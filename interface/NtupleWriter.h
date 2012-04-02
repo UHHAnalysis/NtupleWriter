@@ -39,7 +39,7 @@
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
-#include "UserCode/UHHAnalysis/NtupleWriter/interface/Objects.h"
+#include "UHHAnalysis/NtupleWriter/interface/Objects.h"
 //
 // class declaration
 //

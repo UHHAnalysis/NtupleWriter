@@ -13,11 +13,11 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id$
+// $Id: NtupleWriter.cc,v 1.1 2012/04/02 12:40:12 peiffer Exp $
 //
 //
 
-#include "UserCode/UHHAnalysis//NtupleWriter/interface/NtupleWriter.h"
+#include "UHHAnalysis//NtupleWriter/interface/NtupleWriter.h"
 
 
 
