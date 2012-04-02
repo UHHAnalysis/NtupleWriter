@@ -112,7 +112,7 @@ process.goodOfflinePrimaryVertices = cms.EDFilter(
 
 #top jets
 
-process.load("AnalysisCode.NtupleWriter.Topjets_cfi")
+process.load("UHHAnalysis.NtupleWriter.Topjets_cfi")
 
 process.load("RecoJets.Configuration.GenJetParticles_cff")
 from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
