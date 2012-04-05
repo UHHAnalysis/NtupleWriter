@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.2 2012/04/02 13:26:21 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.4 2012/04/02 15:10:03 peiffer Exp $
 //
 //
 
@@ -171,6 +171,41 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
    else HBHENoiseFilterResult = false;
 
+   // ------------- primary vertices and beamspot  -------------
+
+   if(doPV){
+     for(size_t j=0; j< pv_sources.size(); ++j){
+       pvs[j].clear();
+       
+       edm::Handle< std::vector<reco::Vertex> > pv_handle;
+       iEvent.getByLabel(pv_sources[j], pv_handle);
+       const std::vector<reco::Vertex>& reco_pvs = *(pv_handle.product());
+       
+       for (unsigned int i = 0; i <  reco_pvs.size(); ++i) {
+	 reco::Vertex reco_pv = reco_pvs[i];
+
+	 PrimaryVertex pv;
+	 pv.x =  reco_pv.x();
+	 pv.y =  reco_pv.y();
+	 pv.z =  reco_pv.z();
+	 pv.nTracks =  reco_pv.nTracks();
+	 //pv.isValid =  reco_pv.isValid();
+	 pv.chi2 =  reco_pv.chi2();
+	 pv.ndof =  reco_pv.ndof();	 
+
+	 pvs[j].push_back(pv);
+       }
+     }
+   }
+   
+   edm::Handle<reco::BeamSpot> beamSpot;
+   iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
+   const reco::BeamSpot & bsp = *beamSpot;
+   
+   beamspot_x0 = bsp.x0();
+   beamspot_y0 = bsp.y0();
+   beamspot_z0 = bsp.z0();
+
    // ------------- electrons -------------   
    if(doElectrons){
      for(size_t j=0; j< electron_sources.size(); ++j){
@@ -199,7 +234,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.chargedHadronIso = pat_ele.chargedHadronIso();
 	 ele.trackIso = pat_ele.trackIso();
 	 ele.puChargedHadronIso = pat_ele.puChargedHadronIso();
-
+	 ele.gsfTrack_trackerExpectedHitsInner_numberOfLostHits = pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+	 ele.gsfTrack_px= pat_ele.gsfTrack()->px();
+	 ele.gsfTrack_py= pat_ele.gsfTrack()->py();
+	 ele.gsfTrack_pz= pat_ele.gsfTrack()->pz();
+	 ele.gsfTrack_vx= pat_ele.gsfTrack()->vx();
+	 ele.gsfTrack_vy= pat_ele.gsfTrack()->vy();
+	 ele.gsfTrack_vz= pat_ele.gsfTrack()->vz();
 	 eles[j].push_back(ele);
        }
      }
@@ -364,6 +405,11 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   jet.electronMultiplicity =pat_jet.electronMultiplicity();
 	   jet.photonMultiplicity =pat_jet.photonMultiplicity();
 	 }
+
+	 jecUnc->setJetEta(pat_jet.eta());
+	 jecUnc->setJetPt(pat_jet.pt());
+	 jet.JEC_uncertainty = jecUnc->getUncertainty(true);
+
 	 jet.btag_simpleSecondaryVertexHighEff=pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
 	 jet.btag_simpleSecondaryVertexHighPur=pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
 	 jet.btag_combinedSecondaryVertex=pat_jet.bDiscriminator("combinedSecondaryVertexBJetTags");
@@ -413,6 +459,10 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	 topjet.muonMultiplicity =pat_topjet.muonMultiplicity();
 // 	 topjet.electronMultiplicity =pat_topjet.electronMultiplicity();
 // 	 topjet.photonMultiplicity =pat_topjet.photonMultiplicity();
+
+	 jecUnc->setJetEta(pat_topjet.eta());
+	 jecUnc->setJetPt(pat_topjet.pt());
+	 topjet.JEC_uncertainty = jecUnc->getUncertainty(true);
 
 	 topjet.btag_simpleSecondaryVertexHighEff=pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
 	 topjet.btag_simpleSecondaryVertexHighPur=pat_topjet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
@@ -625,40 +675,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    }
 
-   // ------------- primary vertices and beamspot  -------------
-
-   if(doPV){
-     for(size_t j=0; j< pv_sources.size(); ++j){
-       pvs[j].clear();
-       
-       edm::Handle< std::vector<reco::Vertex> > pv_handle;
-       iEvent.getByLabel(pv_sources[j], pv_handle);
-       const std::vector<reco::Vertex>& reco_pvs = *(pv_handle.product());
-       
-       for (unsigned int i = 0; i <  reco_pvs.size(); ++i) {
-	 reco::Vertex reco_pv = reco_pvs[i];
-
-	 PrimaryVertex pv;
-	 pv.x =  reco_pv.x();
-	 pv.y =  reco_pv.y();
-	 pv.z =  reco_pv.z();
-	 pv.nTracks =  reco_pv.nTracks();
-	 //pv.isValid =  reco_pv.isValid();
-	 pv.chi2 =  reco_pv.chi2();
-	 pv.ndof =  reco_pv.ndof();	 
-
-	 pvs[j].push_back(pv);
-       }
-     }
-   }
-   
-   edm::Handle<reco::BeamSpot> beamSpot;
-   iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
-   const reco::BeamSpot & bsp = *beamSpot;
-   
-   beamspot_x0 = bsp.x0();
-   beamspot_y0 = bsp.y0();
-   beamspot_z0 = bsp.z0();
 
    tr->Fill();
 
@@ -687,6 +703,12 @@ NtupleWriter::beginRun(edm::Run const& iRun, edm::EventSetup const&  iSetup)
   bool setup_changed = false;
   hlt_cfg.init(iRun, iSetup, "HLT", setup_changed);
   newrun=true;
+
+  edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
+  iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
+  JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
+  jecUnc = new JetCorrectionUncertainty(JetCorPar);
+
 }
 
 // ------------ method called when ending the processing of a run  ------------

@@ -64,6 +64,7 @@ class Jet : public Particle{
      btag_combinedSecondaryVertexMVA=0;
      btag_jetBProbability=0;
      btag_jetProbability=0;
+     JEC_uncertainty=0;
   };
 
   ~Jet(){
@@ -90,6 +91,8 @@ class Jet : public Particle{
   float btag_combinedSecondaryVertexMVA;
   float btag_jetBProbability;
   float btag_jetProbability;
+  float JEC_uncertainty;
+  
 };
 
 
@@ -108,6 +111,13 @@ class Electron : public Particle{
     chargedHadronIso=0; 
     trackIso=0; 
     puChargedHadronIso=0;
+    gsfTrack_trackerExpectedHitsInner_numberOfLostHits=0;
+    gsfTrack_px=0;
+    gsfTrack_py=0;
+    gsfTrack_pz=0;
+    gsfTrack_vx=0;
+    gsfTrack_vy=0;
+    gsfTrack_vz=0;
   };
 
   ~Electron(){
@@ -124,6 +134,16 @@ class Electron : public Particle{
   float chargedHadronIso; 
   float trackIso; 
   float puChargedHadronIso;
+  int gsfTrack_trackerExpectedHitsInner_numberOfLostHits;
+  float gsfTrack_px;
+  float gsfTrack_py;
+  float gsfTrack_pz;
+  float gsfTrack_vx;
+  float gsfTrack_vy;
+  float gsfTrack_vz;
+  float gsfTrack_dxy_vertex(const float point_x, const float point_y){ 
+    return ( - (gsfTrack_vx-point_x) * gsfTrack_py + (gsfTrack_vy-point_y) * gsfTrack_px ) / sqrt(gsfTrack_px*gsfTrack_px+gsfTrack_py*gsfTrack_py);  
+  }; 
 
 };
 

@@ -38,8 +38,12 @@
 #include "FWCore/Framework/interface/TriggerNamesService.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 
 #include "UHHAnalysis/NtupleWriter/interface/Objects.h"
+
 //
 // class declaration
 //
@@ -134,6 +138,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       
       HLTConfigProvider hlt_cfg;
       bool newrun;
+
+      JetCorrectionUncertainty *jecUnc;
 };
 
 
