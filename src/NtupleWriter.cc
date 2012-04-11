@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.5 2012/04/05 09:48:20 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.6 2012/04/11 15:15:44 peiffer Exp $
 //
 //
 
@@ -702,15 +702,18 @@ NtupleWriter::endJob()
 void 
 NtupleWriter::beginRun(edm::Run const& iRun, edm::EventSetup const&  iSetup)
 {
-  bool setup_changed = false;
-  hlt_cfg.init(iRun, iSetup, "HLT", setup_changed);
-  newrun=true;
+  if(doTrigger){
+    bool setup_changed = false;
+    hlt_cfg.init(iRun, iSetup, "HLT", setup_changed);
+    newrun=true;
+  }
 
-  edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
-  iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
-  JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
-  jecUnc = new JetCorrectionUncertainty(JetCorPar);
-
+  if(doJets || doTopJets){
+    edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
+    iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
+    JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
+    jecUnc = new JetCorrectionUncertainty(JetCorPar);
+  }
 }
 
 // ------------ method called when ending the processing of a run  ------------
