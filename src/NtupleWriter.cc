@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.6 2012/04/11 15:15:44 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.7 2012/04/11 15:32:13 peiffer Exp $
 //
 //
 
@@ -64,10 +64,11 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   tr->Branch("luminosityBlock",&luminosityBlock);
   tr->Branch("isRealData",&isRealData);
   tr->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult);
-  tr->Branch("beamspot_x0",&beamspot_x0);
-  tr->Branch("beamspot_y0",&beamspot_y0);
-  tr->Branch("beamspot_z0",&beamspot_z0);
-
+  if(doPV){
+    tr->Branch("beamspot_x0",&beamspot_x0);
+    tr->Branch("beamspot_y0",&beamspot_y0);
+    tr->Branch("beamspot_z0",&beamspot_z0);
+  }
   if(doElectrons){
     electron_sources = iConfig.getParameter<std::vector<std::string> >("electron_sources");
     for(size_t j=0; j< electron_sources.size(); ++j){  
@@ -197,15 +198,15 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 pvs[j].push_back(pv);
        }
      }
+      
+     edm::Handle<reco::BeamSpot> beamSpot;
+     iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
+     const reco::BeamSpot & bsp = *beamSpot;
+     
+     beamspot_x0 = bsp.x0();
+     beamspot_y0 = bsp.y0();
+     beamspot_z0 = bsp.z0();
    }
-   
-   edm::Handle<reco::BeamSpot> beamSpot;
-   iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
-   const reco::BeamSpot & bsp = *beamSpot;
-   
-   beamspot_x0 = bsp.x0();
-   beamspot_y0 = bsp.y0();
-   beamspot_z0 = bsp.z0();
 
    // ------------- electrons -------------   
    if(doElectrons){
