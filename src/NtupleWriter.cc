@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.4 2012/04/02 15:10:03 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.5 2012/04/05 09:48:20 peiffer Exp $
 //
 //
 
@@ -55,6 +55,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doGenInfo = iConfig.getParameter<bool>("doGenInfo");
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
+  doTrigger = iConfig.getParameter<bool>("doTrigger");
 
   // initialization of tree variables
 
@@ -125,14 +126,14 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     tr->Branch("genInfo","GenInfo",&genInfo);
     tr->Branch("GenParticles","std::vector<GenParticle>", &genps);
   }
-
-  trigger_prefixes = iConfig.getParameter<std::vector<std::string> >("trigger_prefixes");
-  //tr->Branch("triggerResults","std::map<std::string, bool>",&triggerResults);
-  tr->Branch("triggerNames", "std::vector<std::string>", &triggerNames);  
-  tr->Branch("triggerResults", "std::vector<bool>", &triggerResults);
-  tr->Branch("L1_prescale", "std::vector<int>", &L1_prescale);
-  tr->Branch("HLT_prescale", "std::vector<int>", &HLT_prescale);
-
+  if(doTrigger){
+    trigger_prefixes = iConfig.getParameter<std::vector<std::string> >("trigger_prefixes");
+    //tr->Branch("triggerResults","std::map<std::string, bool>",&triggerResults);
+    tr->Branch("triggerNames", "std::vector<std::string>", &triggerNames);  
+    tr->Branch("triggerResults", "std::vector<bool>", &triggerResults);
+    tr->Branch("L1_prescale", "std::vector<int>", &L1_prescale);
+    tr->Branch("HLT_prescale", "std::vector<int>", &HLT_prescale);
+  }
   newrun = true;
 }
 
@@ -537,50 +538,51 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    // ------------- trigger -------------
-   
-   edm::InputTag triggerEvent = edm::InputTag("hltTriggerSummaryAOD");
-   edm::Handle< trigger::TriggerEvent > dummy_TriggerEvent;
-   iEvent.getByLabel( edm::InputTag(triggerEvent.label(), triggerEvent.instance()), dummy_TriggerEvent );
-   
-   const edm::Provenance *meta = dummy_TriggerEvent.provenance();
-   std::string nameProcess = meta->processName();
-   edm::InputTag triggerResultTag = edm::InputTag("TriggerResults");
-   triggerResultTag = edm::InputTag( triggerResultTag.label(), triggerResultTag.instance(), nameProcess );
-   
-   edm::Handle<edm::TriggerResults> trigger;
-   iEvent.getByLabel(triggerResultTag, trigger);
-   const edm::TriggerResults& trig = *(trigger.product());
-   
-   triggerResults.clear();
-   triggerNames.clear();
-   L1_prescale.clear();
-   HLT_prescale.clear();
-
-   edm::Service<edm::service::TriggerNamesService> tns;
-   std::vector<std::string> triggerNames_all;
-   tns->getTrigPaths(trig,triggerNames_all);
-
-   if (trig.size()!=triggerNames_all.size()) std::cout <<"ERROR: length of names and paths not the same: "<<triggerNames_all.size()<<","<<trig.size()<< std::endl;
-   for(unsigned int i=0; i<trig.size(); ++i){
-     std::vector<std::string>::const_iterator it = trigger_prefixes.begin();
-     for(; it!=trigger_prefixes.end(); ++it){
-       if(triggerNames_all[i].substr(0, it->size()) == *it)break;
+   if(doTrigger){
+     edm::InputTag triggerEvent = edm::InputTag("hltTriggerSummaryAOD");
+     edm::Handle< trigger::TriggerEvent > dummy_TriggerEvent;
+     iEvent.getByLabel( edm::InputTag(triggerEvent.label(), triggerEvent.instance()), dummy_TriggerEvent );
+     
+     const edm::Provenance *meta = dummy_TriggerEvent.provenance();
+     std::string nameProcess = meta->processName();
+     edm::InputTag triggerResultTag = edm::InputTag("TriggerResults");
+     triggerResultTag = edm::InputTag( triggerResultTag.label(), triggerResultTag.instance(), nameProcess );
+     
+     edm::Handle<edm::TriggerResults> trigger;
+     iEvent.getByLabel(triggerResultTag, trigger);
+     const edm::TriggerResults& trig = *(trigger.product());
+     
+     triggerResults.clear();
+     triggerNames.clear();
+     L1_prescale.clear();
+     HLT_prescale.clear();
+     
+     edm::Service<edm::service::TriggerNamesService> tns;
+     std::vector<std::string> triggerNames_all;
+     tns->getTrigPaths(trig,triggerNames_all);
+     
+     if (trig.size()!=triggerNames_all.size()) std::cout <<"ERROR: length of names and paths not the same: "<<triggerNames_all.size()<<","<<trig.size()<< std::endl;
+     for(unsigned int i=0; i<trig.size(); ++i){
+       std::vector<std::string>::const_iterator it = trigger_prefixes.begin();
+       for(; it!=trigger_prefixes.end(); ++it){
+	 if(triggerNames_all[i].substr(0, it->size()) == *it)break;
+       }
+       if(it==trigger_prefixes.end()) continue;
+       
+       //triggerResults.insert(std::pair<std::string, bool>(triggerNames[i],trig.accept(i)));
+       triggerResults.push_back(trig.accept(i));
+       if(newrun) triggerNames.push_back(triggerNames_all[i]);
+       if(isRealData){
+	 std::pair<int, int> pre=hlt_cfg.prescaleValues(iEvent, iSetup, triggerNames_all[i]);
+	 L1_prescale.push_back(pre.first);
+	 HLT_prescale.push_back(pre.second);
+       }
      }
-     if(it==trigger_prefixes.end()) continue;
-
-     //triggerResults.insert(std::pair<std::string, bool>(triggerNames[i],trig.accept(i)));
-     triggerResults.push_back(trig.accept(i));
-     if(newrun) triggerNames.push_back(triggerNames_all[i]);
-     if(isRealData){
-       std::pair<int, int> pre=hlt_cfg.prescaleValues(iEvent, iSetup, triggerNames_all[i]);
-       L1_prescale.push_back(pre.first);
-       HLT_prescale.push_back(pre.second);
-     }
+     //    for(std::map<std::string, bool>::const_iterator iter = triggerResults.begin(); iter!=triggerResults.end(); iter++){
+     //      std::cout << (*iter).first << "   " << (*iter).second << std::endl;
+     //    }
+     newrun=false;
    }
-//    for(std::map<std::string, bool>::const_iterator iter = triggerResults.begin(); iter!=triggerResults.end(); iter++){
-//      std::cout << (*iter).first << "   " << (*iter).second << std::endl;
-//    }
-   newrun=false;
 
    // ------------- generator info -------------
    
