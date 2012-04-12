@@ -92,7 +92,7 @@ class Jet : public Particle{
   float btag_jetBProbability;
   float btag_jetProbability;
   float JEC_uncertainty;
-  
+
 };
 
 
@@ -218,6 +218,7 @@ class Muon : public Particle{
   float outerTrack_d0Error; 
   unsigned short outerTrack_numberOfValidHits;  
   unsigned short outerTrack_numberOfLostHits;  
+
 };
 
 
@@ -230,7 +231,6 @@ class Tau : public Particle{
 
   ~Tau(){
   };
-
 };
 
 class Photon : public Particle{
@@ -259,7 +259,7 @@ class Photon : public Particle{
 /*   float neutralHadronIso;  */
 /*   float chargedHadronIso;  */
   float trackIso; 
-  
+
 };
 
 class MET{
@@ -305,6 +305,7 @@ class PrimaryVertex{
   //bool isValid; 
   float chi2; 
   float ndof;
+
 };
 
 class GenInfo{
@@ -347,7 +348,7 @@ class GenInfo{
   int pileup_NumInteractions_ootbefore; 
   int pileup_NumInteractions_ootafter;
   float pileup_TrueNumInteractions;  //poisson mean
-  
+
 };
 
 
@@ -379,10 +380,48 @@ class GenParticle : public Particle{
   int pdgId;
   int status;
   int index;
+
+  //return mother 1 or 2 (ind<=1 or ind>=2)
+  GenParticle* mother(std::vector<GenParticle> *gplist, int ind=1){
+    for(unsigned int i=0; i< gplist->size(); ++i){
+      if(ind<=1){
+	if(this->mother1 == gplist->at(i).index){
+	  return &(gplist->at(i));
+	}
+      }
+      else{
+	if(this->mother2 == gplist->at(i).index){
+	  return &(gplist->at(i));
+	}	
+      }
+    }
+    //std::cout << "WARNING: Mother " << ind << " not found in list of GenParticles" << std::endl;
+    return 0;
+  }
+  //return daughter 1 or 2 (ind<=1 or ind>=2)
+  GenParticle* daughter(std::vector<GenParticle> *gplist, int ind=1){
+    for(unsigned int i=0; i< gplist->size(); ++i){
+      if(ind<=1){
+	if(this->daughter1 == gplist->at(i).index){
+	  return &(gplist->at(i));
+	}
+      }
+      else{
+	if(this->daughter2 == gplist->at(i).index){
+	  return &(gplist->at(i));
+	}	
+      }
+    }
+    //std::cout << "WARNING: Daughter " << ind << " not found in list of GenParticles" << std::endl;
+    return 0;
+  }
+
   int mother1;
   int mother2;
   int daughter1;
   int daughter2;
+ 
+
 };
 
 #endif 
