@@ -6,6 +6,10 @@
 #include "Math/PtEtaPhiE4D.h"
 #include "TObject.h"
 
+#ifndef PI
+#define PI       3.14159265358979323846264338328     
+#endif
+
 typedef ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiE4D< Double32_t > > LorentzVector;
 
 class Particle{
@@ -29,6 +33,16 @@ class Particle{
     v4.SetE(energy);
     return v4;
   };
+
+  double deltaPhi(Particle p2){
+    double deltaphi = fabs(this->phi - p2.phi);
+    if(deltaphi > PI) deltaphi = deltaphi - PI;
+    return deltaphi;
+  }
+  double deltaR(Particle p2){
+    double deltaeta = this->eta - p2.eta;
+    return sqrt(deltaeta*deltaeta+deltaPhi(p2)*deltaPhi(p2));
+  }
 
   float charge;
   float pt; 
