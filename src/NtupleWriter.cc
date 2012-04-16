@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.7 2012/04/11 15:32:13 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.8 2012/04/11 15:37:04 peiffer Exp $
 //
 //
 
@@ -357,7 +357,19 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 tau.eta =  pat_tau.eta();
 	 tau.phi =  pat_tau.phi();
 	 tau.energy =  pat_tau.energy();
-
+	 tau.decayModeFinding = pat_tau.tauID("decayModeFinding")>0.5; 
+	 tau.byVLooseCombinedIsolationDeltaBetaCorr  = pat_tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5; 
+	 tau.byLooseCombinedIsolationDeltaBetaCorr = pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5; 
+	 tau.byMediumCombinedIsolationDeltaBetaCorr = pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5; 
+	 tau.byTightCombinedIsolationDeltaBetaCorr = pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5; 
+	 tau.againstElectronLoose  = pat_tau.tauID("againstElectronLoose")>0.5; 
+	 tau.againstElectronMedium = pat_tau.tauID("againstElectronMedium")>0.5; 
+	 tau.againstElectronTight = pat_tau.tauID("againstElectronTight")>0.5; 
+	 tau.againstElectronMVA  = pat_tau.tauID("againstElectronMVA")>0.5; 
+	 tau.againstMuonLoose = pat_tau.tauID("againstMuonLoose")>0.5; 
+	 tau.againstMuonMedium = pat_tau.tauID("againstMuonMedium")>0.5; 
+	 tau.againstMuonTight = pat_tau.tauID("againstMuonTight")>0.5; 
+	 
 	 taus[j].push_back(tau);
        }
      }

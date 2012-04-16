@@ -240,11 +240,36 @@ class Tau : public Particle{
 
  public:
   Tau(){
-
+    decayModeFinding=false; 
+    byVLooseCombinedIsolationDeltaBetaCorr =false;
+    byLooseCombinedIsolationDeltaBetaCorr=false; 
+    byMediumCombinedIsolationDeltaBetaCorr=false;
+    byTightCombinedIsolationDeltaBetaCorr=false; 
+    againstElectronLoose =false;
+    againstElectronMedium=false;
+    againstElectronTight=false ;
+    againstElectronMVA =false;
+    againstMuonLoose=false ;
+    againstMuonMedium=false;
+    againstMuonTight=false;
   };
 
   ~Tau(){
   };
+
+  bool decayModeFinding; 
+  bool byVLooseCombinedIsolationDeltaBetaCorr ;
+  bool byLooseCombinedIsolationDeltaBetaCorr; 
+  bool byMediumCombinedIsolationDeltaBetaCorr;
+  bool byTightCombinedIsolationDeltaBetaCorr; 
+  bool againstElectronLoose ;
+  bool againstElectronMedium;
+  bool againstElectronTight ;
+  bool againstElectronMVA ;
+  bool againstMuonLoose ;
+  bool againstMuonMedium;
+  bool againstMuonTight;
+
 };
 
 class Photon : public Particle{
