@@ -132,6 +132,7 @@ class Electron : public Particle{
     gsfTrack_vx=0;
     gsfTrack_vy=0;
     gsfTrack_vz=0;
+    passconversionveto=false;
   };
 
   ~Electron(){
@@ -158,6 +159,7 @@ class Electron : public Particle{
   float gsfTrack_dxy_vertex(const float point_x, const float point_y){ 
     return ( - (gsfTrack_vx-point_x) * gsfTrack_py + (gsfTrack_vy-point_y) * gsfTrack_px ) / sqrt(gsfTrack_px*gsfTrack_px+gsfTrack_py*gsfTrack_py);  
   }; 
+  bool passconversionveto;
 
 };
 
@@ -240,6 +242,9 @@ class Tau : public Particle{
 
  public:
   Tau(){
+    leadPFCand_px=0;
+    leadPFCand_py=0;
+    leadPFCand_pz=0;
     decayModeFinding=false; 
     byVLooseCombinedIsolationDeltaBetaCorr =false;
     byLooseCombinedIsolationDeltaBetaCorr=false; 
@@ -256,6 +261,10 @@ class Tau : public Particle{
 
   ~Tau(){
   };
+
+  float leadPFCand_px;
+  float leadPFCand_py;
+  float leadPFCand_pz;
 
   bool decayModeFinding; 
   bool byVLooseCombinedIsolationDeltaBetaCorr ;

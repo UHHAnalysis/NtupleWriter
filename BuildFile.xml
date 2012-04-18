@@ -14,6 +14,8 @@
 <use name="PhysicsTools/UtilAlgos"/>
 <use name="CondFormats/JetMETObjects"/>
 <use name="JetMETCorrections/Objects"/>
+<use name="RecoEgamma/EgammaTools"/>
+<use name="DataFormats/Luminosity"/>
 
 <export>
    <lib name="1"/>

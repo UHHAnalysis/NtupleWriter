@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.8 2012/04/11 15:37:04 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.9 2012/04/16 15:42:09 peiffer Exp $
 //
 //
 
@@ -53,6 +53,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doPhotons = iConfig.getParameter<bool>("doPhotons");
   doMET = iConfig.getParameter<bool>("doMET");
   doGenInfo = iConfig.getParameter<bool>("doGenInfo");
+  doLumiInfo = iConfig.getParameter<bool>("doLumiInfo");
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
   doTrigger = iConfig.getParameter<bool>("doTrigger");
@@ -64,6 +65,10 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   tr->Branch("luminosityBlock",&luminosityBlock);
   tr->Branch("isRealData",&isRealData);
   tr->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult);
+  if(doLumiInfo){
+    tr->Branch("intgRecLumi",&intgRecLumi);
+    tr->Branch("intgDelLumi",&intgDelLumi);
+  }
   if(doPV){
     tr->Branch("beamspot_x0",&beamspot_x0);
     tr->Branch("beamspot_y0",&beamspot_y0);
@@ -210,6 +215,14 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    // ------------- electrons -------------   
    if(doElectrons){
+
+     edm::Handle<reco::ConversionCollection> hConversions;
+     iEvent.getByLabel("allConversions", hConversions);
+
+     edm::Handle<reco::BeamSpot> beamSpot;
+     iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
+     const reco::BeamSpot & bsp = *beamSpot;
+
      for(size_t j=0; j< electron_sources.size(); ++j){
        eles[j].clear();
        edm::Handle< std::vector<pat::Electron> > ele_handle;
@@ -243,6 +256,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.gsfTrack_vx= pat_ele.gsfTrack()->vx();
 	 ele.gsfTrack_vy= pat_ele.gsfTrack()->vy();
 	 ele.gsfTrack_vz= pat_ele.gsfTrack()->vz();
+	 ele.passconversionveto = !ConversionTools::hasMatchedConversion(pat_ele,hConversions,bsp.position());
 	 eles[j].push_back(ele);
        }
      }
@@ -369,7 +383,18 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 tau.againstMuonLoose = pat_tau.tauID("againstMuonLoose")>0.5; 
 	 tau.againstMuonMedium = pat_tau.tauID("againstMuonMedium")>0.5; 
 	 tau.againstMuonTight = pat_tau.tauID("againstMuonTight")>0.5; 
-	 
+
+	 reco::PFCandidateRef leadPFCand = pat_tau.leadPFCand();
+	 if(!leadPFCand.isNull()){
+	   tau.leadPFCand_px = leadPFCand->px();
+	   tau.leadPFCand_py = leadPFCand->py();
+	   tau.leadPFCand_pz = leadPFCand->pz();
+	 }
+	 else{
+	   tau.leadPFCand_px = 0;
+	   tau.leadPFCand_py = 0;
+	   tau.leadPFCand_pz = 0;
+	 }
 	 taus[j].push_back(tau);
        }
      }
@@ -589,6 +614,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 std::pair<int, int> pre=hlt_cfg.prescaleValues(iEvent, iSetup, triggerNames_all[i]);
 	 L1_prescale.push_back(pre.first);
 	 HLT_prescale.push_back(pre.second);
+	 //std::cout <<  triggerNames_all[i] << " " << pre.first << " " <<pre.second << "   " << hlt_cfg.prescaleValue(iEvent, iSetup, triggerNames_all[i]) << std::endl;
        }
      }
      //    for(std::map<std::string, bool>::const_iterator iter = triggerResults.begin(); iter!=triggerResults.end(); iter++){
@@ -690,9 +716,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    }
 
-
    tr->Fill();
-
+   if(doLumiInfo)
+     previouslumiblockwasfilled=true;
 }
 
 
@@ -700,6 +726,11 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 void 
 NtupleWriter::beginJob()
 {
+  if(doLumiInfo){
+    totalRecLumi=0;
+    totalDelLumi=0;
+    previouslumiblockwasfilled=false;
+  }
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -733,12 +764,34 @@ NtupleWriter::beginRun(edm::Run const& iRun, edm::EventSetup const&  iSetup)
 void 
 NtupleWriter::endRun(edm::Run const&, edm::EventSetup const&)
 {
+  if(doLumiInfo)
+    std::cout << "total integ. luminosity: " << totalDelLumi <<"(del) " << totalRecLumi << "(rec)" << std::endl;
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void 
-NtupleWriter::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+NtupleWriter::beginLuminosityBlock(edm::LuminosityBlock const& lumi, edm::EventSetup const&)
 {
+  if(doLumiInfo){
+    edm::Handle<LumiSummary> l;
+    lumi.getByLabel("lumiProducer", l); 
+    
+    //add lumi of lumi blocks without any event to next lumiblock
+    if(previouslumiblockwasfilled){
+      intgRecLumi=0;
+      intgDelLumi=0; 
+    }
+    previouslumiblockwasfilled=false;
+    
+    if (l.isValid()){;
+      intgRecLumi+=l->intgRecLumi()*6.37;
+      intgDelLumi+=l->intgDelLumi()*6.37;
+      totalRecLumi+=l->intgRecLumi()*6.37;
+      totalDelLumi+=l->intgDelLumi()*6.37;
+    }
+    //std::cout << "this lb: " <<l->intgRecLumi()*6.37 <<"   " << l->intgDelLumi()*6.37<<std::endl;
+    //std::cout << "summed:  "<< intgRecLumi << "   " << intgDelLumi << std::endl;
+  }
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------

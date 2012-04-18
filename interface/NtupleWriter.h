@@ -41,6 +41,8 @@
 #include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+#include "DataFormats/Luminosity/interface/LumiSummary.h"
 
 #include "UHHAnalysis/NtupleWriter/interface/Objects.h"
 
@@ -84,6 +86,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doMET;
       bool doPhotons;
       bool doGenInfo;
+      bool doLumiInfo;
       bool doPV;
       bool doTrigger;
 
@@ -92,6 +95,11 @@ class NtupleWriter : public edm::EDAnalyzer {
       int event;
       bool isRealData;
       bool HBHENoiseFilterResult;
+
+      float intgDelLumi;
+      float intgRecLumi;
+      float totalDelLumi;
+      float totalRecLumi;
 
       std::vector<std::string> electron_sources;
       std::vector<Electron> eles[Nmax];
@@ -139,6 +147,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       
       HLTConfigProvider hlt_cfg;
       bool newrun;
+      bool previouslumiblockwasfilled;
 
       JetCorrectionUncertainty *jecUnc;
 };

@@ -116,12 +116,13 @@ else :
 		    ]
 	elif options.release == '52x' :
 		process.source.fileNames = [
-		    '/store/relval/CMSSW_5_2_2/Jet/RECO/GR_R_52_V4_RelVal_jet2011B-v2/0252/96518387-A174-E111-95A6-001A928116E8.root'
+#		    '/store/relval/CMSSW_5_2_2/Jet/RECO/GR_R_52_V4_RelVal_jet2011B-v2/0252/96518387-A174-E111-95A6-001A928116E8.root'
+			'file:/scratch/hh/lustre/cms/user/peiffer/DataTest.root'
 		    ]
 
 #process.source.eventsToProcess = cms.untracked.VEventRange( ['1:86747'] )
 
-#process.source.skipEvents = cms.untracked.uint32(17268) 
+#process.source.skipEvents = cms.untracked.uint32(100) 
 
 print options
 
@@ -159,11 +160,27 @@ process.scrapingVeto = cms.EDFilter("FilterOutScraping",
                                     thresh = cms.untracked.double(0.2)
                                     )
 # HB + HE noise filtering
-process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
-# Modify defaults setting to avoid an over-efficiency in the presence of OFT PU
-process.HBHENoiseFilter.minIsolatedNoiseSumE = cms.double(999999.)
-process.HBHENoiseFilter.minNumIsolatedNoiseChannels = cms.int32(999999)
-process.HBHENoiseFilter.minIsolatedNoiseSumEt = cms.double(999999.)
+#process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
+## Modify defaults setting to avoid an over-efficiency in the presence of OFT PU
+#process.HBHENoiseFilter.minIsolatedNoiseSumE = cms.double(999999.)
+#process.HBHENoiseFilter.minNumIsolatedNoiseChannels = cms.int32(999999)
+#process.HBHENoiseFilter.minIsolatedNoiseSumEt = cms.double(999999.)
+
+process.load('CommonTools/RecoAlgos/HBHENoiseFilterResultProducer_cfi')
+
+process.HBHENoiseFilterResultProducer.minRatio = cms.double(-999)
+process.HBHENoiseFilterResultProducer.maxRatio = cms.double(999)
+process.HBHENoiseFilterResultProducer.minHPDHits = cms.int32(17)
+process.HBHENoiseFilterResultProducer.minRBXHits = cms.int32(999)
+process.HBHENoiseFilterResultProducer.minHPDNoOtherHits = cms.int32(10)
+process.HBHENoiseFilterResultProducer.minZeros = cms.int32(10)
+process.HBHENoiseFilterResultProducer.minHighEHitTime = cms.double(-9999.0)
+process.HBHENoiseFilterResultProducer.maxHighEHitTime = cms.double(9999.0)
+process.HBHENoiseFilterResultProducer.maxRBXEMF = cms.double(-999.0)
+process.HBHENoiseFilterResultProducer.minNumIsolatedNoiseChannels = cms.int32(999999)
+process.HBHENoiseFilterResultProducer.minIsolatedNoiseSumE = cms.double(999999.)
+process.HBHENoiseFilterResultProducer.minIsolatedNoiseSumEt = cms.double(999999.)
+process.HBHENoiseFilterResultProducer.useTS4TS5 = cms.bool(True)
 
 
 # switch on PAT trigger
@@ -266,8 +283,8 @@ process.pfPileUpPFlow.Vertices = 'goodOfflinePrimaryVertices'
 process.pfElectronsFromVertexPFlow.vertices = 'goodOfflinePrimaryVertices'
 process.pfMuonsFromVertexPFlow.vertices = 'goodOfflinePrimaryVertices'
 
-#process.pfNoTau.enable = cms.bool(False) ??? Braucht man das, wenn man Taus verwendet?
-#process.pfNoTauPFlow.enable = cms.bool(False) ???
+process.pfNoTau.enable = cms.bool(True) 
+process.pfNoTauPFlow.enable = cms.bool(True) 
 
 process.pfJetsPFlow.doAreaFastjet = True
 process.pfJetsPFlow.doRhoFastjet = False
@@ -353,6 +370,7 @@ process.looseLeptonSequence = cms.Sequence(
     process.selectedPatElectronsLoosePFlow
     )
 
+process.hpsPFTauProducerPFlow.src = cms.InputTag("hpsPFTauProducerSansRefsPFlow")
 
 # turn to false when running on data
 if options.useData :
@@ -1177,9 +1195,7 @@ if options.useExtraJetColls:
 						      filterParams = pfJetIDSelector.clone(),
 						      src = cms.InputTag("selectedPatJetsAK7TrimmedPF")
 						      )
-
-
-
+	
 	process.goodPatJetsAK8PF = cms.EDFilter("PFJetIDSelectionFunctorFilter",
 						      filterParams = pfJetIDSelector.clone(),
 						      src = cms.InputTag("selectedPatJetsAK8PF")
@@ -1314,7 +1330,7 @@ if options.useExtraJetColls:
 
 process.patseq = cms.Sequence(
     process.scrapingVeto*
-    process.HBHENoiseFilter*
+    process.HBHENoiseFilterResultProducer*
     #process.offlinePrimaryVerticesDAF*    
     process.goodOfflinePrimaryVertices*
     process.primaryVertexFilter*
@@ -1389,7 +1405,7 @@ if options.writeSimpleInputs :
 	process.patseq *= cms.Sequence(process.pfInputs)
 
 if options.useSusyFilter :
-	process.patseq.remove( process.HBHENoiseFilter )
+	process.patseq.remove( process.HBHENoiseFilterResultProducer )
 	process.load( 'PhysicsTools.HepMCCandAlgos.modelfilter_cfi' )
 	process.modelSelector.parameterMins = [500.,    0.] # mstop, mLSP
 	process.modelSelector.parameterMaxs  = [7000., 200.] # mstop, mLSP
@@ -1408,7 +1424,7 @@ else :
 
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('ttbar52.root'), 
+                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/Ntuples/ttbar52_otherjets.root'), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
@@ -1418,13 +1434,14 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doMET = cms.bool(True),
                                   doPV = cms.bool(True),
                                   doGenInfo = cms.bool(not options.useData),
+				  doLumiInfo = cms.bool(options.useData),
                                   doTrigger = cms.bool(True),
                                   electron_sources = cms.vstring("selectedPatElectronsPFlow","selectedPatElectronsLoosePFlow"),
                                   muon_sources = cms.vstring("selectedPatMuonsPFlow","selectedPatMuonsLoosePFlow"),
                                   tau_sources = cms.vstring("selectedPatTausPFlow","selectedPatTaus"),
                                   tau_ptmin = cms.double(0.0),
                                   tau_etamax = cms.double(999.0),
-                                  jet_sources = cms.vstring("selectedPatJetsPFlow"),
+                                  jet_sources = cms.vstring("goodPatJetsPFlow"),
                                   jet_ptmin = cms.double(10.0),
                                   jet_etamax = cms.double(5.0),
                                   topjet_sources = cms.vstring("goodPatJetsCATopTagPF","goodPatJetsCA8PrunedPF"),
@@ -1436,7 +1453,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   trigger_prefixes = cms.vstring(#"HLT_IsoMu", "HLT_Mu",
                                                                  #"HLT_L1SingleMu", "HLT_L2Mu",
                                                                  #"HLT_Ele",
-                                                                 "HLT_",
+                                                                 "HLT_Quatsch",
                                                                  #"HLT_DoubleMu", "HLT_DoubleEle"
 	                                                         ),
                                   
@@ -1455,8 +1472,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(100)
 
 
 # process all the events
-process.maxEvents.input = 50
-process.options.wantSummary = True
+process.maxEvents.input = 100
+process.options.wantSummary = False
 
 
 #open('junk.py','w').write(process.dumpPython())
