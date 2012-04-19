@@ -141,6 +141,7 @@ class Electron : public Particle{
     // particleIso=0; 
     neutralHadronIso=0; 
     chargedHadronIso=0; 
+    photonIso=0;
     trackIso=0; 
     puChargedHadronIso=0;
     gsfTrack_trackerExpectedHitsInner_numberOfLostHits=0;
@@ -174,6 +175,7 @@ class Electron : public Particle{
   //float particleIso; 
   float neutralHadronIso; 
   float chargedHadronIso; 
+  float photonIso;
   float trackIso; 
   float puChargedHadronIso;
   int gsfTrack_trackerExpectedHitsInner_numberOfLostHits;
@@ -200,6 +202,10 @@ class Electron : public Particle{
   float mvaTrigV0;
   float mvaNonTrigV0;
 
+  float relIso(){
+    return ( chargedHadronIso + std::max( 0.0, neutralHadronIso + photonIso - 0.5*puChargedHadronIso ) ) / pt;
+  }
+
 };
 
 class Muon : public Particle{
@@ -214,6 +220,7 @@ class Muon : public Particle{
     neutralHadronIso=0; 
     chargedHadronIso=0; 
     trackIso=0; 
+    photonIso=0;
     puChargedHadronIso=0;
     isGlobalMuon=false;
     isStandAloneMuon=false;
@@ -252,6 +259,7 @@ class Muon : public Particle{
   float neutralHadronIso; 
   float chargedHadronIso; 
   float trackIso; 
+  float photonIso;
   float puChargedHadronIso;
   bool isGlobalMuon;
   bool isStandAloneMuon;
@@ -277,6 +285,10 @@ class Muon : public Particle{
   float outerTrack_d0Error; 
   unsigned short outerTrack_numberOfValidHits;  
   unsigned short outerTrack_numberOfLostHits;  
+  
+  float relIso(){
+    return ( chargedHadronIso + std::max( 0.0, neutralHadronIso + photonIso - 0.5*puChargedHadronIso ) ) / pt;
+  }
 
 };
 

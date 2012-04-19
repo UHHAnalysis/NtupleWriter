@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.11 2012/04/19 09:51:01 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.12 2012/04/19 12:03:28 peiffer Exp $
 //
 //
 
@@ -249,6 +249,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.neutralHadronIso = pat_ele.neutralHadronIso();
 	 ele.chargedHadronIso = pat_ele.chargedHadronIso();
 	 ele.trackIso = pat_ele.trackIso();
+	 ele.photonIso = pat_ele.photonIso();
 	 ele.puChargedHadronIso = pat_ele.puChargedHadronIso();
 	 ele.gsfTrack_trackerExpectedHitsInner_numberOfLostHits = pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
 	 ele.gsfTrack_px= pat_ele.gsfTrack()->px();
@@ -299,6 +300,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 mu.neutralHadronIso = pat_mu.neutralHadronIso();
 	 mu.chargedHadronIso = pat_mu.chargedHadronIso();
 	 mu.trackIso = pat_mu.trackIso();
+	 mu.photonIso = pat_mu.photonIso();
 	 mu.puChargedHadronIso = pat_mu.puChargedHadronIso();
 	 mu.isGlobalMuon = pat_mu.isGlobalMuon();
 	 mu.isStandAloneMuon = pat_mu.isStandAloneMuon();
