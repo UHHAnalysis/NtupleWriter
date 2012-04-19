@@ -79,6 +79,11 @@ class Jet : public Particle{
      btag_jetBProbability=0;
      btag_jetProbability=0;
      JEC_uncertainty=0;
+     JEC_factor_raw=0;
+     genjet_pt=0;
+     genjet_eta=0;
+     genjet_phi=0;
+     genjet_energy=0;
   };
 
   ~Jet(){
@@ -106,6 +111,19 @@ class Jet : public Particle{
   float btag_jetBProbability;
   float btag_jetProbability;
   float JEC_uncertainty;
+  float JEC_factor_raw;
+  float genjet_pt;
+  float genjet_eta;
+  float genjet_phi;
+  float genjet_energy;
+  LorentzVector genjet_v4(){
+    LorentzVector v4;
+    v4.SetPt(genjet_pt);
+    v4.SetEta(genjet_eta);
+    v4.SetPhi(genjet_phi);
+    v4.SetE(genjet_energy);
+    return v4;
+  };
 
 };
 

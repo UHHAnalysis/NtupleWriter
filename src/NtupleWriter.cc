@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.10 2012/04/18 12:53:46 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.11 2012/04/19 09:51:01 peiffer Exp $
 //
 //
 
@@ -463,6 +463,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jecUnc->setJetEta(pat_jet.eta());
 	 jecUnc->setJetPt(pat_jet.pt());
 	 jet.JEC_uncertainty = jecUnc->getUncertainty(true);
+	 jet.JEC_factor_raw = pat_jet.jecFactor("Uncorrected");
 
 	 jet.btag_simpleSecondaryVertexHighEff=pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
 	 jet.btag_simpleSecondaryVertexHighPur=pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
@@ -470,6 +471,14 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jet.btag_combinedSecondaryVertexMVA=pat_jet.bDiscriminator("combinedSecondaryVertexMVABJetTags");
 	 jet.btag_jetBProbability=pat_jet.bDiscriminator("jetBProbabilityBJetTags");
 	 jet.btag_jetProbability=pat_jet.bDiscriminator("jetProbabilityBJetTags");
+
+	 const reco::GenJet *genj = pat_jet.genJet();
+	 if(genj){
+	   jet.genjet_pt = genj->pt();
+	   jet.genjet_eta = genj->eta();
+	   jet.genjet_phi = genj->phi();
+	   jet.genjet_energy = genj->energy();
+	 }
 
 	 jets[j].push_back(jet);
        }
@@ -517,6 +526,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jecUnc->setJetEta(pat_topjet.eta());
 	 jecUnc->setJetPt(pat_topjet.pt());
 	 topjet.JEC_uncertainty = jecUnc->getUncertainty(true);
+	 topjet.JEC_factor_raw = pat_topjet.jecFactor("Uncorrected");
 
 	 topjet.btag_simpleSecondaryVertexHighEff=pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
 	 topjet.btag_simpleSecondaryVertexHighPur=pat_topjet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
@@ -524,6 +534,14 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 topjet.btag_combinedSecondaryVertexMVA=pat_topjet.bDiscriminator("combinedSecondaryVertexMVABJetTags");
 	 topjet.btag_jetBProbability=pat_topjet.bDiscriminator("jetBProbabilityBJetTags");
 	 topjet.btag_jetProbability=pat_topjet.bDiscriminator("jetProbabilityBJetTags");
+
+	 const reco::GenJet *genj = pat_topjet.genJet();
+	 if(genj){
+	   topjet.genjet_pt = genj->pt();
+	   topjet.genjet_eta = genj->eta();
+	   topjet.genjet_phi = genj->phi();
+	   topjet.genjet_energy = genj->energy();
+	 }
 
 	 for (unsigned int k = 0; k < pat_topjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
