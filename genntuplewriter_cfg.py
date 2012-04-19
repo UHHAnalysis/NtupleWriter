@@ -41,7 +41,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 #NtupleWriter
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('genLQ.root'), 
+                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/genLQ.root'), 
                                   doElectrons = cms.bool(False),
                                   doMuons = cms.bool(False),
                                   doTaus = cms.bool(False),
@@ -51,7 +51,8 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doMET = cms.bool(False),
                                   doPV = cms.bool(False),
                                   doGenInfo = cms.bool(True),
-                                  doTrigger = cms.bool(False)
+                                  doTrigger = cms.bool(False),
+                                  doLumiInfo = cms.bool(False)
                                   
                                   
 )
