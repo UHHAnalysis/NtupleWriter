@@ -133,6 +133,15 @@ class Electron : public Particle{
     gsfTrack_vy=0;
     gsfTrack_vz=0;
     passconversionveto=false;
+    dEtaIn=0;
+    dPhiIn=0;
+    sigmaIEtaIEta=0;
+    HoverE=0;
+    fbrem=0;
+    EoverPIn=0;
+    EcalEnergy=0;
+    mvaTrigV0=0;
+    mvaNonTrigV0=0;
   };
 
   ~Electron(){
@@ -158,8 +167,20 @@ class Electron : public Particle{
   float gsfTrack_vz;
   float gsfTrack_dxy_vertex(const float point_x, const float point_y){ 
     return ( - (gsfTrack_vx-point_x) * gsfTrack_py + (gsfTrack_vy-point_y) * gsfTrack_px ) / sqrt(gsfTrack_px*gsfTrack_px+gsfTrack_py*gsfTrack_py);  
-  }; 
+  };
+  float gsfTrack_dz_vertex(const float point_x, const float point_y, const float point_z){ 
+    return (gsfTrack_vz-point_z) - ((gsfTrack_vx-point_x)*gsfTrack_px+(gsfTrack_vy-point_y)*gsfTrack_py)/(gsfTrack_px*gsfTrack_px+gsfTrack_py*gsfTrack_py) * gsfTrack_pz; 
+  }
   bool passconversionveto;
+  float dEtaIn;
+  float dPhiIn; 
+  float sigmaIEtaIEta; 
+  float HoverE;
+  float fbrem;
+  float EoverPIn;
+  float EcalEnergy;
+  float mvaTrigV0;
+  float mvaNonTrigV0;
 
 };
 
@@ -192,6 +213,8 @@ class Muon : public Particle{
     innerTrack_d0Error=0; 
     innerTrack_numberOfValidHits=0;  
     innerTrack_numberOfLostHits=0;  
+    innerTrack_trackerLayersWithMeasurement=0;
+    innerTrack_numberOfValidPixelHits=0;
     outerTrack_chi2=0;
     outerTrack_ndof=0;
     outerTrack_d0=0;
@@ -228,6 +251,8 @@ class Muon : public Particle{
   float innerTrack_d0Error; 
   unsigned short innerTrack_numberOfValidHits;  
   unsigned short innerTrack_numberOfLostHits;  
+  unsigned short innerTrack_trackerLayersWithMeasurement;
+  unsigned short innerTrack_numberOfValidPixelHits;
   float outerTrack_chi2;
   float outerTrack_ndof;
   float outerTrack_d0;

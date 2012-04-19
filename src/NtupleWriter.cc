@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.9 2012/04/16 15:42:09 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.10 2012/04/18 12:53:46 peiffer Exp $
 //
 //
 
@@ -53,6 +53,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doPhotons = iConfig.getParameter<bool>("doPhotons");
   doMET = iConfig.getParameter<bool>("doMET");
   doGenInfo = iConfig.getParameter<bool>("doGenInfo");
+  doAllGenParticles = iConfig.getParameter<bool>("doAllGenParticles");
   doLumiInfo = iConfig.getParameter<bool>("doLumiInfo");
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
@@ -257,6 +258,16 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.gsfTrack_vy= pat_ele.gsfTrack()->vy();
 	 ele.gsfTrack_vz= pat_ele.gsfTrack()->vz();
 	 ele.passconversionveto = !ConversionTools::hasMatchedConversion(pat_ele,hConversions,bsp.position());
+	 ele.dEtaIn=pat_ele.deltaEtaSuperClusterTrackAtVtx();
+	 ele.dPhiIn=pat_ele.deltaPhiSuperClusterTrackAtVtx();
+	 ele.sigmaIEtaIEta=pat_ele.sigmaIetaIeta();
+	 ele.HoverE=pat_ele.hadronicOverEm();
+	 ele.fbrem=pat_ele.fbrem();
+	 ele.EoverPIn=pat_ele.eSuperClusterOverP();
+	 ele.EcalEnergy=pat_ele.ecalEnergy();
+	 ele.mvaTrigV0=pat_ele.electronID("mvaTrigV0");
+	 ele.mvaNonTrigV0=pat_ele.electronID("mvaNonTrigV0");
+
 	 eles[j].push_back(ele);
        }
      }
@@ -318,6 +329,8 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   mu.innerTrack_d0Error = innerTrack->d0Error();
 	   mu.innerTrack_numberOfValidHits = innerTrack->numberOfValidHits();
 	   mu.innerTrack_numberOfLostHits = innerTrack->numberOfLostHits();
+	   mu.innerTrack_trackerLayersWithMeasurement = innerTrack->hitPattern().trackerLayersWithMeasurement();
+	   mu.innerTrack_numberOfValidPixelHits = innerTrack->hitPattern().numberOfValidPixelHits();
 	 }
 	 else{
 	   mu.innerTrack_chi2 = 0;
@@ -326,6 +339,8 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   mu.innerTrack_d0Error = 0;
 	   mu.innerTrack_numberOfValidHits = 0;
 	   mu.innerTrack_numberOfLostHits = 0;
+	   mu.innerTrack_trackerLayersWithMeasurement = 0;
+	   mu.innerTrack_numberOfValidPixelHits = 0;
 	 }
 	 reco::TrackRef outerTrack = pat_mu.outerTrack();
 	 if(!outerTrack.isNull()){
@@ -686,7 +701,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        index++;
        
        //write out only top quarks and status 3 particles (works fine only for MadGraph)
-       if(abs(iter->pdgId())==6 || iter->status()==3){
+       if(abs(iter->pdgId())==6 || iter->status()==3 || doAllGenParticles){
 	 GenParticle genp;
 	 genp.charge = iter->charge();;
 	 genp.pt = iter->p4().pt();

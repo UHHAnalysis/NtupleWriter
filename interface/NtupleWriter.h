@@ -86,6 +86,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doMET;
       bool doPhotons;
       bool doGenInfo;
+      bool doAllGenParticles;
       bool doLumiInfo;
       bool doPV;
       bool doTrigger;
