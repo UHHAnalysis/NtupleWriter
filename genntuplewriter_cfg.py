@@ -51,6 +51,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doMET = cms.bool(False),
                                   doPV = cms.bool(False),
                                   doGenInfo = cms.bool(True),
+                                  doAllGenParticles = cms.bool(True),
                                   doTrigger = cms.bool(False),
                                   doLumiInfo = cms.bool(False)
                                   

@@ -36,7 +36,7 @@ class Particle{
 
   double deltaPhi(Particle p2){
     double deltaphi = fabs(this->phi - p2.phi);
-    if(deltaphi > PI) deltaphi = deltaphi - PI;
+    if(deltaphi > PI) deltaphi = 2* PI - deltaphi;
     return deltaphi;
   }
   double deltaR(Particle p2){
