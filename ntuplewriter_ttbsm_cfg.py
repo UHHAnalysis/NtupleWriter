@@ -350,8 +350,8 @@ process.eidCiCSequence = cms.Sequence(
     )
 
 #MVA Ele-ID
-process.load('EGamma.EGammaAnalysisTools.electronIdMVAProducer_cfi') 
-process.mvaID = cms.Sequence(  process.mvaTrigV0 + process.mvaNonTrigV0 )
+#process.load('EGamma.EGammaAnalysisTools.electronIdMVAProducer_cfi') 
+#process.mvaID = cms.Sequence(  process.mvaTrigV0 + process.mvaNonTrigV0 )
 
 for iele in [ process.patElectrons,
               process.patElectronsPFlow,
@@ -366,8 +366,8 @@ for iele in [ process.patElectrons,
             eidHyperTight2MC = cms.InputTag("eidHyperTight2MC"),
             eidHyperTight3MC = cms.InputTag("eidHyperTight3MC"),
             eidHyperTight4MC = cms.InputTag("eidHyperTight4MC"),
-	    mvaTrigV0 = cms.InputTag("mvaTrigV0"),
-	    mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0"),
+	    #mvaTrigV0 = cms.InputTag("mvaTrigV0"),
+	    #mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0"),
             )
 
 
@@ -1289,7 +1289,7 @@ if useExtraJetColls:
 
 
 process.patseq = cms.Sequence(
-	process.mvaID+
+	#process.mvaID+
 	process.scrapingVeto*
 	process.HBHENoiseFilterResultProducer*
 	#process.offlinePrimaryVerticesDAF*    
@@ -1410,12 +1410,16 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   topjet_sources = cms.vstring("goodPatJetsCATopTagPF","goodPatJetsCA8PrunedPF"),
                                   topjet_ptmin = cms.double(150.0), 
                                   topjet_etamax = cms.double(5.0),
+				  doGenTopJets = cms.bool(not useData),
+                                  gentopjet_sources = cms.vstring("caTopTagGen" ),
+                                  gentopjet_ptmin = cms.double(150.0), 
+                                  gentopjet_etamax = cms.double(5.0),
                                   met_sources =  cms.vstring("patMETs"),
                                   pv_sources = cms.vstring("goodOfflinePrimaryVertices"),
                                   trigger_prefixes = cms.vstring(#"HLT_IsoMu", "HLT_Mu",
                                                                  #"HLT_L1SingleMu", "HLT_L2Mu",
                                                                  #"HLT_Ele",
-                                                                 "HLT_Quatsch",
+                                                                 "HLT_",
                                                                  #"HLT_DoubleMu", "HLT_DoubleEle"
 	                                                         ),
                                   
@@ -1438,4 +1442,4 @@ process.maxEvents.input = 100
 process.options.wantSummary = False
 
 
-open('junk.py','w').write(process.dumpPython())
+#open('junk.py','w').write(process.dumpPython())

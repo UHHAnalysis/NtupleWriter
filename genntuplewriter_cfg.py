@@ -38,15 +38,39 @@ process.source = cms.Source("PoolSource",
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 
 
+process.load("RecoJets.Configuration.GenJetParticles_cff")
+from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
+from RecoJets.JetProducers.PFJetParameters_cfi import *
+from RecoJets.JetProducers.CaloJetParameters_cfi import *
+from RecoJets.JetProducers.AnomalousCellParameters_cfi import *
+from RecoJets.JetProducers.CATopJetParameters_cfi import *
+from RecoJets.JetProducers.GenJetParameters_cfi import *
+
+process.caTopTagGen = cms.EDProducer(
+    "CATopJetProducer",
+    GenJetParameters.clone(src = cms.InputTag("genParticlesForJetsNoNu"),
+                           doAreaFastjet = cms.bool(False),
+                           doRhoFastjet = cms.bool(False)),
+    AnomalousCellParameters,
+    CATopJetParameters,
+    jetAlgorithm = cms.string("CambridgeAachen"),
+    rParam = cms.double(0.8),
+    writeCompound = cms.bool(True)
+    )
+
 #NtupleWriter
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/genLQ.root'), 
+                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/genLQ_test.root'), 
                                   doElectrons = cms.bool(False),
                                   doMuons = cms.bool(False),
                                   doTaus = cms.bool(False),
                                   doJets = cms.bool(False),
                                   doTopJets = cms.bool(False),
+                                  doGenTopJets = cms.bool(True),
+                                  gentopjet_sources = cms.vstring("caTopTagGen" ),
+                                  gentopjet_ptmin = cms.double(150.0), 
+                                  gentopjet_etamax = cms.double(5.0),
                                   doPhotons = cms.bool(False),
                                   doMET = cms.bool(False),
                                   doPV = cms.bool(False),
@@ -58,5 +82,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   
 )
 
-process.p = cms.Path(process.MyNtuple)
+process.p = cms.Path( process.genParticlesForJetsNoNu*
+                      process.caTopTagGen*                        
+                      process.MyNtuple)
 

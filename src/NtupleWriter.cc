@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.12 2012/04/19 12:03:28 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.13 2012/04/19 14:47:13 peiffer Exp $
 //
 //
 
@@ -50,6 +50,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doMuons = iConfig.getParameter<bool>("doMuons");
   doTaus = iConfig.getParameter<bool>("doTaus"); 
   doJets = iConfig.getParameter<bool>("doJets");
+  doGenTopJets = iConfig.getParameter<bool>("doGenTopJets");  
   doPhotons = iConfig.getParameter<bool>("doPhotons");
   doMET = iConfig.getParameter<bool>("doMET");
   doGenInfo = iConfig.getParameter<bool>("doGenInfo");
@@ -109,6 +110,14 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     topjet_etamax = iConfig.getParameter<double> ("topjet_etamax");
     for(size_t j=0; j< topjet_sources.size(); ++j){  
       tr->Branch( topjet_sources[j].c_str(), "std::vector<TopJet>", &topjets[j]);
+    }
+  }
+  if(doGenTopJets){
+    gentopjet_sources = iConfig.getParameter<std::vector<std::string> >("gentopjet_sources");
+    gentopjet_ptmin = iConfig.getParameter<double> ("gentopjet_ptmin");
+    gentopjet_etamax = iConfig.getParameter<double> ("gentopjet_etamax");
+    for(size_t j=0; j< gentopjet_sources.size(); ++j){  
+      tr->Branch( gentopjet_sources[j].c_str(), "std::vector<TopJet>", &gentopjets[j]);
     }
   }
   if(doPhotons){
@@ -266,8 +275,8 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.fbrem=pat_ele.fbrem();
 	 ele.EoverPIn=pat_ele.eSuperClusterOverP();
 	 ele.EcalEnergy=pat_ele.ecalEnergy();
-	 ele.mvaTrigV0=pat_ele.electronID("mvaTrigV0");
-	 ele.mvaNonTrigV0=pat_ele.electronID("mvaNonTrigV0");
+	 //ele.mvaTrigV0=pat_ele.electronID("mvaTrigV0");
+	 //ele.mvaNonTrigV0=pat_ele.electronID("mvaNonTrigV0");
 
 	 eles[j].push_back(ele);
        }
@@ -498,6 +507,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        iEvent.getByLabel(topjet_sources[j], pat_topjets);
 
        for (unsigned int i = 0; i < pat_topjets->size(); i++) {
+ 
 	 const pat::Jet  pat_topjet =  * dynamic_cast<pat::Jet const *>(&pat_topjets->at(i));
 	 if(pat_topjet.pt() < topjet_ptmin) continue;
 	 if(fabs(pat_topjet.eta()) > topjet_etamax) continue;
@@ -554,6 +564,44 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   topjet.subjets.push_back(subjet_v4);
 	 }
 	 topjets[j].push_back(topjet);
+       }
+     }
+   }
+
+
+   // ------------- generator top jets -------------
+   if(doGenTopJets){
+     for(size_t j=0; j< gentopjet_sources.size(); ++j){
+       
+       gentopjets[j].clear();
+
+       edm::Handle<reco::BasicJetCollection> reco_gentopjets;
+       //edm::Handle<std::vector<reco::Jet> > reco_gentopjets;
+       iEvent.getByLabel(gentopjet_sources[j], reco_gentopjets);
+
+       for (unsigned int i = 0; i < reco_gentopjets->size(); i++) {
+	 
+	 const reco::BasicJet  reco_gentopjet =  reco_gentopjets->at(i);
+	 if(reco_gentopjet.pt() < gentopjet_ptmin) continue;
+	 if(fabs(reco_gentopjet.eta()) > gentopjet_etamax) continue;
+
+	 TopJet gentopjet;
+	 gentopjet.charge = reco_gentopjet.charge();
+	 gentopjet.pt = reco_gentopjet.pt();
+	 gentopjet.eta = reco_gentopjet.eta();
+	 gentopjet.phi = reco_gentopjet.phi();
+	 gentopjet.energy = reco_gentopjet.energy();
+	 gentopjet.numberOfDaughters =reco_gentopjet.numberOfDaughters();
+
+	 for (unsigned int k = 0; k < reco_gentopjet.numberOfDaughters(); k++) {
+	   Particle subjet_v4;
+	   subjet_v4.pt = reco_gentopjet.daughter(k)->p4().pt();
+	   subjet_v4.eta = reco_gentopjet.daughter(k)->p4().eta();
+	   subjet_v4.phi = reco_gentopjet.daughter(k)->p4().phi(); 
+	   subjet_v4.energy = reco_gentopjet.daughter(k)->p4().E(); 
+	   gentopjet.subjets.push_back(subjet_v4);
+	 }
+	 gentopjets[j].push_back(gentopjet);
        }
      }
    }
@@ -739,12 +787,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 
 	 int nm=iter->numberOfMothers();
 	 int nd=iter->numberOfDaughters();
+
 	 
 	 if (nm>0) genp.mother1 = iter->motherRef(0).key();
-	 if (nm>1) genp.mother2 = iter->motherRef(nm-1).key();
+	 if (nm>1) genp.mother2 = iter->motherRef(1).key();
 	 if (nd>0) genp.daughter1 = iter->daughterRef(0).key();
-	 if (nd>1) genp.daughter2 = iter->daughterRef(nd-1).key();
-	 
+	 if (nd>1) genp.daughter2 = iter->daughterRef(1).key();
+	 //std::cout << genp.index <<"  pdgId = " << genp.pdgId << "  mo1 = " << genp.mother1 << "  mo2 = " << genp.mother2 <<"  da1 = " << genp.daughter1 << "  da2 = " << genp.daughter2 <<std::endl;
 	 genps.push_back(genp);
        }
      }
