@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.13 2012/04/19 14:47:13 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.14 2012/04/23 14:26:23 peiffer Exp $
 //
 //
 
@@ -221,6 +221,99 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      beamspot_x0 = bsp.x0();
      beamspot_y0 = bsp.y0();
      beamspot_z0 = bsp.z0();
+   }
+
+ // ------------- generator info -------------
+   
+   if(doGenInfo){
+     genInfo.weights.clear();
+     genInfo.binningValues.clear();
+     genps.clear();
+
+     edm::Handle<GenEventInfoProduct> genEventInfoProduct;
+     iEvent.getByLabel("generator", genEventInfoProduct);
+     const GenEventInfoProduct& genEventInfo = *(genEventInfoProduct.product());
+  
+     genInfo.binningValues = genEventInfo.binningValues();
+     genInfo.weights = genEventInfo.weights();
+     genInfo.alphaQCD = genEventInfo.alphaQCD();
+     genInfo.alphaQED = genEventInfo.alphaQED();
+     genInfo.qScale = genEventInfo.qScale();
+     
+     const gen::PdfInfo* pdf = genEventInfo.pdf();
+     if(pdf){
+       genInfo.pdf_id1=pdf->id.first;
+       genInfo.pdf_id2=pdf->id.second; 
+       genInfo.pdf_x1=pdf->x.first;
+       genInfo.pdf_x2=pdf->x.second;
+       genInfo.pdf_scalePDF=pdf->scalePDF;
+       genInfo.pdf_xPDF1=pdf->xPDF.first;
+       genInfo.pdf_xPDF2=pdf->xPDF.second; 
+     }
+     else{
+       genInfo.pdf_id1=-999;
+       genInfo.pdf_id2=-999; 
+       genInfo.pdf_x1=-999;
+       genInfo.pdf_x2=-999;
+       genInfo.pdf_scalePDF=-999;
+       genInfo.pdf_xPDF1=-999;
+       genInfo.pdf_xPDF2=-999;
+     }
+
+     edm::Handle<std::vector<PileupSummaryInfo> > pus;
+     iEvent.getByLabel(edm::InputTag("addPileupInfo"), pus);
+     genInfo.pileup_NumInteractions_intime=0;
+     genInfo.pileup_NumInteractions_ootbefore=0;
+     genInfo.pileup_NumInteractions_ootafter=0;
+     if(pus.isValid()){
+       genInfo.pileup_TrueNumInteractions = (float) pus->at(0).getTrueNumInteractions();
+       for(size_t i=0; i<pus->size(); ++i){
+	 if(pus->at(i).getBunchCrossing() == 0) // intime pileup
+	    genInfo.pileup_NumInteractions_intime += pus->at(i).getPU_NumInteractions();
+	 else if(pus->at(i).getBunchCrossing() == -1){ // oot pileup before
+	    genInfo.pileup_NumInteractions_ootbefore += pus->at(i).getPU_NumInteractions();
+	 }
+	 else if(pus->at(i).getBunchCrossing() == +1){ // oot pileup before
+	   genInfo.pileup_NumInteractions_ootafter += pus->at(i).getPU_NumInteractions();
+	 }
+       }
+     }
+
+     edm::Handle<reco::GenParticleCollection> genPartColl;
+     iEvent.getByLabel(edm::InputTag("genParticles"), genPartColl);
+     int index=-1;
+     for(reco::GenParticleCollection::const_iterator iter = genPartColl->begin(); iter != genPartColl->end(); ++ iter){
+       index++;
+       
+       //write out only top quarks and status 3 particles (works fine only for MadGraph)
+       if(abs(iter->pdgId())==6 || iter->status()==3 || doAllGenParticles){
+	 GenParticle genp;
+	 genp.charge = iter->charge();;
+	 genp.pt = iter->p4().pt();
+	 genp.eta = iter->p4().eta();
+	 genp.phi = iter->p4().phi();
+	 genp.energy = iter->p4().E();
+	 genp.index =index;
+	 genp.status = iter->status();
+	 genp.pdgId = iter->pdgId();
+
+	 genp.mother1=-1;
+	 genp.mother2=-1;
+	 genp.daughter1=-1;
+	 genp.daughter2=-1;
+	 
+	 int nm=iter->numberOfMothers();
+	 int nd=iter->numberOfDaughters();
+
+	 
+	 if (nm>0) genp.mother1 = iter->motherRef(0).key();
+	 if (nm>1) genp.mother2 = iter->motherRef(1).key();
+	 if (nd>0) genp.daughter1 = iter->daughterRef(0).key();
+	 if (nd>1) genp.daughter2 = iter->daughterRef(1).key();
+	 //std::cout << genp.index <<"  pdgId = " << genp.pdgId << "  mo1 = " << genp.mother1 << "  mo2 = " << genp.mother2 <<"  da1 = " << genp.daughter1 << "  da2 = " << genp.daughter2 <<std::endl;
+	 genps.push_back(genp);
+       }
+     }
    }
 
    // ------------- electrons -------------   
@@ -489,8 +582,19 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   jet.genjet_eta = genj->eta();
 	   jet.genjet_phi = genj->phi();
 	   jet.genjet_energy = genj->energy();
+	   if(doAllGenParticles){
+	     std::vector<const reco::GenParticle * > jetgenps = genj->getGenConstituents();
+	     for(unsigned int l = 0; l<jetgenps.size(); ++l){
+	       for(unsigned int k=0; k< genps.size(); ++k){
+		 if(jetgenps[l]->pt() == genps[k].pt && jetgenps[l]->pdgId() == genps[k].pdgId){
+		   jet.genparticles_indices.push_back(genps[k].index);
+		 }
+	       }
+	     }
+	     if(jet.genparticles_indices.size()!= jetgenps.size())
+	       std::cout << "WARNING: Found only " << jet.genparticles_indices.size() << " from " << jetgenps.size() << " gen particles of this jet"<<std::endl;
+	   }
 	 }
-
 	 jets[j].push_back(jet);
        }
      }
@@ -553,6 +657,18 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   topjet.genjet_eta = genj->eta();
 	   topjet.genjet_phi = genj->phi();
 	   topjet.genjet_energy = genj->energy();
+	   if(doAllGenParticles){
+	     std::vector<const reco::GenParticle * > jetgenps = genj->getGenConstituents();
+	     for(unsigned int l = 0; l<jetgenps.size(); ++l){
+	       for(unsigned int k=0; k< genps.size(); ++k){
+		 if(jetgenps[l]->pt() == genps[k].pt && jetgenps[l]->pdgId() == genps[k].pdgId){
+		   topjet.genparticles_indices.push_back(genps[k].index);
+		 }
+	       }
+	     }
+	     if(topjet.genparticles_indices.size()!= jetgenps.size())
+	       std::cout << "WARNING: Found only " << topjet.genparticles_indices.size() << " from " << jetgenps.size() << " gen particles of this topjet"<<std::endl;
+	   }
 	 }
 
 	 for (unsigned int k = 0; k < pat_topjet.numberOfDaughters(); k++) {
@@ -706,99 +822,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      newrun=false;
    }
 
-   // ------------- generator info -------------
-   
-   if(doGenInfo){
-     genInfo.weights.clear();
-     genInfo.binningValues.clear();
-     genps.clear();
-
-     edm::Handle<GenEventInfoProduct> genEventInfoProduct;
-     iEvent.getByLabel("generator", genEventInfoProduct);
-     const GenEventInfoProduct& genEventInfo = *(genEventInfoProduct.product());
-  
-     genInfo.binningValues = genEventInfo.binningValues();
-     genInfo.weights = genEventInfo.weights();
-     genInfo.alphaQCD = genEventInfo.alphaQCD();
-     genInfo.alphaQED = genEventInfo.alphaQED();
-     genInfo.qScale = genEventInfo.qScale();
-     
-     const gen::PdfInfo* pdf = genEventInfo.pdf();
-     if(pdf){
-       genInfo.pdf_id1=pdf->id.first;
-       genInfo.pdf_id2=pdf->id.second; 
-       genInfo.pdf_x1=pdf->x.first;
-       genInfo.pdf_x2=pdf->x.second;
-       genInfo.pdf_scalePDF=pdf->scalePDF;
-       genInfo.pdf_xPDF1=pdf->xPDF.first;
-       genInfo.pdf_xPDF2=pdf->xPDF.second; 
-     }
-     else{
-       genInfo.pdf_id1=-999;
-       genInfo.pdf_id2=-999; 
-       genInfo.pdf_x1=-999;
-       genInfo.pdf_x2=-999;
-       genInfo.pdf_scalePDF=-999;
-       genInfo.pdf_xPDF1=-999;
-       genInfo.pdf_xPDF2=-999;
-     }
-
-     edm::Handle<std::vector<PileupSummaryInfo> > pus;
-     iEvent.getByLabel(edm::InputTag("addPileupInfo"), pus);
-     genInfo.pileup_NumInteractions_intime=0;
-     genInfo.pileup_NumInteractions_ootbefore=0;
-     genInfo.pileup_NumInteractions_ootafter=0;
-     if(pus.isValid()){
-       genInfo.pileup_TrueNumInteractions = (float) pus->at(0).getTrueNumInteractions();
-       for(size_t i=0; i<pus->size(); ++i){
-	 if(pus->at(i).getBunchCrossing() == 0) // intime pileup
-	    genInfo.pileup_NumInteractions_intime += pus->at(i).getPU_NumInteractions();
-	 else if(pus->at(i).getBunchCrossing() == -1){ // oot pileup before
-	    genInfo.pileup_NumInteractions_ootbefore += pus->at(i).getPU_NumInteractions();
-	 }
-	 else if(pus->at(i).getBunchCrossing() == +1){ // oot pileup before
-	   genInfo.pileup_NumInteractions_ootafter += pus->at(i).getPU_NumInteractions();
-	 }
-       }
-     }
-
-     edm::Handle<reco::GenParticleCollection> genPartColl;
-     iEvent.getByLabel(edm::InputTag("genParticles"), genPartColl);
-     int index=-1;
-     for(reco::GenParticleCollection::const_iterator iter = genPartColl->begin(); iter != genPartColl->end(); ++ iter){
-       index++;
-       
-       //write out only top quarks and status 3 particles (works fine only for MadGraph)
-       if(abs(iter->pdgId())==6 || iter->status()==3 || doAllGenParticles){
-	 GenParticle genp;
-	 genp.charge = iter->charge();;
-	 genp.pt = iter->p4().pt();
-	 genp.eta = iter->p4().eta();
-	 genp.phi = iter->p4().phi();
-	 genp.energy = iter->p4().E();
-	 genp.index =index;
-	 genp.status = iter->status();
-	 genp.pdgId = iter->pdgId();
-
-	 genp.mother1=-1;
-	 genp.mother2=-1;
-	 genp.daughter1=-1;
-	 genp.daughter2=-1;
-	 
-	 int nm=iter->numberOfMothers();
-	 int nd=iter->numberOfDaughters();
-
-	 
-	 if (nm>0) genp.mother1 = iter->motherRef(0).key();
-	 if (nm>1) genp.mother2 = iter->motherRef(1).key();
-	 if (nd>0) genp.daughter1 = iter->daughterRef(0).key();
-	 if (nd>1) genp.daughter2 = iter->daughterRef(1).key();
-	 //std::cout << genp.index <<"  pdgId = " << genp.pdgId << "  mo1 = " << genp.mother1 << "  mo2 = " << genp.mother2 <<"  da1 = " << genp.daughter1 << "  da2 = " << genp.daughter2 <<std::endl;
-	 genps.push_back(genp);
-       }
-     }
-
-   }
 
    tr->Fill();
    if(doLumiInfo)

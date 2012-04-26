@@ -84,6 +84,7 @@ class Jet : public Particle{
      genjet_eta=0;
      genjet_phi=0;
      genjet_energy=0;
+     genparticles_indices.clear();
   };
 
   ~Jet(){
@@ -124,6 +125,7 @@ class Jet : public Particle{
     v4.SetE(genjet_energy);
     return v4;
   };
+  std::vector<unsigned int> genparticles_indices;
 
 };
 
