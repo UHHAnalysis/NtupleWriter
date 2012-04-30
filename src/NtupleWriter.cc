@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.14 2012/04/23 14:26:23 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.15 2012/04/26 08:38:39 peiffer Exp $
 //
 //
 
@@ -147,8 +147,8 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     //tr->Branch("triggerResults","std::map<std::string, bool>",&triggerResults);
     tr->Branch("triggerNames", "std::vector<std::string>", &triggerNames);  
     tr->Branch("triggerResults", "std::vector<bool>", &triggerResults);
-    tr->Branch("L1_prescale", "std::vector<int>", &L1_prescale);
-    tr->Branch("HLT_prescale", "std::vector<int>", &HLT_prescale);
+    //tr->Branch("L1_prescale", "std::vector<int>", &L1_prescale);
+    //tr->Branch("HLT_prescale", "std::vector<int>", &HLT_prescale);
   }
   newrun = true;
 }
@@ -791,8 +791,8 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      
      triggerResults.clear();
      triggerNames.clear();
-     L1_prescale.clear();
-     HLT_prescale.clear();
+//      L1_prescale.clear();
+//      HLT_prescale.clear();
      
      edm::Service<edm::service::TriggerNamesService> tns;
      std::vector<std::string> triggerNames_all;
@@ -809,12 +809,12 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //triggerResults.insert(std::pair<std::string, bool>(triggerNames[i],trig.accept(i)));
        triggerResults.push_back(trig.accept(i));
        if(newrun) triggerNames.push_back(triggerNames_all[i]);
-       if(isRealData){
-	 std::pair<int, int> pre=hlt_cfg.prescaleValues(iEvent, iSetup, triggerNames_all[i]);
-	 L1_prescale.push_back(pre.first);
-	 HLT_prescale.push_back(pre.second);
-	 //std::cout <<  triggerNames_all[i] << " " << pre.first << " " <<pre.second << "   " << hlt_cfg.prescaleValue(iEvent, iSetup, triggerNames_all[i]) << std::endl;
-       }
+//        if(isRealData){
+// 	 std::pair<int, int> pre=hlt_cfg.prescaleValues(iEvent, iSetup, triggerNames_all[i]);
+// 	 L1_prescale.push_back(pre.first);
+// 	 HLT_prescale.push_back(pre.second);
+// 	 //std::cout <<  triggerNames_all[i] << " " << pre.first << " " <<pre.second << "   " << hlt_cfg.prescaleValue(iEvent, iSetup, triggerNames_all[i]) << std::endl;
+//        }
      }
      //    for(std::map<std::string, bool>::const_iterator iter = triggerResults.begin(); iter!=triggerResults.end(); iter++){
      //      std::cout << (*iter).first << "   " << (*iter).second << std::endl;

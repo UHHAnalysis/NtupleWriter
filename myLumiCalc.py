@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #usage: ./myLumiCalc.py -i /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions12/8TeV/Prompt/Cert_190456-190688_8TeV_PromptReco_Collisions12_JSON.txt lumibyls -b stable -o Out.root
-
+#or: ./myLumiCalc.py -i /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions12/8TeV/Prompt/Cert_190456-191859_8TeV_PromptReco_Collisions12_JSON.txt lumibyls -b stable --hltpath "HLT_PFJet320_*" -o Out.root
 
 VERSION='2.00'
 import os,sys,time,re
@@ -46,6 +46,77 @@ def parseInputFiles(inputfilename,dbrunlist,optaction):
         else:
             selectedrunlsInDB[runinfile]=runlsbyfile[runinfile]
     return (selectedrunlsInDB,resultlines)
+
+def toROOTLSEffective(lumidata,filename,resultlines,scalefactor,isverbose):
+
+    gROOT.ProcessLine(\
+       "struct MyStruct{\
+        Int_t runnr;\
+        Int_t luminosityBlock;\
+        TString HLTpath;\
+        TString L1bit;\
+        Double_t intgRecLumi;\
+        Int_t HLTpresc;\
+        Int_t L1presc;\
+        };")
+    from ROOT import MyStruct
+    
+    ofile = TFile(filename,"RECREATE")
+    tr = TTree("AnalysisTree","AnalysisTree")
+    
+    s = MyStruct()
+
+    tr.Branch('run',AddressOf(s,'runnr'),'runnr/I')
+    tr.Branch('luminosityBlock',AddressOf(s,'luminosityBlock'),'luminosityBlock/I')
+    tr.Branch('HLTpath','std::string',AddressOf(s,'HLTpath'))
+    tr.Branch('L1bit','std::string',AddressOf(s,'L1bit'))   
+    tr.Branch('intgRecLumi',AddressOf(s,'intgRecLumi'),'intgRecLumi/D')   
+    tr.Branch('HLTpresc',AddressOf(s,'HLTpresc'),'HLTpresc/I')
+    tr.Branch('L1presc',AddressOf(s,'L1presc'),'L1presc/I') 
+    
+    #'''
+    #input:  {run:[lumilsnum(0),cmslsnum(1),timestamp(2),beamstatus(3),beamenergy(4),deliveredlumi(5),recordedlumi(6),calibratedlumierror(7),{hltpath:[l1name,l1prescale,hltprescale,efflumi]},bxdata,beamdata]}
+    #'''
+    #result=[]#[run,ls,hltpath,l1bitname,hltpresc,l1presc,efflumi]
+    for run in sorted(lumidata):#loop over runs
+        rundata=lumidata[run]
+        if rundata is None:
+            continue
+        for lsdata in rundata:
+            efflumiDict=lsdata[8]# this ls has no such path?
+            if not efflumiDict:
+                continue
+            cmslsnum=lsdata[1]
+            recorded=lsdata[6]
+            if not recorded:
+                recorded=0.0
+            for hltpathname in sorted(efflumiDict):
+                pathdata=efflumiDict[hltpathname]
+                l1name=pathdata[0]
+                if l1name is None:
+                    l1name='n/a'
+                else:
+                    l1name=l1name.replace('"','')
+                l1prescale=pathdata[1]
+                hltprescale=pathdata[2]
+                lumival=pathdata[3]
+                #if lumival is not None:
+                      #result.append([run,cmslsnum,hltpathname,l1name,hltprescale,l1prescale,recorded*scalefactor,lumival*scalefactor])
+                s.luminosityBlock = cmslsnum
+                s.runnr = run
+                s.HLTpath = hltpathname
+                s.L1bit = l1name
+                s.intgRecLumi = recorded*scalefactor
+                s.HLTpresc = hltprescale
+                s.L1presc = l1prescale
+                tr.Fill()
+                
+                #else:
+                      #result.append([run,cmslsnum,hltpathname,l1name,hltprescale,l1prescale,recorded*scalefactor,'n/a'])
+
+
+    ofile.Write()
+    ofile.Close()     
 
     
 def ToROOTLumiByLS(lumidata,filename,resultlines,scalefactor,isverbose):
@@ -376,7 +447,7 @@ if __name__ == '__main__':
            if not options.outputfile:
                lumiReport.toScreenLSEffective(result,iresults,options.scalefactor,options.verbose)
            else:
-               lumiReport.toCSVLSEffective(result,options.outputfile,iresults,options.scalefactor,options.verbose)
+               toROOTLSEffective(result,options.outputfile,iresults,options.scalefactor,options.verbose)
     if options.action == 'recorded':#recorded actually means effective because it needs to show all the hltpaths...
        session.transaction().start(True)
        hltname=options.hltpath

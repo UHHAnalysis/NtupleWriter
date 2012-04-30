@@ -149,8 +149,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       //std::map<std::string, bool> triggerResults;
       std::vector<std::string> triggerNames;
       std::vector<bool> triggerResults;
-      std::vector<int> L1_prescale;
-      std::vector<int> HLT_prescale;
+/*       std::vector<int> L1_prescale; */
+/*       std::vector<int> HLT_prescale; */
       
       HLTConfigProvider hlt_cfg;
       bool newrun;
