@@ -8,8 +8,9 @@ import os,sys,time,re
 import coral
 from RecoLuminosity.LumiDB import sessionManager,lumiTime,inputFilesetParser,csvSelectionParser,selectionParser,csvReporter,argparse,CommonUtil,lumiCalcAPI,lumiReport,lumiCorrections
 
-from ROOT import gROOT, TFile, TTree, AddressOf
- 
+from ROOT import gROOT, TFile, TTree, AddressOf, TString, std
+from ctypes import *
+
 gROOT.Reset()
 
 class RegexValidator(object):
@@ -51,13 +52,11 @@ def toROOTLSEffective(lumidata,filename,resultlines,scalefactor,isverbose):
 
     gROOT.ProcessLine(\
        "struct MyStruct{\
-        Int_t runnr;\
-        Int_t luminosityBlock;\
-        TString HLTpath;\
-        TString L1bit;\
+        UInt_t runnr;\
+        UInt_t luminosityBlock;\
         Double_t intgRecLumi;\
-        Int_t HLTpresc;\
-        Int_t L1presc;\
+        Double_t HLTpresc;\
+        Double_t L1presc;\
         };")
     from ROOT import MyStruct
     
@@ -66,14 +65,17 @@ def toROOTLSEffective(lumidata,filename,resultlines,scalefactor,isverbose):
     
     s = MyStruct()
 
-    tr.Branch('run',AddressOf(s,'runnr'),'runnr/I')
-    tr.Branch('luminosityBlock',AddressOf(s,'luminosityBlock'),'luminosityBlock/I')
-    tr.Branch('HLTpath','std::string',AddressOf(s,'HLTpath'))
-    tr.Branch('L1bit','std::string',AddressOf(s,'L1bit'))   
-    tr.Branch('intgRecLumi',AddressOf(s,'intgRecLumi'),'intgRecLumi/D')   
-    tr.Branch('HLTpresc',AddressOf(s,'HLTpresc'),'HLTpresc/I')
-    tr.Branch('L1presc',AddressOf(s,'L1presc'),'L1presc/I') 
+    hltpath = TString("")
     
+
+    tr.Branch('run',AddressOf(s,'runnr'),'runnr/i')
+    tr.Branch('luminosityBlock',AddressOf(s,'luminosityBlock'),'luminosityBlock/i')
+    tr.Branch("HLTpath","TString",hltpath)
+    #tr.Branch('L1bit','TString',l1bit)
+    tr.Branch('intgRecLumi',AddressOf(s,'intgRecLumi'),'intgRecLumi/D')   
+    tr.Branch('HLTpresc',AddressOf(s,'HLTpresc'),'HLTpresc/D')
+    tr.Branch('L1presc',AddressOf(s,'L1presc'),'L1presc/D')
+
     #'''
     #input:  {run:[lumilsnum(0),cmslsnum(1),timestamp(2),beamstatus(3),beamenergy(4),deliveredlumi(5),recordedlumi(6),calibratedlumierror(7),{hltpath:[l1name,l1prescale,hltprescale,efflumi]},bxdata,beamdata]}
     #'''
@@ -104,11 +106,14 @@ def toROOTLSEffective(lumidata,filename,resultlines,scalefactor,isverbose):
                       #result.append([run,cmslsnum,hltpathname,l1name,hltprescale,l1prescale,recorded*scalefactor,lumival*scalefactor])
                 s.luminosityBlock = cmslsnum
                 s.runnr = run
-                s.HLTpath = hltpathname
-                s.L1bit = l1name
+                #l1bit = string("L1Test")
                 s.intgRecLumi = recorded*scalefactor
                 s.HLTpresc = hltprescale
                 s.L1presc = l1prescale
+                hltpath = TString(hltpathname)
+                hltpath = TString(hltpathname)
+                #print hltpath
+                #print '  ', hltpathname
                 tr.Fill()
                 
                 #else:
@@ -123,8 +128,8 @@ def ToROOTLumiByLS(lumidata,filename,resultlines,scalefactor,isverbose):
 
     gROOT.ProcessLine(\
        "struct MyStruct{\
-        Int_t runnr;\
-        Int_t luminosityBlock;\
+        UInt_t runnr;\
+        UInt_t luminosityBlock;\
         Double_t intgRecLumi;\
         Double_t intgDelLumi;\
         };")
@@ -135,8 +140,8 @@ def ToROOTLumiByLS(lumidata,filename,resultlines,scalefactor,isverbose):
     
     s = MyStruct()
 
-    tr.Branch('run',AddressOf(s,'runnr'),'runnr/I')
-    tr.Branch('luminosityBlock',AddressOf(s,'luminosityBlock'),'luminosityBlock/I')
+    tr.Branch('run',AddressOf(s,'runnr'),'runnr/i')
+    tr.Branch('luminosityBlock',AddressOf(s,'luminosityBlock'),'luminosityBlock/i')
     tr.Branch('intgDelLumi',AddressOf(s,'intgDelLumi'),'intgDelLumi/D')
     tr.Branch('intgRecLumi',AddressOf(s,'intgRecLumi'),'intgRecLumi/D')   
     

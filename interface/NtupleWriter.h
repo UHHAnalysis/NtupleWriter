@@ -92,8 +92,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doPV;
       bool doTrigger;
 
-      unsigned int run;
-      unsigned int luminosityBlock;
+      int run;
+      int luminosityBlock;
       int event;
       bool isRealData;
       bool HBHENoiseFilterResult;
