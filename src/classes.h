@@ -1,4 +1,15 @@
-#include  "UHHAnalysis/NtupleWriter/interface/Objects.h"
+#include "UHHAnalysis/NtupleWriter/Objects/Particle.h"
+#include "UHHAnalysis/NtupleWriter/Objects/Jet.h"
+#include "UHHAnalysis/NtupleWriter/Objects/Electron.h"
+#include "UHHAnalysis/NtupleWriter/Objects/Muon.h"
+#include "UHHAnalysis/NtupleWriter/Objects/Tau.h"
+#include "UHHAnalysis/NtupleWriter/Objects/Photon.h"
+#include "UHHAnalysis/NtupleWriter/Objects/MET.h"
+#include "UHHAnalysis/NtupleWriter/Objects/PrimaryVertex.h"
+#include "UHHAnalysis/NtupleWriter/Objects/TopJet.h"
+#include "UHHAnalysis/NtupleWriter/Objects/GenInfo.h"
+#include "UHHAnalysis/NtupleWriter/Objects/GenParticle.h"
+
 #include <vector>
 
 namespace {

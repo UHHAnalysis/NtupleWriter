@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.15 2012/04/26 08:38:39 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.16 2012/04/30 09:01:16 peiffer Exp $
 //
 //
 
@@ -66,7 +66,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   tr->Branch("event",&event);
   tr->Branch("luminosityBlock",&luminosityBlock);
   tr->Branch("isRealData",&isRealData);
-  tr->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult);
+  //tr->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult);
   if(doLumiInfo){
     tr->Branch("intgRecLumi",&intgRecLumi);
     tr->Branch("intgDelLumi",&intgDelLumi);
@@ -181,12 +181,12 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    luminosityBlock = iEvent.luminosityBlock();
    isRealData      = iEvent.isRealData();
 
-   if(isRealData){
-     edm::Handle<bool> bool_handle;
-     iEvent.getByLabel(edm::InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),bool_handle);
-     HBHENoiseFilterResult = *(bool_handle.product());
-   }
-   else HBHENoiseFilterResult = false;
+//    if(isRealData){
+//      edm::Handle<bool> bool_handle;
+//      iEvent.getByLabel(edm::InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),bool_handle);
+//      HBHENoiseFilterResult = *(bool_handle.product());
+//    }
+//    else HBHENoiseFilterResult = false;
 
    // ------------- primary vertices and beamspot  -------------
 
@@ -202,13 +202,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 reco::Vertex reco_pv = reco_pvs[i];
 
 	 PrimaryVertex pv;
-	 pv.x =  reco_pv.x();
-	 pv.y =  reco_pv.y();
-	 pv.z =  reco_pv.z();
-	 pv.nTracks =  reco_pv.nTracks();
-	 //pv.isValid =  reco_pv.isValid();
-	 pv.chi2 =  reco_pv.chi2();
-	 pv.ndof =  reco_pv.ndof();	 
+	 pv.set_x( reco_pv.x());
+	 pv.set_y( reco_pv.y());
+	 pv.set_z( reco_pv.z());
+	 pv.set_nTracks( reco_pv.nTracks());
+	 //pv.set_isValid( reco_pv.isValid());
+	 pv.set_chi2( reco_pv.chi2());
+	 pv.set_ndof( reco_pv.ndof());	 
 
 	 pvs[j].push_back(pv);
        }
@@ -226,55 +226,59 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  // ------------- generator info -------------
    
    if(doGenInfo){
-     genInfo.weights.clear();
-     genInfo.binningValues.clear();
+     genInfo.clear_weights();
+     genInfo.clear_binningValues();
      genps.clear();
 
      edm::Handle<GenEventInfoProduct> genEventInfoProduct;
      iEvent.getByLabel("generator", genEventInfoProduct);
      const GenEventInfoProduct& genEventInfo = *(genEventInfoProduct.product());
   
-     genInfo.binningValues = genEventInfo.binningValues();
-     genInfo.weights = genEventInfo.weights();
-     genInfo.alphaQCD = genEventInfo.alphaQCD();
-     genInfo.alphaQED = genEventInfo.alphaQED();
-     genInfo.qScale = genEventInfo.qScale();
+     for(unsigned int k=0; k<genEventInfo.binningValues().size();++k){
+       genInfo.add_binningValue(genEventInfo.binningValues().at(k));
+     }
+     for(unsigned int k=0; k<genEventInfo.weights().size();++k){
+       genInfo.add_weight(genEventInfo.weights().at(k));
+     }
+     genInfo.set_alphaQCD(genEventInfo.alphaQCD());
+     genInfo.set_alphaQED(genEventInfo.alphaQED());
+     genInfo.set_qScale(genEventInfo.qScale());
      
      const gen::PdfInfo* pdf = genEventInfo.pdf();
      if(pdf){
-       genInfo.pdf_id1=pdf->id.first;
-       genInfo.pdf_id2=pdf->id.second; 
-       genInfo.pdf_x1=pdf->x.first;
-       genInfo.pdf_x2=pdf->x.second;
-       genInfo.pdf_scalePDF=pdf->scalePDF;
-       genInfo.pdf_xPDF1=pdf->xPDF.first;
-       genInfo.pdf_xPDF2=pdf->xPDF.second; 
+       genInfo.set_pdf_id1(pdf->id.first);
+       genInfo.set_pdf_id2(pdf->id.second); 
+       genInfo.set_pdf_x1(pdf->x.first);
+       genInfo.set_pdf_x2(pdf->x.second);
+       genInfo.set_pdf_scalePDF(pdf->scalePDF);
+       genInfo.set_pdf_xPDF1(pdf->xPDF.first);
+       genInfo.set_pdf_xPDF2(pdf->xPDF.second); 
      }
      else{
-       genInfo.pdf_id1=-999;
-       genInfo.pdf_id2=-999; 
-       genInfo.pdf_x1=-999;
-       genInfo.pdf_x2=-999;
-       genInfo.pdf_scalePDF=-999;
-       genInfo.pdf_xPDF1=-999;
-       genInfo.pdf_xPDF2=-999;
+       genInfo.set_pdf_id1(-999);
+       genInfo.set_pdf_id2(-999); 
+       genInfo.set_pdf_x1(-999);
+       genInfo.set_pdf_x2(-999);
+       genInfo.set_pdf_scalePDF(-999);
+       genInfo.set_pdf_xPDF1(-999);
+       genInfo.set_pdf_xPDF2(-999);
      }
 
      edm::Handle<std::vector<PileupSummaryInfo> > pus;
      iEvent.getByLabel(edm::InputTag("addPileupInfo"), pus);
-     genInfo.pileup_NumInteractions_intime=0;
-     genInfo.pileup_NumInteractions_ootbefore=0;
-     genInfo.pileup_NumInteractions_ootafter=0;
+     genInfo.set_pileup_NumInteractions_intime(0);
+     genInfo.set_pileup_NumInteractions_ootbefore(0);
+     genInfo.set_pileup_NumInteractions_ootafter(0);
      if(pus.isValid()){
-       genInfo.pileup_TrueNumInteractions = (float) pus->at(0).getTrueNumInteractions();
+       genInfo.set_pileup_TrueNumInteractions ( (float) pus->at(0).getTrueNumInteractions());
        for(size_t i=0; i<pus->size(); ++i){
 	 if(pus->at(i).getBunchCrossing() == 0) // intime pileup
-	    genInfo.pileup_NumInteractions_intime += pus->at(i).getPU_NumInteractions();
+	   genInfo.set_pileup_NumInteractions_intime( genInfo.pileup_NumInteractions_intime() + pus->at(i).getPU_NumInteractions());
 	 else if(pus->at(i).getBunchCrossing() == -1){ // oot pileup before
-	    genInfo.pileup_NumInteractions_ootbefore += pus->at(i).getPU_NumInteractions();
+	   genInfo.set_pileup_NumInteractions_ootbefore( genInfo.pileup_NumInteractions_ootbefore() + pus->at(i).getPU_NumInteractions());
 	 }
 	 else if(pus->at(i).getBunchCrossing() == +1){ // oot pileup before
-	   genInfo.pileup_NumInteractions_ootafter += pus->at(i).getPU_NumInteractions();
+	   genInfo.set_pileup_NumInteractions_ootafter( genInfo.pileup_NumInteractions_ootafter() + pus->at(i).getPU_NumInteractions());
 	 }
        }
      }
@@ -288,29 +292,29 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //write out only top quarks and status 3 particles (works fine only for MadGraph)
        if(abs(iter->pdgId())==6 || iter->status()==3 || doAllGenParticles){
 	 GenParticle genp;
-	 genp.charge = iter->charge();;
-	 genp.pt = iter->p4().pt();
-	 genp.eta = iter->p4().eta();
-	 genp.phi = iter->p4().phi();
-	 genp.energy = iter->p4().E();
-	 genp.index =index;
-	 genp.status = iter->status();
-	 genp.pdgId = iter->pdgId();
+	 genp.set_charge(iter->charge());
+	 genp.set_pt(iter->p4().pt());
+	 genp.set_eta(iter->p4().eta());
+	 genp.set_phi(iter->p4().phi());
+	 genp.set_energy(iter->p4().E());
+	 genp.set_index(index);
+	 genp.set_status( iter->status());
+	 genp.set_pdgId( iter->pdgId());
 
-	 genp.mother1=-1;
-	 genp.mother2=-1;
-	 genp.daughter1=-1;
-	 genp.daughter2=-1;
+	 genp.set_mother1(-1);
+	 genp.set_mother2(-1);
+	 genp.set_daughter1(-1);
+	 genp.set_daughter2(-1);
 	 
 	 int nm=iter->numberOfMothers();
 	 int nd=iter->numberOfDaughters();
 
 	 
-	 if (nm>0) genp.mother1 = iter->motherRef(0).key();
-	 if (nm>1) genp.mother2 = iter->motherRef(1).key();
-	 if (nd>0) genp.daughter1 = iter->daughterRef(0).key();
-	 if (nd>1) genp.daughter2 = iter->daughterRef(1).key();
-	 //std::cout << genp.index <<"  pdgId = " << genp.pdgId << "  mo1 = " << genp.mother1 << "  mo2 = " << genp.mother2 <<"  da1 = " << genp.daughter1 << "  da2 = " << genp.daughter2 <<std::endl;
+	 if (nm>0) genp.set_mother1( iter->motherRef(0).key());
+	 if (nm>1) genp.set_mother2( iter->motherRef(1).key());
+	 if (nd>0) genp.set_daughter1( iter->daughterRef(0).key());
+	 if (nd>1) genp.set_daughter2( iter->daughterRef(1).key());
+
 	 genps.push_back(genp);
        }
      }
@@ -336,40 +340,40 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 pat::Electron pat_ele = pat_electrons[i];
 	 Electron ele;
 	 
-	 ele.charge =  pat_ele.charge();
-	 ele.pt =  pat_ele.pt();
-	 ele.eta =  pat_ele.eta();
-	 ele.phi =  pat_ele.phi();
-	 ele.energy =  pat_ele.energy();
-	 ele.vertex_x = pat_ele.vertex().x();
-	 ele.vertex_y = pat_ele.vertex().y();
-	 ele.vertex_z = pat_ele.vertex().z();
-	 ele.supercluster_eta = pat_ele.superCluster()->eta();
-	 ele.supercluster_phi = pat_ele.superCluster()->phi();
-	 ele.dB = pat_ele.dB();
-	 //ele.particleIso = pat_ele.particleIso();
-	 ele.neutralHadronIso = pat_ele.neutralHadronIso();
-	 ele.chargedHadronIso = pat_ele.chargedHadronIso();
-	 ele.trackIso = pat_ele.trackIso();
-	 ele.photonIso = pat_ele.photonIso();
-	 ele.puChargedHadronIso = pat_ele.puChargedHadronIso();
-	 ele.gsfTrack_trackerExpectedHitsInner_numberOfLostHits = pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
-	 ele.gsfTrack_px= pat_ele.gsfTrack()->px();
-	 ele.gsfTrack_py= pat_ele.gsfTrack()->py();
-	 ele.gsfTrack_pz= pat_ele.gsfTrack()->pz();
-	 ele.gsfTrack_vx= pat_ele.gsfTrack()->vx();
-	 ele.gsfTrack_vy= pat_ele.gsfTrack()->vy();
-	 ele.gsfTrack_vz= pat_ele.gsfTrack()->vz();
-	 ele.passconversionveto = !ConversionTools::hasMatchedConversion(pat_ele,hConversions,bsp.position());
-	 ele.dEtaIn=pat_ele.deltaEtaSuperClusterTrackAtVtx();
-	 ele.dPhiIn=pat_ele.deltaPhiSuperClusterTrackAtVtx();
-	 ele.sigmaIEtaIEta=pat_ele.sigmaIetaIeta();
-	 ele.HoverE=pat_ele.hadronicOverEm();
-	 ele.fbrem=pat_ele.fbrem();
-	 ele.EoverPIn=pat_ele.eSuperClusterOverP();
-	 ele.EcalEnergy=pat_ele.ecalEnergy();
-	 //ele.mvaTrigV0=pat_ele.electronID("mvaTrigV0");
-	 //ele.mvaNonTrigV0=pat_ele.electronID("mvaNonTrigV0");
+	 ele.set_charge( pat_ele.charge());
+	 ele.set_pt( pat_ele.pt());
+	 ele.set_eta( pat_ele.eta());
+	 ele.set_phi( pat_ele.phi());
+	 ele.set_energy( pat_ele.energy());
+	 ele.set_vertex_x(pat_ele.vertex().x());
+	 ele.set_vertex_y(pat_ele.vertex().y());
+	 ele.set_vertex_z(pat_ele.vertex().z());
+	 ele.set_supercluster_eta(pat_ele.superCluster()->eta());
+	 ele.set_supercluster_phi(pat_ele.superCluster()->phi());
+	 ele.set_dB(pat_ele.dB());
+	 //ele.set_particleIso(pat_ele.particleIso());
+	 ele.set_neutralHadronIso(pat_ele.neutralHadronIso());
+	 ele.set_chargedHadronIso(pat_ele.chargedHadronIso());
+	 ele.set_trackIso(pat_ele.trackIso());
+	 ele.set_photonIso(pat_ele.photonIso());
+	 ele.set_puChargedHadronIso(pat_ele.puChargedHadronIso());
+	 ele.set_gsfTrack_trackerExpectedHitsInner_numberOfLostHits(pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits());
+	 ele.set_gsfTrack_px( pat_ele.gsfTrack()->px());
+	 ele.set_gsfTrack_py( pat_ele.gsfTrack()->py());
+	 ele.set_gsfTrack_pz( pat_ele.gsfTrack()->pz());
+	 ele.set_gsfTrack_vx( pat_ele.gsfTrack()->vx());
+	 ele.set_gsfTrack_vy( pat_ele.gsfTrack()->vy());
+	 ele.set_gsfTrack_vz( pat_ele.gsfTrack()->vz());
+	 ele.set_passconversionveto(!ConversionTools::hasMatchedConversion(pat_ele,hConversions,bsp.position()));
+	 ele.set_dEtaIn(pat_ele.deltaEtaSuperClusterTrackAtVtx());
+	 ele.set_dPhiIn(pat_ele.deltaPhiSuperClusterTrackAtVtx());
+	 ele.set_sigmaIEtaIEta(pat_ele.sigmaIetaIeta());
+	 ele.set_HoverE(pat_ele.hadronicOverEm());
+	 ele.set_fbrem(pat_ele.fbrem());
+	 ele.set_EoverPIn(pat_ele.eSuperClusterOverP());
+	 ele.set_EcalEnergy(pat_ele.ecalEnergy());
+	 //ele.set_mvaTrigV0(pat_ele.electronID("mvaTrigV0"));
+	 //ele.set_mvaNonTrigV0(pat_ele.electronID("mvaNonTrigV0"));
 
 	 eles[j].push_back(ele);
        }
@@ -389,79 +393,79 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 pat::Muon pat_mu = pat_muons[i];
 
 	 Muon mu;
-	 mu.charge =  pat_mu.charge();
-	 mu.pt =  pat_mu.pt();
-	 mu.eta =  pat_mu.eta();
-	 mu.phi =  pat_mu.phi();
-	 mu.energy =  pat_mu.energy();
-	 mu.vertex_x = pat_mu.vertex().x();
-	 mu.vertex_y = pat_mu.vertex().y();
-	 mu.vertex_z = pat_mu.vertex().z();
-	 mu.dB = pat_mu.dB();
-	 //mu.particleIso = pat_mu.particleIso();
-	 mu.neutralHadronIso = pat_mu.neutralHadronIso();
-	 mu.chargedHadronIso = pat_mu.chargedHadronIso();
-	 mu.trackIso = pat_mu.trackIso();
-	 mu.photonIso = pat_mu.photonIso();
-	 mu.puChargedHadronIso = pat_mu.puChargedHadronIso();
-	 mu.isGlobalMuon = pat_mu.isGlobalMuon();
-	 mu.isStandAloneMuon = pat_mu.isStandAloneMuon();
-	 mu.isTrackerMuon = pat_mu.isTrackerMuon();
-	 mu.numberOfMatchedStations = pat_mu.numberOfMatchedStations();
+	 mu.set_charge( pat_mu.charge());
+	 mu.set_pt( pat_mu.pt());
+	 mu.set_eta( pat_mu.eta());
+	 mu.set_phi( pat_mu.phi());
+	 mu.set_energy( pat_mu.energy());
+	 mu.set_vertex_x ( pat_mu.vertex().x());
+	 mu.set_vertex_y ( pat_mu.vertex().y());
+	 mu.set_vertex_z ( pat_mu.vertex().z());
+	 mu.set_dB ( pat_mu.dB());
+	 //mu.particleIso ( pat_mu.particleIso());
+	 mu.set_neutralHadronIso ( pat_mu.neutralHadronIso());
+	 mu.set_chargedHadronIso ( pat_mu.chargedHadronIso());
+	 mu.set_trackIso ( pat_mu.trackIso());
+	 mu.set_photonIso ( pat_mu.photonIso());
+	 mu.set_puChargedHadronIso ( pat_mu.puChargedHadronIso());
+	 mu.set_isGlobalMuon ( pat_mu.isGlobalMuon());
+	 mu.set_isStandAloneMuon ( pat_mu.isStandAloneMuon());
+	 mu.set_isTrackerMuon ( pat_mu.isTrackerMuon());
+	 mu.set_numberOfMatchedStations ( pat_mu.numberOfMatchedStations());
 	 reco::TrackRef globalTrack = pat_mu.globalTrack();
 	 if(!globalTrack.isNull()){
-	   mu.globalTrack_chi2 = globalTrack->chi2();
-	   mu.globalTrack_ndof = globalTrack->ndof();
-	   mu.globalTrack_d0 = globalTrack->d0();	 
-	   mu.globalTrack_d0Error = globalTrack->d0Error();
-	   mu.globalTrack_numberOfValidHits = globalTrack->numberOfValidHits();
-	   mu.globalTrack_numberOfLostHits = globalTrack->numberOfLostHits();
+	   mu.set_globalTrack_chi2 ( globalTrack->chi2());
+	   mu.set_globalTrack_ndof ( globalTrack->ndof());
+	   mu.set_globalTrack_d0 ( globalTrack->d0());	 
+	   mu.set_globalTrack_d0Error ( globalTrack->d0Error());
+	   mu.set_globalTrack_numberOfValidHits ( globalTrack->numberOfValidHits());
+	   mu.set_globalTrack_numberOfLostHits ( globalTrack->numberOfLostHits());
 	 }
 	 else{
-	   mu.globalTrack_chi2 = 0;
-	   mu.globalTrack_ndof = 0;
-	   mu.globalTrack_d0 = 0;
-	   mu.globalTrack_d0Error = 0;
-	   mu.globalTrack_numberOfValidHits = 0;
-	   mu.globalTrack_numberOfLostHits = 0;
+	   mu.set_globalTrack_chi2 ( 0);
+	   mu.set_globalTrack_ndof ( 0);
+	   mu.set_globalTrack_d0 ( 0);
+	   mu.set_globalTrack_d0Error ( 0);
+	   mu.set_globalTrack_numberOfValidHits ( 0);
+	   mu.set_globalTrack_numberOfLostHits ( 0);
 	 }
 	 reco::TrackRef innerTrack = pat_mu.innerTrack();
 	 if(!innerTrack.isNull()){
-	   mu.innerTrack_chi2 = innerTrack->chi2();
-	   mu.innerTrack_ndof = innerTrack->ndof();
-	   mu.innerTrack_d0 = innerTrack->d0();	 
-	   mu.innerTrack_d0Error = innerTrack->d0Error();
-	   mu.innerTrack_numberOfValidHits = innerTrack->numberOfValidHits();
-	   mu.innerTrack_numberOfLostHits = innerTrack->numberOfLostHits();
-	   mu.innerTrack_trackerLayersWithMeasurement = innerTrack->hitPattern().trackerLayersWithMeasurement();
-	   mu.innerTrack_numberOfValidPixelHits = innerTrack->hitPattern().numberOfValidPixelHits();
+	   mu.set_innerTrack_chi2 ( innerTrack->chi2());
+	   mu.set_innerTrack_ndof ( innerTrack->ndof());
+	   mu.set_innerTrack_d0 ( innerTrack->d0());	 
+	   mu.set_innerTrack_d0Error ( innerTrack->d0Error());
+	   mu.set_innerTrack_numberOfValidHits ( innerTrack->numberOfValidHits());
+	   mu.set_innerTrack_numberOfLostHits ( innerTrack->numberOfLostHits());
+	   mu.set_innerTrack_trackerLayersWithMeasurement ( innerTrack->hitPattern().trackerLayersWithMeasurement());
+	   mu.set_innerTrack_numberOfValidPixelHits ( innerTrack->hitPattern().numberOfValidPixelHits());
 	 }
 	 else{
-	   mu.innerTrack_chi2 = 0;
-	   mu.innerTrack_ndof = 0;
-	   mu.innerTrack_d0 = 0;
-	   mu.innerTrack_d0Error = 0;
-	   mu.innerTrack_numberOfValidHits = 0;
-	   mu.innerTrack_numberOfLostHits = 0;
-	   mu.innerTrack_trackerLayersWithMeasurement = 0;
-	   mu.innerTrack_numberOfValidPixelHits = 0;
+	   mu.set_innerTrack_chi2 ( 0);
+	   mu.set_innerTrack_ndof ( 0);
+	   mu.set_innerTrack_d0 ( 0);
+	   mu.set_innerTrack_d0Error ( 0);
+	   mu.set_innerTrack_numberOfValidHits ( 0);
+	   mu.set_innerTrack_numberOfLostHits ( 0);
+	   mu.set_innerTrack_trackerLayersWithMeasurement ( 0);
+	   mu.set_innerTrack_numberOfValidPixelHits ( 0);
 	 }
 	 reco::TrackRef outerTrack = pat_mu.outerTrack();
 	 if(!outerTrack.isNull()){
-	   mu.outerTrack_chi2 = outerTrack->chi2();
-	   mu.outerTrack_ndof = outerTrack->ndof();
-	   mu.outerTrack_d0 = outerTrack->d0();	 
-	   mu.outerTrack_d0Error = outerTrack->d0Error();
-	   mu.outerTrack_numberOfValidHits = outerTrack->numberOfValidHits();
-	   mu.outerTrack_numberOfLostHits = outerTrack->numberOfLostHits();
+	   mu.set_outerTrack_chi2 ( outerTrack->chi2());
+	   mu.set_outerTrack_ndof ( outerTrack->ndof());
+	   mu.set_outerTrack_d0 ( outerTrack->d0());	 
+	   mu.set_outerTrack_d0Error ( outerTrack->d0Error());
+	   mu.set_outerTrack_numberOfValidHits ( outerTrack->numberOfValidHits());
+	   mu.set_outerTrack_numberOfLostHits ( outerTrack->numberOfLostHits());
 	 } 
 	 else{
-	   mu.outerTrack_chi2 = 0;
-	   mu.outerTrack_ndof = 0;
-	   mu.outerTrack_d0 = 0;
-	   mu.outerTrack_d0Error = 0;
-	   mu.outerTrack_numberOfValidHits = 0;
-	   mu.outerTrack_numberOfLostHits = 0;
+	   mu.set_outerTrack_chi2 ( 0);
+	   mu.set_outerTrack_ndof ( 0);
+	   mu.set_outerTrack_d0 ( 0);
+	   mu.set_outerTrack_d0Error ( 0);
+	   mu.set_outerTrack_numberOfValidHits ( 0);
+	   mu.set_outerTrack_numberOfLostHits ( 0);
 	 }
 
 	 mus[j].push_back(mu);
@@ -485,34 +489,34 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 if(fabs(pat_tau.eta()) > tau_etamax) continue;
 
 	 Tau tau;
-	 tau.charge =  pat_tau.charge();
-	 tau.pt =  pat_tau.pt();
-	 tau.eta =  pat_tau.eta();
-	 tau.phi =  pat_tau.phi();
-	 tau.energy =  pat_tau.energy();
-	 tau.decayModeFinding = pat_tau.tauID("decayModeFinding")>0.5; 
-	 tau.byVLooseCombinedIsolationDeltaBetaCorr  = pat_tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5; 
-	 tau.byLooseCombinedIsolationDeltaBetaCorr = pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5; 
-	 tau.byMediumCombinedIsolationDeltaBetaCorr = pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5; 
-	 tau.byTightCombinedIsolationDeltaBetaCorr = pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5; 
-	 tau.againstElectronLoose  = pat_tau.tauID("againstElectronLoose")>0.5; 
-	 tau.againstElectronMedium = pat_tau.tauID("againstElectronMedium")>0.5; 
-	 tau.againstElectronTight = pat_tau.tauID("againstElectronTight")>0.5; 
-	 tau.againstElectronMVA  = pat_tau.tauID("againstElectronMVA")>0.5; 
-	 tau.againstMuonLoose = pat_tau.tauID("againstMuonLoose")>0.5; 
-	 tau.againstMuonMedium = pat_tau.tauID("againstMuonMedium")>0.5; 
-	 tau.againstMuonTight = pat_tau.tauID("againstMuonTight")>0.5; 
+	 tau.set_charge( pat_tau.charge());
+	 tau.set_pt( pat_tau.pt());
+	 tau.set_eta( pat_tau.eta());
+	 tau.set_phi( pat_tau.phi());
+	 tau.set_energy( pat_tau.energy());
+	 tau.set_decayModeFinding ( pat_tau.tauID("decayModeFinding")>0.5); 
+	 tau.set_byVLooseCombinedIsolationDeltaBetaCorr  ( pat_tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5); 
+	 tau.set_byLooseCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5); 
+	 tau.set_byMediumCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5); 
+	 tau.set_byTightCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5); 
+	 tau.set_againstElectronLoose  ( pat_tau.tauID("againstElectronLoose")>0.5); 
+	 tau.set_againstElectronMedium ( pat_tau.tauID("againstElectronMedium")>0.5); 
+	 tau.set_againstElectronTight ( pat_tau.tauID("againstElectronTight")>0.5); 
+	 tau.set_againstElectronMVA  ( pat_tau.tauID("againstElectronMVA")>0.5); 
+	 tau.set_againstMuonLoose ( pat_tau.tauID("againstMuonLoose")>0.5); 
+	 tau.set_againstMuonMedium ( pat_tau.tauID("againstMuonMedium")>0.5); 
+	 tau.set_againstMuonTight ( pat_tau.tauID("againstMuonTight")>0.5); 
 
 	 reco::PFCandidateRef leadPFCand = pat_tau.leadPFCand();
 	 if(!leadPFCand.isNull()){
-	   tau.leadPFCand_px = leadPFCand->px();
-	   tau.leadPFCand_py = leadPFCand->py();
-	   tau.leadPFCand_pz = leadPFCand->pz();
+	   tau.set_leadPFCand_px ( leadPFCand->px());
+	   tau.set_leadPFCand_py ( leadPFCand->py());
+	   tau.set_leadPFCand_pz ( leadPFCand->pz());
 	 }
 	 else{
-	   tau.leadPFCand_px = 0;
-	   tau.leadPFCand_py = 0;
-	   tau.leadPFCand_pz = 0;
+	   tau.set_leadPFCand_px ( 0);
+	   tau.set_leadPFCand_py ( 0);
+	   tau.set_leadPFCand_pz ( 0);
 	 }
 	 taus[j].push_back(tau);
        }
@@ -540,59 +544,60 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	 }
 
 	 Jet jet;
-	 jet.charge = pat_jet.charge();
-	 jet.pt = pat_jet.pt();
-	 jet.eta = pat_jet.eta();
-	 jet.phi = pat_jet.phi();
-	 jet.energy = pat_jet.energy();
-	 jet.numberOfDaughters =pat_jet.numberOfDaughters();
+	 jet.set_charge(pat_jet.charge());
+	 jet.set_pt(pat_jet.pt());
+	 jet.set_eta(pat_jet.eta());
+	 jet.set_phi(pat_jet.phi());
+	 jet.set_energy(pat_jet.energy());
+	 jet.set_numberOfDaughters (pat_jet.numberOfDaughters());
 	 const reco::TrackRefVector&  jettracks = pat_jet.associatedTracks();
-	 jet.nTracks = jettracks.size();
-	 jet.jetArea = pat_jet.jetArea();
-	 jet.pileup = pat_jet.pileup();
+	 jet.set_nTracks ( jettracks.size());
+	 jet.set_jetArea(pat_jet.jetArea());
+	 jet.set_pileup(pat_jet.pileup());
 	 if(pat_jet.isPFJet()){
-	   jet.neutralEmEnergyFraction =pat_jet.neutralEmEnergyFraction();
-	   jet.neutralHadronEnergyFraction =pat_jet.neutralHadronEnergyFraction();
-	   jet.chargedEmEnergyFraction =pat_jet.chargedEmEnergyFraction();
-	   jet.chargedHadronEnergyFraction =pat_jet.chargedHadronEnergyFraction();
-	   jet.muonEnergyFraction =pat_jet.muonEnergyFraction();
-	   jet.photonEnergyFraction =pat_jet.photonEnergyFraction();
-	   jet.chargedMultiplicity =pat_jet.chargedMultiplicity();
-	   jet.neutralMultiplicity =pat_jet.neutralMultiplicity();
-	   jet.muonMultiplicity =pat_jet.muonMultiplicity();
-	   jet.electronMultiplicity =pat_jet.electronMultiplicity();
-	   jet.photonMultiplicity =pat_jet.photonMultiplicity();
+	   jet.set_neutralEmEnergyFraction (pat_jet.neutralEmEnergyFraction());
+	   jet.set_neutralHadronEnergyFraction (pat_jet.neutralHadronEnergyFraction());
+	   jet.set_chargedEmEnergyFraction (pat_jet.chargedEmEnergyFraction());
+	   jet.set_chargedHadronEnergyFraction (pat_jet.chargedHadronEnergyFraction());
+	   jet.set_muonEnergyFraction (pat_jet.muonEnergyFraction());
+	   jet.set_photonEnergyFraction (pat_jet.photonEnergyFraction());
+	   jet.set_chargedMultiplicity (pat_jet.chargedMultiplicity());
+	   jet.set_neutralMultiplicity (pat_jet.neutralMultiplicity());
+	   jet.set_muonMultiplicity (pat_jet.muonMultiplicity());
+	   jet.set_electronMultiplicity (pat_jet.electronMultiplicity());
+	   jet.set_photonMultiplicity (pat_jet.photonMultiplicity());
 	 }
 
 	 jecUnc->setJetEta(pat_jet.eta());
 	 jecUnc->setJetPt(pat_jet.pt());
-	 jet.JEC_uncertainty = jecUnc->getUncertainty(true);
-	 jet.JEC_factor_raw = pat_jet.jecFactor("Uncorrected");
+	 jet.set_JEC_uncertainty(jecUnc->getUncertainty(true));
+	 jet.set_JEC_factor_raw(pat_jet.jecFactor("Uncorrected"));
 
-	 jet.btag_simpleSecondaryVertexHighEff=pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
-	 jet.btag_simpleSecondaryVertexHighPur=pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
-	 jet.btag_combinedSecondaryVertex=pat_jet.bDiscriminator("combinedSecondaryVertexBJetTags");
-	 jet.btag_combinedSecondaryVertexMVA=pat_jet.bDiscriminator("combinedSecondaryVertexMVABJetTags");
-	 jet.btag_jetBProbability=pat_jet.bDiscriminator("jetBProbabilityBJetTags");
-	 jet.btag_jetProbability=pat_jet.bDiscriminator("jetProbabilityBJetTags");
+	 jet.set_btag_simpleSecondaryVertexHighEff(pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
+	 jet.set_btag_simpleSecondaryVertexHighPur(pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags"));
+	 jet.set_btag_combinedSecondaryVertex(pat_jet.bDiscriminator("combinedSecondaryVertexBJetTags"));
+	 jet.set_btag_combinedSecondaryVertexMVA(pat_jet.bDiscriminator("combinedSecondaryVertexMVABJetTags"));
+	 jet.set_btag_jetBProbability(pat_jet.bDiscriminator("jetBProbabilityBJetTags"));
+	 jet.set_btag_jetProbability(pat_jet.bDiscriminator("jetProbabilityBJetTags"));
 
 	 const reco::GenJet *genj = pat_jet.genJet();
 	 if(genj){
-	   jet.genjet_pt = genj->pt();
-	   jet.genjet_eta = genj->eta();
-	   jet.genjet_phi = genj->phi();
-	   jet.genjet_energy = genj->energy();
+	   jet.set_genjet_pt(genj->pt());
+	   jet.set_genjet_eta(genj->eta());
+	   jet.set_genjet_phi(genj->phi());
+	   jet.set_genjet_energy(genj->energy());
 	   if(doAllGenParticles){
 	     std::vector<const reco::GenParticle * > jetgenps = genj->getGenConstituents();
 	     for(unsigned int l = 0; l<jetgenps.size(); ++l){
 	       for(unsigned int k=0; k< genps.size(); ++k){
-		 if(jetgenps[l]->pt() == genps[k].pt && jetgenps[l]->pdgId() == genps[k].pdgId){
-		   jet.genparticles_indices.push_back(genps[k].index);
+		 if(jetgenps[l]->pt() == genps[k].pt() && jetgenps[l]->pdgId() == genps[k].pdgId()){
+		   jet.add_genparticles_index(genps[k].index());
+		   break;
 		 }
 	       }
 	     }
-	     if(jet.genparticles_indices.size()!= jetgenps.size())
-	       std::cout << "WARNING: Found only " << jet.genparticles_indices.size() << " from " << jetgenps.size() << " gen particles of this jet"<<std::endl;
+	     if(jet.genparticles_indices().size()!= jetgenps.size())
+	       std::cout << "WARNING: Found only " << jet.genparticles_indices().size() << " from " << jetgenps.size() << " gen particles of this jet"<<std::endl;
 	   }
 	 }
 	 jets[j].push_back(jet);
@@ -617,67 +622,68 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 if(fabs(pat_topjet.eta()) > topjet_etamax) continue;
 
 	 TopJet topjet;
-	 topjet.charge = pat_topjet.charge();
-	 topjet.pt = pat_topjet.pt();
-	 topjet.eta = pat_topjet.eta();
-	 topjet.phi = pat_topjet.phi();
-	 topjet.energy = pat_topjet.energy();
-	 topjet.numberOfDaughters =pat_topjet.numberOfDaughters();
+	 topjet.set_charge(pat_topjet.charge());
+	 topjet.set_pt(pat_topjet.pt());
+	 topjet.set_eta(pat_topjet.eta());
+	 topjet.set_phi(pat_topjet.phi());
+	 topjet.set_energy(pat_topjet.energy());
+	 topjet.set_numberOfDaughters(pat_topjet.numberOfDaughters());
 	 const reco::TrackRefVector&  topjettracks = pat_topjet.associatedTracks();
-	 topjet.nTracks = topjettracks.size();
-	 topjet.jetArea = pat_topjet.jetArea();
-	 topjet.pileup = pat_topjet.pileup();
-//  	 topjet.neutralEmEnergyFraction =pat_topjet.neutralEmEnergyFraction();
-//  	 topjet.neutralHadronEnergyFraction =pat_topjet.neutralHadronEnergyFraction();
-//  	 topjet.chargedEmEnergyFraction =pat_topjet.chargedEmEnergyFraction();
-//  	 topjet.chargedHadronEnergyFraction =pat_topjet.chargedHadronEnergyFraction();
-//  	 topjet.muonEnergyFraction =pat_topjet.muonEnergyFraction();
-//  	 topjet.photonEnergyFraction =pat_topjet.photonEnergyFraction();
-// 	 topjet.chargedMultiplicity =pat_topjet.chargedMultiplicity();
-// 	 topjet.neutralMultiplicity =pat_topjet.neutralMultiplicity();
-// 	 topjet.muonMultiplicity =pat_topjet.muonMultiplicity();
-// 	 topjet.electronMultiplicity =pat_topjet.electronMultiplicity();
-// 	 topjet.photonMultiplicity =pat_topjet.photonMultiplicity();
+	 topjet.set_nTracks( topjettracks.size());
+	 topjet.set_jetArea( pat_topjet.jetArea());
+	 topjet.set_pileup( pat_topjet.pileup());
+//  	 topjet.set_neutralEmEnergyFraction(pat_topjet.neutralEmEnergyFraction());
+//  	 topjet.set_neutralHadronEnergyFraction(pat_topjet.neutralHadronEnergyFraction());
+//  	 topjet.set_chargedEmEnergyFraction(pat_topjet.chargedEmEnergyFraction());
+//  	 topjet.set_chargedHadronEnergyFraction(pat_topjet.chargedHadronEnergyFraction());
+//  	 topjet.set_muonEnergyFraction(pat_topjet.muonEnergyFraction());
+//  	 topjet.set_photonEnergyFraction(pat_topjet.photonEnergyFraction());
+// 	 topjet.set_chargedMultiplicity(pat_topjet.chargedMultiplicity());
+// 	 topjet.set_neutralMultiplicity(pat_topjet.neutralMultiplicity());
+// 	 topjet.set_muonMultiplicity(pat_topjet.muonMultiplicity());
+// 	 topjet.set_electronMultiplicity(pat_topjet.electronMultiplicity());
+// 	 topjet.set_photonMultiplicity(pat_topjet.photonMultiplicity());
 
 	 jecUnc->setJetEta(pat_topjet.eta());
 	 jecUnc->setJetPt(pat_topjet.pt());
-	 topjet.JEC_uncertainty = jecUnc->getUncertainty(true);
-	 topjet.JEC_factor_raw = pat_topjet.jecFactor("Uncorrected");
+	 topjet.set_JEC_uncertainty( jecUnc->getUncertainty(true));
+	 topjet.set_JEC_factor_raw( pat_topjet.jecFactor("Uncorrected"));
 
-	 topjet.btag_simpleSecondaryVertexHighEff=pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
-	 topjet.btag_simpleSecondaryVertexHighPur=pat_topjet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
-	 topjet.btag_combinedSecondaryVertex=pat_topjet.bDiscriminator("combinedSecondaryVertexBJetTags");
-	 topjet.btag_combinedSecondaryVertexMVA=pat_topjet.bDiscriminator("combinedSecondaryVertexMVABJetTags");
-	 topjet.btag_jetBProbability=pat_topjet.bDiscriminator("jetBProbabilityBJetTags");
-	 topjet.btag_jetProbability=pat_topjet.bDiscriminator("jetProbabilityBJetTags");
+	 topjet.set_btag_simpleSecondaryVertexHighEff(pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
+	 topjet.set_btag_simpleSecondaryVertexHighPur(pat_topjet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags"));
+	 topjet.set_btag_combinedSecondaryVertex(pat_topjet.bDiscriminator("combinedSecondaryVertexBJetTags"));
+	 topjet.set_btag_combinedSecondaryVertexMVA(pat_topjet.bDiscriminator("combinedSecondaryVertexMVABJetTags"));
+	 topjet.set_btag_jetBProbability(pat_topjet.bDiscriminator("jetBProbabilityBJetTags"));
+	 topjet.set_btag_jetProbability(pat_topjet.bDiscriminator("jetProbabilityBJetTags"));
 
 	 const reco::GenJet *genj = pat_topjet.genJet();
 	 if(genj){
-	   topjet.genjet_pt = genj->pt();
-	   topjet.genjet_eta = genj->eta();
-	   topjet.genjet_phi = genj->phi();
-	   topjet.genjet_energy = genj->energy();
+	   topjet.set_genjet_pt ( genj->pt());
+	   topjet.set_genjet_eta ( genj->eta());
+	   topjet.set_genjet_phi ( genj->phi());
+	   topjet.set_genjet_energy ( genj->energy());
 	   if(doAllGenParticles){
 	     std::vector<const reco::GenParticle * > jetgenps = genj->getGenConstituents();
 	     for(unsigned int l = 0; l<jetgenps.size(); ++l){
 	       for(unsigned int k=0; k< genps.size(); ++k){
-		 if(jetgenps[l]->pt() == genps[k].pt && jetgenps[l]->pdgId() == genps[k].pdgId){
-		   topjet.genparticles_indices.push_back(genps[k].index);
+		 if(jetgenps[l]->pt() == genps[k].pt() && jetgenps[l]->pdgId() == genps[k].pdgId()){
+		   topjet.add_genparticles_index(genps[k].index());
+		   break;
 		 }
 	       }
 	     }
-	     if(topjet.genparticles_indices.size()!= jetgenps.size())
-	       std::cout << "WARNING: Found only " << topjet.genparticles_indices.size() << " from " << jetgenps.size() << " gen particles of this topjet"<<std::endl;
+	     if(topjet.genparticles_indices().size()!= jetgenps.size())
+	       std::cout << "WARNING: Found only " << topjet.genparticles_indices().size() << " from " << jetgenps.size() << " gen particles of this topjet"<<std::endl;
 	   }
 	 }
 
 	 for (unsigned int k = 0; k < pat_topjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
-	   subjet_v4.pt = pat_topjet.daughter(k)->p4().pt();
-	   subjet_v4.eta = pat_topjet.daughter(k)->p4().eta();
-	   subjet_v4.phi = pat_topjet.daughter(k)->p4().phi(); 
-	   subjet_v4.energy = pat_topjet.daughter(k)->p4().E(); 
-	   topjet.subjets.push_back(subjet_v4);
+	   subjet_v4.set_pt(pat_topjet.daughter(k)->p4().pt());
+	   subjet_v4.set_eta(pat_topjet.daughter(k)->p4().eta());
+	   subjet_v4.set_phi(pat_topjet.daughter(k)->p4().phi()); 
+	   subjet_v4.set_energy(pat_topjet.daughter(k)->p4().E()); 
+	   topjet.add_subjet(subjet_v4);
 	 }
 	 topjets[j].push_back(topjet);
        }
@@ -702,20 +708,20 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 if(fabs(reco_gentopjet.eta()) > gentopjet_etamax) continue;
 
 	 TopJet gentopjet;
-	 gentopjet.charge = reco_gentopjet.charge();
-	 gentopjet.pt = reco_gentopjet.pt();
-	 gentopjet.eta = reco_gentopjet.eta();
-	 gentopjet.phi = reco_gentopjet.phi();
-	 gentopjet.energy = reco_gentopjet.energy();
-	 gentopjet.numberOfDaughters =reco_gentopjet.numberOfDaughters();
+	 gentopjet.set_charge(reco_gentopjet.charge());
+	 gentopjet.set_pt(reco_gentopjet.pt());
+	 gentopjet.set_eta(reco_gentopjet.eta());
+	 gentopjet.set_phi(reco_gentopjet.phi());
+	 gentopjet.set_energy(reco_gentopjet.energy());
+	 gentopjet.set_numberOfDaughters(reco_gentopjet.numberOfDaughters());
 
 	 for (unsigned int k = 0; k < reco_gentopjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
-	   subjet_v4.pt = reco_gentopjet.daughter(k)->p4().pt();
-	   subjet_v4.eta = reco_gentopjet.daughter(k)->p4().eta();
-	   subjet_v4.phi = reco_gentopjet.daughter(k)->p4().phi(); 
-	   subjet_v4.energy = reco_gentopjet.daughter(k)->p4().E(); 
-	   gentopjet.subjets.push_back(subjet_v4);
+	   subjet_v4.set_pt(reco_gentopjet.daughter(k)->p4().pt());
+	   subjet_v4.set_eta(reco_gentopjet.daughter(k)->p4().eta());
+	   subjet_v4.set_phi(reco_gentopjet.daughter(k)->p4().phi()); 
+	   subjet_v4.set_energy(reco_gentopjet.daughter(k)->p4().E()); 
+	   gentopjet.add_subjet(subjet_v4);
 	 }
 	 gentopjets[j].push_back(gentopjet);
        }
@@ -734,19 +740,19 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        for (unsigned int i = 0; i < pat_photons.size(); ++i) {
 	 pat::Photon pat_photon = pat_photons[i];
 	 Photon ph;
-	 ph.charge = 0;
-	 ph.pt =  pat_photon.pt();
-	 ph.eta =  pat_photon.eta();
-	 ph.phi =  pat_photon.phi();
-	 ph.energy =  pat_photon.energy();
-	 ph.vertex_x = pat_photon.vertex().x();
-	 ph.vertex_y = pat_photon.vertex().y();
-	 ph.vertex_z = pat_photon.vertex().z();
-	 ph.supercluster_eta = pat_photon.superCluster()->eta();
-	 ph.supercluster_phi = pat_photon.superCluster()->phi();
-// 	 ph.neutralHadronIso = pat_photon.neutralHadronIso();
-// 	 ph.chargedHadronIso = pat_photon.chargedHadronIso();
-	 ph.trackIso = pat_photon.trackIso();
+	 ph.set_charge(0);
+	 ph.set_pt( pat_photon.pt());
+	 ph.set_eta( pat_photon.eta());
+	 ph.set_phi( pat_photon.phi());
+	 ph.set_energy( pat_photon.energy());
+	 ph.set_vertex_x(pat_photon.vertex().x());
+	 ph.set_vertex_y(pat_photon.vertex().y());
+	 ph.set_vertex_z(pat_photon.vertex().z());
+	 ph.set_supercluster_eta(pat_photon.superCluster()->eta());
+	 ph.set_supercluster_phi(pat_photon.superCluster()->phi());
+// 	 ph.set_neutralHadronIso(pat_photon.neutralHadronIso());
+// 	 ph.set_chargedHadronIso(pat_photon.chargedHadronIso());
+	 ph.set_trackIso(pat_photon.trackIso());
 	 phs[j].push_back(ph);
        }
      }
@@ -766,9 +772,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        else{
 	 pat::MET pat_met = pat_mets[0];
 	 
-	 met[j].pt=pat_met.pt();
-	 met[j].phi=pat_met.phi();
-	 met[j].mEtSig= pat_met.mEtSig();
+	 met[j].set_pt(pat_met.pt());
+	 met[j].set_phi(pat_met.phi());
+	 met[j].set_mEtSig(pat_met.mEtSig());
        }
        
      }

@@ -10,7 +10,8 @@ from PhysicsTools.PatAlgos.tools.coreTools import *
 useData = False
 release='52x'
 hltprocess='HLT'
-writeAllGenParticles=False
+writeAllGenParticles=True
+
 writeFat=False
 writeSimpleInputs=False
 writeGenParticles=False
@@ -34,7 +35,8 @@ if not useData :
 			]    
 	elif release == '52x' :
 		process.source.fileNames = [
-			'file:/scratch/hh/lustre/cms/user/peiffer/TTbarTest52.root'
+			'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ_STEP2_RAW2DIGI_L1Reco_RECO_VALIDATION_DQM_PU_1.root'
+#			'file:/scratch/hh/lustre/cms/user/peiffer/TTbarTest52.root'
 #			'/store/relval/CMSSW_5_2_3/RelValTTbar/GEN-SIM-RECO/START52_V5-v1/0043/18E75EC8-2B7A-E111-B784-002354EF3BDE.root',
 #			'/store/relval/CMSSW_5_2_3/RelValTTbar/GEN-SIM-RECO/START52_V5-v1/0043/42F2FCD5-FF79-E111-9A09-003048FFD736.root',
 #			'/store/relval/CMSSW_5_2_3/RelValTTbar/GEN-SIM-RECO/START52_V5-v1/0043/60C59011-FE79-E111-B86A-003048FFCB9E.root',
@@ -110,28 +112,11 @@ process.scrapingVeto = cms.EDFilter("FilterOutScraping",
                                     thresh = cms.untracked.double(0.2)
                                     )
 # HB + HE noise filtering
-#process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
+process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
 ## Modify defaults setting to avoid an over-efficiency in the presence of OFT PU
-#process.HBHENoiseFilter.minIsolatedNoiseSumE = cms.double(999999.)
-#process.HBHENoiseFilter.minNumIsolatedNoiseChannels = cms.int32(999999)
-#process.HBHENoiseFilter.minIsolatedNoiseSumEt = cms.double(999999.)
-
-process.load('CommonTools/RecoAlgos/HBHENoiseFilterResultProducer_cfi')
-
-process.HBHENoiseFilterResultProducer.minRatio = cms.double(-999)
-process.HBHENoiseFilterResultProducer.maxRatio = cms.double(999)
-process.HBHENoiseFilterResultProducer.minHPDHits = cms.int32(17)
-process.HBHENoiseFilterResultProducer.minRBXHits = cms.int32(999)
-process.HBHENoiseFilterResultProducer.minHPDNoOtherHits = cms.int32(10)
-process.HBHENoiseFilterResultProducer.minZeros = cms.int32(10)
-process.HBHENoiseFilterResultProducer.minHighEHitTime = cms.double(-9999.0)
-process.HBHENoiseFilterResultProducer.maxHighEHitTime = cms.double(9999.0)
-process.HBHENoiseFilterResultProducer.maxRBXEMF = cms.double(-999.0)
-process.HBHENoiseFilterResultProducer.minNumIsolatedNoiseChannels = cms.int32(999999)
-process.HBHENoiseFilterResultProducer.minIsolatedNoiseSumE = cms.double(999999.)
-process.HBHENoiseFilterResultProducer.minIsolatedNoiseSumEt = cms.double(999999.)
-process.HBHENoiseFilterResultProducer.useTS4TS5 = cms.bool(True)
-
+process.HBHENoiseFilter.minIsolatedNoiseSumE = cms.double(999999.)
+process.HBHENoiseFilter.minNumIsolatedNoiseChannels = cms.int32(999999)
+process.HBHENoiseFilter.minIsolatedNoiseSumEt = cms.double(999999.)
 
 # switch on PAT trigger
 #from PhysicsTools.PatAlgos.tools.trigTools import switchOnTrigger
@@ -1291,7 +1276,7 @@ if useExtraJetColls:
 process.patseq = cms.Sequence(
 	#process.mvaID+
 	process.scrapingVeto*
-	process.HBHENoiseFilterResultProducer*
+	process.HBHENoiseFilter*
 	#process.offlinePrimaryVerticesDAF*    
 	process.goodOfflinePrimaryVertices*
 	process.primaryVertexFilter*
@@ -1366,7 +1351,7 @@ if writeSimpleInputs :
 	process.patseq *= cms.Sequence(process.pfInputs)
 
 if useSusyFilter :
-	process.patseq.remove( process.HBHENoiseFilterResultProducer )
+	process.patseq.remove( process.HBHENoiseFilter )
 	process.load( 'PhysicsTools.HepMCCandAlgos.modelfilter_cfi' )
 	process.modelSelector.parameterMins = [500.,    0.] # mstop, mLSP
 	process.modelSelector.parameterMaxs  = [7000., 200.] # mstop, mLSP
@@ -1385,7 +1370,7 @@ else :
 
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/Ntuples/ttbar52.root'), 
+                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/LQ1000_1.root'), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
@@ -1438,7 +1423,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(100)
 
 
 # process all the events
-process.maxEvents.input = 100
+process.maxEvents.input = -1
 process.options.wantSummary = False
 
 
