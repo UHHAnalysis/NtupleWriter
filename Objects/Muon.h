@@ -48,40 +48,40 @@ class Muon : public Particle{
   ~Muon(){
   };
 
-  float vertex_x(){return m_vertex_x;} 
-  float vertex_y(){return m_vertex_y;} 
-  float vertex_z(){return m_vertex_z;} 
-  float dB(){return m_dB;} 
-  //float particleIso(){return m_particleIso;} 
-  float neutralHadronIso(){return m_neutralHadronIso;} 
-  float chargedHadronIso(){return m_chargedHadronIso;} 
-  float trackIso(){return m_trackIso;} 
-  float photonIso(){return m_photonIso;}
-  float puChargedHadronIso(){return m_puChargedHadronIso;}
-  bool isGlobalMuon(){return m_isGlobalMuon;}
-  bool isStandAloneMuon(){return m_isStandAloneMuon;}
-  bool isTrackerMuon(){return m_isTrackerMuon;}
-  int numberOfMatchedStations(){return m_numberOfMatchedStations;}
-  float globalTrack_chi2(){return m_globalTrack_chi2;}
-  float globalTrack_ndof(){return m_globalTrack_ndof;}
-  float globalTrack_d0(){return m_globalTrack_d0;}
-  float globalTrack_d0Error(){return m_globalTrack_d0Error;} 
-  unsigned short globalTrack_numberOfValidHits(){return m_globalTrack_numberOfValidHits;}  
-  unsigned short globalTrack_numberOfLostHits(){return m_globalTrack_numberOfLostHits;}  
-  float innerTrack_chi2(){return m_innerTrack_chi2;}
-  float innerTrack_ndof(){return m_innerTrack_ndof;}
-  float innerTrack_d0(){return m_innerTrack_d0;}
-  float innerTrack_d0Error(){return m_innerTrack_d0Error;} 
-  unsigned short innerTrack_numberOfValidHits(){return m_innerTrack_numberOfValidHits;}  
-  unsigned short innerTrack_numberOfLostHits(){return m_innerTrack_numberOfLostHits;}  
-  unsigned short innerTrack_trackerLayersWithMeasurement(){return m_innerTrack_trackerLayersWithMeasurement;}
-  unsigned short innerTrack_numberOfValidPixelHits(){return m_innerTrack_numberOfValidPixelHits;}
-  float outerTrack_chi2(){return m_outerTrack_chi2;}
-  float outerTrack_ndof(){return m_outerTrack_ndof;}
-  float outerTrack_d0(){return m_outerTrack_d0;}
-  float outerTrack_d0Error(){return m_outerTrack_d0Error;} 
-  unsigned short outerTrack_numberOfValidHits(){return m_outerTrack_numberOfValidHits;}  
-  unsigned short outerTrack_numberOfLostHits(){return m_outerTrack_numberOfLostHits;}  
+  float vertex_x() const{return m_vertex_x;} 
+  float vertex_y() const{return m_vertex_y;} 
+  float vertex_z() const{return m_vertex_z;} 
+  float dB() const{return m_dB;} 
+  //float particleIso() const{return m_particleIso;} 
+  float neutralHadronIso() const{return m_neutralHadronIso;} 
+  float chargedHadronIso() const{return m_chargedHadronIso;} 
+  float trackIso() const{return m_trackIso;} 
+  float photonIso() const{return m_photonIso;}
+  float puChargedHadronIso() const{return m_puChargedHadronIso;}
+  bool isGlobalMuon() const{return m_isGlobalMuon;}
+  bool isStandAloneMuon() const{return m_isStandAloneMuon;}
+  bool isTrackerMuon() const{return m_isTrackerMuon;}
+  int numberOfMatchedStations() const{return m_numberOfMatchedStations;}
+  float globalTrack_chi2() const{return m_globalTrack_chi2;}
+  float globalTrack_ndof() const{return m_globalTrack_ndof;}
+  float globalTrack_d0() const{return m_globalTrack_d0;}
+  float globalTrack_d0Error() const{return m_globalTrack_d0Error;} 
+  unsigned short globalTrack_numberOfValidHits() const{return m_globalTrack_numberOfValidHits;}  
+  unsigned short globalTrack_numberOfLostHits() const{return m_globalTrack_numberOfLostHits;}  
+  float innerTrack_chi2() const{return m_innerTrack_chi2;}
+  float innerTrack_ndof() const{return m_innerTrack_ndof;}
+  float innerTrack_d0() const{return m_innerTrack_d0;}
+  float innerTrack_d0Error() const{return m_innerTrack_d0Error;} 
+  unsigned short innerTrack_numberOfValidHits() const{return m_innerTrack_numberOfValidHits;}  
+  unsigned short innerTrack_numberOfLostHits() const{return m_innerTrack_numberOfLostHits;}  
+  unsigned short innerTrack_trackerLayersWithMeasurement() const{return m_innerTrack_trackerLayersWithMeasurement;}
+  unsigned short innerTrack_numberOfValidPixelHits() const{return m_innerTrack_numberOfValidPixelHits;}
+  float outerTrack_chi2() const{return m_outerTrack_chi2;}
+  float outerTrack_ndof() const{return m_outerTrack_ndof;}
+  float outerTrack_d0() const{return m_outerTrack_d0;}
+  float outerTrack_d0Error() const{return m_outerTrack_d0Error;} 
+  unsigned short outerTrack_numberOfValidHits() const{return m_outerTrack_numberOfValidHits;}  
+  unsigned short outerTrack_numberOfLostHits() const{return m_outerTrack_numberOfLostHits;}  
 
   void set_vertex_x(float x){m_vertex_x=x;} 
   void set_vertex_y(float x){m_vertex_y=x;} 
@@ -118,7 +118,7 @@ class Muon : public Particle{
   void set_outerTrack_numberOfValidHits(unsigned short x){m_outerTrack_numberOfValidHits=x;}  
   void set_outerTrack_numberOfLostHits(unsigned short x){m_outerTrack_numberOfLostHits=x;}  
 
-  float relIso(){
+  float relIso() const{
     return ( m_chargedHadronIso + std::max( 0.0, m_neutralHadronIso + m_photonIso - 0.5*m_puChargedHadronIso ) ) / pt();
   }
 

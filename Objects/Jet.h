@@ -42,7 +42,7 @@ class Jet : public Particle{
   ~Jet(){
   };
 
-  LorentzVector genjet_v4(){
+  LorentzVector genjet_v4() const{
     LorentzVector v4;
     v4.SetPt(m_genjet_pt);
     v4.SetEta(m_genjet_eta);
@@ -51,34 +51,34 @@ class Jet : public Particle{
     return v4;
   };
 
-  int nTracks(){return m_nTracks;}
-  float jetArea(){return m_jetArea;}
-  float pileup(){return m_pileup;}
-  int numberOfDaughters(){return m_numberOfDaughters;} 
-  float neutralEmEnergyFraction(){return m_neutralEmEnergyFraction;}
-  float neutralHadronEnergyFraction(){return m_neutralHadronEnergyFraction;}
-  float chargedEmEnergyFraction(){return m_chargedEmEnergyFraction;}
-  float chargedHadronEnergyFraction(){return m_chargedHadronEnergyFraction;}
-  float muonEnergyFraction(){return m_muonEnergyFraction;}
-  float photonEnergyFraction(){return m_photonEnergyFraction;}
-  int chargedMultiplicity(){return m_chargedMultiplicity;}
-  int neutralMultiplicity(){return m_neutralMultiplicity;}
-  int muonMultiplicity(){return m_muonMultiplicity;} 
-  int electronMultiplicity(){return m_electronMultiplicity;}
-  int photonMultiplicity(){return m_photonMultiplicity;}
-  float btag_simpleSecondaryVertexHighEff(){return m_btag_simpleSecondaryVertexHighEff;}
-  float btag_simpleSecondaryVertexHighPur(){return m_btag_simpleSecondaryVertexHighPur;}
-  float btag_combinedSecondaryVertex(){return m_btag_combinedSecondaryVertex;}
-  float btag_combinedSecondaryVertexMVA(){return m_btag_combinedSecondaryVertexMVA;}
-  float btag_jetBProbability(){return m_btag_jetBProbability;}
-  float btag_jetProbability(){return m_btag_jetProbability;}
-  float JEC_uncertainty(){return m_JEC_uncertainty;}
-  float JEC_factor_raw(){return m_JEC_factor_raw;}
-  float genjet_pt(){return m_genjet_pt;}
-  float genjet_eta(){return m_genjet_eta;}
-  float genjet_phi(){return m_genjet_phi;}
-  float genjet_energy(){return m_genjet_energy;}
-  std::vector<unsigned int> genparticles_indices(){return m_genparticles_indices;}
+  int nTracks() const{return m_nTracks;}
+  float jetArea() const{return m_jetArea;}
+  float pileup() const{return m_pileup;}
+  int numberOfDaughters() const{return m_numberOfDaughters;} 
+  float neutralEmEnergyFraction() const{return m_neutralEmEnergyFraction;}
+  float neutralHadronEnergyFraction() const{return m_neutralHadronEnergyFraction;}
+  float chargedEmEnergyFraction() const{return m_chargedEmEnergyFraction;}
+  float chargedHadronEnergyFraction() const{return m_chargedHadronEnergyFraction;}
+  float muonEnergyFraction() const{return m_muonEnergyFraction;}
+  float photonEnergyFraction() const{return m_photonEnergyFraction;}
+  int chargedMultiplicity() const{return m_chargedMultiplicity;}
+  int neutralMultiplicity() const{return m_neutralMultiplicity;}
+  int muonMultiplicity() const{return m_muonMultiplicity;} 
+  int electronMultiplicity() const{return m_electronMultiplicity;}
+  int photonMultiplicity() const{return m_photonMultiplicity;}
+  float btag_simpleSecondaryVertexHighEff() const{return m_btag_simpleSecondaryVertexHighEff;}
+  float btag_simpleSecondaryVertexHighPur() const{return m_btag_simpleSecondaryVertexHighPur;}
+  float btag_combinedSecondaryVertex() const{return m_btag_combinedSecondaryVertex;}
+  float btag_combinedSecondaryVertexMVA() const{return m_btag_combinedSecondaryVertexMVA;}
+  float btag_jetBProbability() const{return m_btag_jetBProbability;}
+  float btag_jetProbability() const{return m_btag_jetProbability;}
+  float JEC_uncertainty() const{return m_JEC_uncertainty;}
+  float JEC_factor_raw() const{return m_JEC_factor_raw;}
+  float genjet_pt() const{return m_genjet_pt;}
+  float genjet_eta() const{return m_genjet_eta;}
+  float genjet_phi() const{return m_genjet_phi;}
+  float genjet_energy() const{return m_genjet_energy;}
+  std::vector<unsigned int> genparticles_indices() const{return m_genparticles_indices;}
 
   void set_nTracks(int x){m_nTracks=x;}
   void set_jetArea(float x){m_jetArea=x;}

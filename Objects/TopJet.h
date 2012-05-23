@@ -11,7 +11,7 @@ class TopJet : public Jet{
   ~TopJet(){
   };
 
-  std::vector<Particle> subjets(){return m_subjets;}
+  std::vector<Particle> subjets() const{return m_subjets;}
 
   void add_subjet(Particle p){m_subjets.push_back(p);}
 

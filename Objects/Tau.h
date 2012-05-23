@@ -27,22 +27,22 @@ class Tau : public Particle{
   ~Tau(){
   };
 
-  float leadPFCand_px(){return m_leadPFCand_px;}
-  float leadPFCand_py(){return m_leadPFCand_py;}
-  float leadPFCand_pz(){return m_leadPFCand_pz;}
+  float leadPFCand_px() const{return m_leadPFCand_px;}
+  float leadPFCand_py() const{return m_leadPFCand_py;}
+  float leadPFCand_pz() const{return m_leadPFCand_pz;}
 
-  bool decayModeFinding(){return m_decayModeFinding;} 
-  bool byVLooseCombinedIsolationDeltaBetaCorr (){return m_byVLooseCombinedIsolationDeltaBetaCorr;}
-  bool byLooseCombinedIsolationDeltaBetaCorr(){return m_byLooseCombinedIsolationDeltaBetaCorr;} 
-  bool byMediumCombinedIsolationDeltaBetaCorr(){return m_byMediumCombinedIsolationDeltaBetaCorr;}
-  bool byTightCombinedIsolationDeltaBetaCorr(){return m_byTightCombinedIsolationDeltaBetaCorr;} 
-  bool againstElectronLoose (){return m_againstElectronLoose;}
-  bool againstElectronMedium(){return m_againstElectronMedium;}
-  bool againstElectronTight (){return m_againstElectronTight;}
-  bool againstElectronMVA (){return m_againstElectronMVA;}
-  bool againstMuonLoose (){return m_againstMuonLoose;}
-  bool againstMuonMedium(){return m_againstMuonMedium;}
-  bool againstMuonTight(){return m_againstMuonTight;}
+  bool decayModeFinding() const{return m_decayModeFinding;} 
+  bool byVLooseCombinedIsolationDeltaBetaCorr () const{return m_byVLooseCombinedIsolationDeltaBetaCorr;}
+  bool byLooseCombinedIsolationDeltaBetaCorr() const{return m_byLooseCombinedIsolationDeltaBetaCorr;} 
+  bool byMediumCombinedIsolationDeltaBetaCorr() const{return m_byMediumCombinedIsolationDeltaBetaCorr;}
+  bool byTightCombinedIsolationDeltaBetaCorr() const{return m_byTightCombinedIsolationDeltaBetaCorr;} 
+  bool againstElectronLoose () const{return m_againstElectronLoose;}
+  bool againstElectronMedium() const{return m_againstElectronMedium;}
+  bool againstElectronTight () const{return m_againstElectronTight;}
+  bool againstElectronMVA () const{return m_againstElectronMVA;}
+  bool againstMuonLoose () const{return m_againstMuonLoose;}
+  bool againstMuonMedium() const{return m_againstMuonMedium;}
+  bool againstMuonTight() const{return m_againstMuonTight;}
 
   void set_leadPFCand_px(float x){m_leadPFCand_px=x;}
   void set_leadPFCand_py(float x){m_leadPFCand_py=x;}

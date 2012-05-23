@@ -41,35 +41,35 @@ class Electron : public Particle{
   ~Electron(){
   };
 
-  float vertex_x(){return m_vertex_x;} 
-  float vertex_y(){return m_vertex_y;} 
-  float vertex_z(){return m_vertex_z;} 
-  float supercluster_eta(){return m_supercluster_eta;} 
-  float supercluster_phi(){return m_supercluster_phi;} 
-  float dB(){return m_dB;} 
-  //float particleIso(){return m_particleIso;} 
-  float neutralHadronIso(){return m_neutralHadronIso;} 
-  float chargedHadronIso(){return m_chargedHadronIso;} 
-  float photonIso(){return m_photonIso;}
-  float trackIso(){return m_trackIso;} 
-  float puChargedHadronIso(){return m_puChargedHadronIso;}
-  int gsfTrack_trackerExpectedHitsInner_numberOfLostHits(){return m_gsfTrack_trackerExpectedHitsInner_numberOfLostHits;}
-  float gsfTrack_px(){return m_gsfTrack_px;}
-  float gsfTrack_py(){return m_gsfTrack_py;}
-  float gsfTrack_pz(){return m_gsfTrack_pz;}
-  float gsfTrack_vx(){return m_gsfTrack_vx;}
-  float gsfTrack_vy(){return m_gsfTrack_vy;}
-  float gsfTrack_vz(){return m_gsfTrack_vz;}
-  bool passconversionveto(){return m_passconversionveto;}
-  float dEtaIn(){return m_dEtaIn;}
-  float dPhiIn(){return m_dPhiIn;} 
-  float sigmaIEtaIEta(){return m_sigmaIEtaIEta;} 
-  float HoverE(){return m_HoverE;}
-  float fbrem(){return m_fbrem;}
-  float EoverPIn(){return m_EoverPIn;}
-  float EcalEnergy(){return m_EcalEnergy;}
-  float mvaTrigV0(){return m_mvaTrigV0;}
-  float mvaNonTrigV0(){return m_mvaNonTrigV0;}
+  float vertex_x() const{return m_vertex_x;} 
+  float vertex_y() const{return m_vertex_y;} 
+  float vertex_z() const{return m_vertex_z;} 
+  float supercluster_eta() const{return m_supercluster_eta;} 
+  float supercluster_phi() const{return m_supercluster_phi;} 
+  float dB() const{return m_dB;} 
+  //float particleIso() const{return m_particleIso;} 
+  float neutralHadronIso() const{return m_neutralHadronIso;} 
+  float chargedHadronIso() const{return m_chargedHadronIso;} 
+  float photonIso() const{return m_photonIso;}
+  float trackIso() const{return m_trackIso;} 
+  float puChargedHadronIso() const{return m_puChargedHadronIso;}
+  int gsfTrack_trackerExpectedHitsInner_numberOfLostHits() const{return m_gsfTrack_trackerExpectedHitsInner_numberOfLostHits;}
+  float gsfTrack_px() const{return m_gsfTrack_px;}
+  float gsfTrack_py() const{return m_gsfTrack_py;}
+  float gsfTrack_pz() const{return m_gsfTrack_pz;}
+  float gsfTrack_vx() const{return m_gsfTrack_vx;}
+  float gsfTrack_vy() const{return m_gsfTrack_vy;}
+  float gsfTrack_vz() const{return m_gsfTrack_vz;}
+  bool passconversionveto() const{return m_passconversionveto;}
+  float dEtaIn() const{return m_dEtaIn;}
+  float dPhiIn() const{return m_dPhiIn;} 
+  float sigmaIEtaIEta() const{return m_sigmaIEtaIEta;} 
+  float HoverE() const{return m_HoverE;}
+  float fbrem() const{return m_fbrem;}
+  float EoverPIn() const{return m_EoverPIn;}
+  float EcalEnergy() const{return m_EcalEnergy;}
+  float mvaTrigV0() const{return m_mvaTrigV0;}
+  float mvaNonTrigV0() const{return m_mvaNonTrigV0;}
 
 
   void set_vertex_x(float x){m_vertex_x=x;} 
@@ -102,13 +102,13 @@ class Electron : public Particle{
   void set_mvaTrigV0(float x){m_mvaTrigV0=x;}
   void set_mvaNonTrigV0(float x){m_mvaNonTrigV0=x;}
 
-  float gsfTrack_dxy_vertex(const float point_x, const float point_y){ 
+  float gsfTrack_dxy_vertex(const float point_x, const float point_y) const{ 
     return ( - (m_gsfTrack_vx-point_x) * m_gsfTrack_py + (m_gsfTrack_vy-point_y) * m_gsfTrack_px ) / sqrt(m_gsfTrack_px*m_gsfTrack_px+m_gsfTrack_py*m_gsfTrack_py);  
   };
-  float gsfTrack_dz_vertex(const float point_x, const float point_y, const float point_z){ 
+  float gsfTrack_dz_vertex(const float point_x, const float point_y, const float point_z) const{ 
     return (m_gsfTrack_vz-point_z) - ((m_gsfTrack_vx-point_x)*m_gsfTrack_px+(m_gsfTrack_vy-point_y)*m_gsfTrack_py)/(m_gsfTrack_px*m_gsfTrack_px+m_gsfTrack_py*m_gsfTrack_py) * m_gsfTrack_pz; 
   }
-  float relIso(){
+  float relIso() const{
     return ( m_chargedHadronIso + std::max( 0.0, m_neutralHadronIso + m_photonIso - 0.5*m_puChargedHadronIso ) ) / pt();
   }
 

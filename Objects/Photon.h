@@ -21,12 +21,12 @@ class Photon : public Particle{
   ~Photon(){
   };
 
-  float vertex_x(){return m_vertex_x;} 
-  float vertex_y(){return m_vertex_y;} 
-  float vertex_z(){return m_vertex_z;} 
-  float supercluster_eta(){return m_supercluster_eta;} 
-  float supercluster_phi(){return m_supercluster_phi;} 
-  float trackIso(){return m_trackIso;} 
+  float vertex_x() const{return m_vertex_x;} 
+  float vertex_y() const{return m_vertex_y;} 
+  float vertex_z() const{return m_vertex_z;} 
+  float supercluster_eta() const{return m_supercluster_eta;} 
+  float supercluster_phi() const{return m_supercluster_phi;} 
+  float trackIso() const{return m_trackIso;} 
 
   void set_vertex_x(float x){m_vertex_x=x;} 
   void set_vertex_y(float x){m_vertex_y=x;} 

@@ -15,9 +15,9 @@ class MET{
   };
 
 
-  float pt(){return m_pt;}
-  float phi(){return m_phi;}
-  float mEtSig(){return m_mEtSig;}
+  float pt() const{return m_pt;}
+  float phi() const{return m_phi;}
+  float mEtSig() const{return m_mEtSig;}
 
   void set_pt(float pt){m_pt=pt;}  
   void set_phi(float phi){m_phi=phi;}

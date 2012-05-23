@@ -35,11 +35,11 @@ class Particle{
     return v4;
   };
 
-  float charge(){return m_charge;}
-  float pt(){return m_pt;}
-  float eta(){return m_eta;}
-  float phi(){return m_phi;}
-  float energy(){return m_energy;}
+  float charge() const{return m_charge;}
+  float pt() const {return m_pt;}
+  float eta() const{return m_eta;}
+  float phi() const{return m_phi;}
+  float energy() const{return m_energy;}
 
   void set_charge(float charge){m_charge=charge;}
   void set_pt(float pt){m_pt=pt;}  

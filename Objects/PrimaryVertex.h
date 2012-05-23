@@ -18,12 +18,12 @@ class PrimaryVertex{
   ~PrimaryVertex(){
   };
 
-  float x(){return m_x;} 
-  float y(){return m_y;} 
-  float z(){return m_z;} 
-  unsigned int nTracks(){return m_nTracks;} 
-  float chi2(){return m_chi2;} 
-  float ndof(){return m_ndof;}
+  float x() const{return m_x;} 
+  float y() const{return m_y;} 
+  float z() const{return m_z;} 
+  unsigned int nTracks() const{return m_nTracks;} 
+  float chi2() const{return m_chi2;} 
+  float ndof() const{return m_ndof;}
 
   void set_x(float x){m_x=x;} 
   void set_y(float x){m_y=x;} 

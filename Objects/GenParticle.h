@@ -18,9 +18,9 @@ class GenParticle : public Particle{
   };
 
 
-  int pdgId(){return m_pdgId;}
-  int status(){return m_status;}
-  int index(){return m_index;}
+  int pdgId() const{return m_pdgId;}
+  int status() const{return m_status;}
+  int index() const{return m_index;}
 
 
   //return mother 1 or 2 (ind<=1 or ind>=2)

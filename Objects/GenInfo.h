@@ -26,22 +26,22 @@ class GenInfo{
   ~GenInfo(){
   };
 
-  std::vector<float> binningValues(){return m_binningValues;}
-  std::vector<float> weights(){return m_weights;}
-  float alphaQCD(){return m_alphaQCD;}
-  float alphaQED(){return m_alphaQED;}
-  float qScale(){return m_qScale;}
-  int pdf_id1(){return m_pdf_id1;}
-  int pdf_id2(){return m_pdf_id2;}
-  float pdf_x1(){return m_pdf_x1;}
-  float pdf_x2(){return m_pdf_x2;}
-  float pdf_xPDF1(){return m_pdf_xPDF1;}
-  float pdf_xPDF2(){return m_pdf_xPDF2;}
-  float pdf_scalePDF(){return m_pdf_scalePDF;}
-  int pileup_NumInteractions_intime(){return m_pileup_NumInteractions_intime;} 
-  int pileup_NumInteractions_ootbefore(){return m_pileup_NumInteractions_ootbefore;} 
-  int pileup_NumInteractions_ootafter(){return m_pileup_NumInteractions_ootafter;}
-  float pileup_TrueNumInteractions(){return m_pileup_TrueNumInteractions;}  
+  std::vector<float> binningValues() const{return m_binningValues;}
+  std::vector<float> weights() const{return m_weights;}
+  float alphaQCD() const{return m_alphaQCD;}
+  float alphaQED() const{return m_alphaQED;}
+  float qScale() const{return m_qScale;}
+  int pdf_id1() const{return m_pdf_id1;}
+  int pdf_id2() const{return m_pdf_id2;}
+  float pdf_x1() const{return m_pdf_x1;}
+  float pdf_x2() const{return m_pdf_x2;}
+  float pdf_xPDF1() const{return m_pdf_xPDF1;}
+  float pdf_xPDF2() const{return m_pdf_xPDF2;}
+  float pdf_scalePDF() const{return m_pdf_scalePDF;}
+  int pileup_NumInteractions_intime() const{return m_pileup_NumInteractions_intime;} 
+  int pileup_NumInteractions_ootbefore() const{return m_pileup_NumInteractions_ootbefore;} 
+  int pileup_NumInteractions_ootafter() const{return m_pileup_NumInteractions_ootafter;}
+  float pileup_TrueNumInteractions() const{return m_pileup_TrueNumInteractions;}  
 
   void add_binningValue(float x){m_binningValues.push_back(x);}
   void add_weight(float x){m_weights.push_back(x);}
