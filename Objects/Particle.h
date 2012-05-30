@@ -54,12 +54,12 @@ class Particle{
     set_energy(v4.E());
   }
 
-  double deltaPhi(Particle p2){
+  double deltaPhi(const Particle p2) const{
     double deltaphi = fabs(this->phi() - p2.phi());
     if(deltaphi > PI) deltaphi = 2* PI - deltaphi;
     return deltaphi;
   }
-  double deltaR(Particle p2){
+  double deltaR(const Particle p2) const{
     double deltaeta = this->eta() - p2.eta();
     return sqrt(deltaeta*deltaeta+deltaPhi(p2)*deltaPhi(p2));
   }
