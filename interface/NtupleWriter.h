@@ -105,12 +105,15 @@ class NtupleWriter : public edm::EDAnalyzer {
       int luminosityBlock;
       int event;
       bool isRealData;
-      bool HBHENoiseFilterResult;
+      //bool HBHENoiseFilterResult;
+      float rho;
 
       float intgDelLumi;
       float intgRecLumi;
       float totalDelLumi;
       float totalRecLumi;
+
+      edm::InputTag rho_source;
 
       std::vector<std::string> electron_sources;
       std::vector<Electron> eles[Nmax];

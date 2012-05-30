@@ -25,6 +25,8 @@ class PrimaryVertex{
   float chi2() const{return m_chi2;} 
   float ndof() const{return m_ndof;}
 
+  float rho() const{return sqrt(m_x*m_x+m_y*m_y);}
+
   void set_x(float x){m_x=x;} 
   void set_y(float x){m_y=x;} 
   void set_z(float x){m_z=x;} 

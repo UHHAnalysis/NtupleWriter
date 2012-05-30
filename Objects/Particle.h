@@ -26,7 +26,7 @@ class Particle{
   ~Particle(){
   };
 
-  LorentzVector v4(){
+  LorentzVector v4() const{
     LorentzVector v4;
     v4.SetPt(m_pt);
     v4.SetEta(m_eta);
@@ -46,6 +46,13 @@ class Particle{
   void set_eta(float eta){m_eta=eta;}
   void set_phi(float phi){m_phi=phi;}
   void set_energy(float energy){m_energy=energy;}
+
+  void set_v4(LorentzVector v4){
+    set_pt(v4.Pt());
+    set_eta(v4.Eta());
+    set_phi(v4.Phi());
+    set_energy(v4.E());
+  }
 
   double deltaPhi(Particle p2){
     double deltaphi = fabs(this->phi() - p2.phi());

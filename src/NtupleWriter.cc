@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.16 2012/04/30 09:01:16 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.17 2012/05/22 09:32:31 peiffer Exp $
 //
 //
 
@@ -66,6 +66,9 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   tr->Branch("event",&event);
   tr->Branch("luminosityBlock",&luminosityBlock);
   tr->Branch("isRealData",&isRealData);
+  tr->Branch("rho",&rho);
+  rho_source = iConfig.getParameter<edm::InputTag>("rho_source");
+
   //tr->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult);
   if(doLumiInfo){
     tr->Branch("intgRecLumi",&intgRecLumi);
@@ -180,6 +183,10 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    event = iEvent.id().event();
    luminosityBlock = iEvent.luminosityBlock();
    isRealData      = iEvent.isRealData();
+
+   edm::Handle<double> m_rho;
+   iEvent.getByLabel(rho_source,m_rho);
+   rho=*m_rho;
 
 //    if(isRealData){
 //      edm::Handle<bool> bool_handle;

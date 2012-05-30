@@ -35,7 +35,7 @@ if not useData :
 			]    
 	elif release == '52x' :
 		process.source.fileNames = [
-			'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ_STEP2_RAW2DIGI_L1Reco_RECO_VALIDATION_DQM_PU_1.root'
+			'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ_STEP2_RAW2DIGI_L1Reco_RECO_VALIDATION_DQM_PU_MYNUM.root'
 #			'file:/scratch/hh/lustre/cms/user/peiffer/TTbarTest52.root'
 #			'/store/relval/CMSSW_5_2_3/RelValTTbar/GEN-SIM-RECO/START52_V5-v1/0043/18E75EC8-2B7A-E111-B784-002354EF3BDE.root',
 #			'/store/relval/CMSSW_5_2_3/RelValTTbar/GEN-SIM-RECO/START52_V5-v1/0043/42F2FCD5-FF79-E111-9A09-003048FFD736.root',
@@ -1370,7 +1370,7 @@ else :
 
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/LQ1000_1.root'), 
+                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/LQ1000_MYNUM.root'), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
@@ -1383,6 +1383,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
 				  doAllGenParticles = cms.bool(writeAllGenParticles),
 				  doLumiInfo = cms.bool(useData),
                                   doTrigger = cms.bool(True),
+				  rho_source =  cms.InputTag("kt6PFJets", "rho"),
                                   electron_sources = cms.vstring("selectedPatElectronsPFlow","selectedPatElectronsLoosePFlow"),
                                   muon_sources = cms.vstring("selectedPatMuonsPFlow","selectedPatMuonsLoosePFlow"),
                                   tau_sources = cms.vstring("selectedPatTausPFlow","selectedPatTaus"),

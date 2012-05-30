@@ -17,11 +17,13 @@ class GenParticle : public Particle{
   ~GenParticle(){
   };
 
-
   int pdgId() const{return m_pdgId;}
   int status() const{return m_status;}
   int index() const{return m_index;}
-
+  int mother1() const{return m_mother1;}
+  int mother2() const{return m_mother2;}
+  int daughter1() const{return m_daughter1;}
+  int daughter2() const{return m_daughter2;}
 
   //return mother 1 or 2 (ind<=1 or ind>=2)
   GenParticle* mother(std::vector<GenParticle> *gplist, int ind=1){
