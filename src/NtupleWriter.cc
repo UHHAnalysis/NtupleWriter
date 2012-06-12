@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.17 2012/05/22 09:32:31 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.18 2012/05/30 13:20:08 peiffer Exp $
 //
 //
 
@@ -50,6 +50,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doMuons = iConfig.getParameter<bool>("doMuons");
   doTaus = iConfig.getParameter<bool>("doTaus"); 
   doJets = iConfig.getParameter<bool>("doJets");
+  doJECUncertainty = iConfig.getParameter<bool>("doJECUncertainty");
   doGenTopJets = iConfig.getParameter<bool>("doGenTopJets");  
   doPhotons = iConfig.getParameter<bool>("doPhotons");
   doMET = iConfig.getParameter<bool>("doMET");
@@ -379,8 +380,8 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.set_fbrem(pat_ele.fbrem());
 	 ele.set_EoverPIn(pat_ele.eSuperClusterOverP());
 	 ele.set_EcalEnergy(pat_ele.ecalEnergy());
-	 //ele.set_mvaTrigV0(pat_ele.electronID("mvaTrigV0"));
-	 //ele.set_mvaNonTrigV0(pat_ele.electronID("mvaNonTrigV0"));
+	 ele.set_mvaTrigV0(pat_ele.electronID("mvaTrigV0"));
+	 ele.set_mvaNonTrigV0(pat_ele.electronID("mvaNonTrigV0"));
 
 	 eles[j].push_back(ele);
        }
@@ -514,17 +515,17 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 tau.set_againstMuonMedium ( pat_tau.tauID("againstMuonMedium")>0.5); 
 	 tau.set_againstMuonTight ( pat_tau.tauID("againstMuonTight")>0.5); 
 
-	 reco::PFCandidateRef leadPFCand = pat_tau.leadPFCand();
-	 if(!leadPFCand.isNull()){
-	   tau.set_leadPFCand_px ( leadPFCand->px());
-	   tau.set_leadPFCand_py ( leadPFCand->py());
-	   tau.set_leadPFCand_pz ( leadPFCand->pz());
-	 }
-	 else{
-	   tau.set_leadPFCand_px ( 0);
-	   tau.set_leadPFCand_py ( 0);
-	   tau.set_leadPFCand_pz ( 0);
-	 }
+// 	 reco::PFCandidateRef leadPFCand = pat_tau.leadPFCand();
+// 	 if(!leadPFCand.isNull()){
+// 	   tau.set_leadPFCand_px ( leadPFCand->px());
+// 	   tau.set_leadPFCand_py ( leadPFCand->py());
+// 	   tau.set_leadPFCand_pz ( leadPFCand->pz());
+// 	 }
+// 	 else{
+// 	   tau.set_leadPFCand_px ( 0);
+// 	   tau.set_leadPFCand_py ( 0);
+// 	   tau.set_leadPFCand_pz ( 0);
+// 	 }
 	 taus[j].push_back(tau);
        }
      }
@@ -574,12 +575,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   jet.set_electronMultiplicity (pat_jet.electronMultiplicity());
 	   jet.set_photonMultiplicity (pat_jet.photonMultiplicity());
 	 }
-
-	 jecUnc->setJetEta(pat_jet.eta());
-	 jecUnc->setJetPt(pat_jet.pt());
-	 jet.set_JEC_uncertainty(jecUnc->getUncertainty(true));
+	 if(doJECUncertainty){
+	   jecUnc->setJetEta(pat_jet.eta());
+	   jecUnc->setJetPt(pat_jet.pt());
+	   jet.set_JEC_uncertainty(jecUnc->getUncertainty(true));
+	 }
 	 jet.set_JEC_factor_raw(pat_jet.jecFactor("Uncorrected"));
-
+	 
 	 jet.set_btag_simpleSecondaryVertexHighEff(pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
 	 jet.set_btag_simpleSecondaryVertexHighPur(pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags"));
 	 jet.set_btag_combinedSecondaryVertex(pat_jet.bDiscriminator("combinedSecondaryVertexBJetTags"));
@@ -650,10 +652,11 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	 topjet.set_muonMultiplicity(pat_topjet.muonMultiplicity());
 // 	 topjet.set_electronMultiplicity(pat_topjet.electronMultiplicity());
 // 	 topjet.set_photonMultiplicity(pat_topjet.photonMultiplicity());
-
-	 jecUnc->setJetEta(pat_topjet.eta());
-	 jecUnc->setJetPt(pat_topjet.pt());
-	 topjet.set_JEC_uncertainty( jecUnc->getUncertainty(true));
+	 if(doJECUncertainty){
+	   jecUnc->setJetEta(pat_topjet.eta());
+	   jecUnc->setJetPt(pat_topjet.pt());
+	   topjet.set_JEC_uncertainty( jecUnc->getUncertainty(true));
+	 }
 	 topjet.set_JEC_factor_raw( pat_topjet.jecFactor("Uncorrected"));
 
 	 topjet.set_btag_simpleSecondaryVertexHighEff(pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
@@ -663,6 +666,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 topjet.set_btag_jetBProbability(pat_topjet.bDiscriminator("jetBProbabilityBJetTags"));
 	 topjet.set_btag_jetProbability(pat_topjet.bDiscriminator("jetProbabilityBJetTags"));
 
+	 /*
 	 const reco::GenJet *genj = pat_topjet.genJet();
 	 if(genj){
 	   topjet.set_genjet_pt ( genj->pt());
@@ -683,6 +687,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	       std::cout << "WARNING: Found only " << topjet.genparticles_indices().size() << " from " << jetgenps.size() << " gen particles of this topjet"<<std::endl;
 	   }
 	 }
+	 */
 
 	 for (unsigned int k = 0; k < pat_topjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
@@ -867,16 +872,18 @@ void
 NtupleWriter::beginRun(edm::Run const& iRun, edm::EventSetup const&  iSetup)
 {
   if(doTrigger){
-    bool setup_changed = false;
-    hlt_cfg.init(iRun, iSetup, "HLT", setup_changed);
+    //bool setup_changed = false;
+    //hlt_cfg.init(iRun, iSetup, "HLT", setup_changed);
     newrun=true;
   }
 
   if(doJets || doTopJets){
-    edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
-    iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
-    JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
-    jecUnc = new JetCorrectionUncertainty(JetCorPar);
+    if(doJECUncertainty){
+      edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
+      iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
+      JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
+      jecUnc = new JetCorrectionUncertainty(JetCorPar);
+    }
   }
 }
 

@@ -91,6 +91,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doMuons;
       bool doTaus;
       bool doJets;
+      bool doJECUncertainty;
       bool doTopJets;
       bool doGenTopJets;
       bool doMET;
@@ -164,7 +165,7 @@ class NtupleWriter : public edm::EDAnalyzer {
 /*       std::vector<int> L1_prescale; */
 /*       std::vector<int> HLT_prescale; */
       
-      HLTConfigProvider hlt_cfg;
+      //HLTConfigProvider hlt_cfg;
       bool newrun;
       bool previouslumiblockwasfilled;
 
