@@ -3,6 +3,11 @@
 
 #include "Jet.h"
 
+/**
+ *  @short top-jet class
+ *  @author Thomas Peiffer
+ */
+
 class TopJet : public Jet{
  public:
   TopJet(){

@@ -3,7 +3,10 @@
 
 #include "Particle.h"
 
-
+/**
+ *  @short muon class
+ *  @author Thomas Peiffer
+ */
 
 class Muon : public Particle{
 

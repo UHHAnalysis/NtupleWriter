@@ -3,6 +3,11 @@
 
 #include "Particle.h"
 
+/**
+ *  @short tau class
+ *  @author Thomas Peiffer
+ */
+
 class Tau : public Particle{
 
  public:

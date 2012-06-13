@@ -3,6 +3,11 @@
 
 #include "Particle.h"
 
+/**
+ *  @short photon class
+ *  @author Thomas Peiffer
+ */
+
 class Photon : public Particle{
 
  public:

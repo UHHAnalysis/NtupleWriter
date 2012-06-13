@@ -3,6 +3,11 @@
 
 #include "Particle.h"
 
+/**
+ *  @short generator particle class
+ *  @author Thomas Peiffer
+ */
+
 class GenParticle : public Particle{
  public:
   GenParticle(){

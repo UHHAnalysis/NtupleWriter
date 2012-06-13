@@ -3,6 +3,10 @@
 
 #include "Particle.h"
 
+/**
+ *  @short jet class
+ *  @author Thomas Peiffer
+ */
 
 class Jet : public Particle{
 
