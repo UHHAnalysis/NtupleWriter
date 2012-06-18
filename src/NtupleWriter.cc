@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.18 2012/05/30 13:20:08 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.19 2012/06/12 11:43:16 peiffer Exp $
 //
 //
 
@@ -331,12 +331,12 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // ------------- electrons -------------   
    if(doElectrons){
 
-     edm::Handle<reco::ConversionCollection> hConversions;
-     iEvent.getByLabel("allConversions", hConversions);
+//      edm::Handle<reco::ConversionCollection> hConversions;
+//      iEvent.getByLabel("allConversions", hConversions);
 
-     edm::Handle<reco::BeamSpot> beamSpot;
-     iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
-     const reco::BeamSpot & bsp = *beamSpot;
+//      edm::Handle<reco::BeamSpot> beamSpot;
+//      iEvent.getByLabel(edm::InputTag("offlineBeamSpot"), beamSpot);
+//      const reco::BeamSpot & bsp = *beamSpot;
 
      for(size_t j=0; j< electron_sources.size(); ++j){
        eles[j].clear();
@@ -372,7 +372,8 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.set_gsfTrack_vx( pat_ele.gsfTrack()->vx());
 	 ele.set_gsfTrack_vy( pat_ele.gsfTrack()->vy());
 	 ele.set_gsfTrack_vz( pat_ele.gsfTrack()->vz());
-	 ele.set_passconversionveto(!ConversionTools::hasMatchedConversion(pat_ele,hConversions,bsp.position()));
+	 //ele.set_passconversionveto(!ConversionTools::hasMatchedConversion(pat_ele,hConversions,bsp.position()));
+	 ele.set_passconversionveto(pat_ele.passConversionVeto());
 	 ele.set_dEtaIn(pat_ele.deltaEtaSuperClusterTrackAtVtx());
 	 ele.set_dPhiIn(pat_ele.deltaPhiSuperClusterTrackAtVtx());
 	 ele.set_sigmaIEtaIEta(pat_ele.sigmaIetaIeta());
