@@ -113,6 +113,8 @@ class Jet : public Particle{
   void set_genjet_energy(float x){m_genjet_energy=x;}
   void add_genparticles_index(unsigned int x){m_genparticles_indices.push_back(x);}
 
+  bool has_genjet() const{return m_genjet_pt>0;}
+
  private:
   
   int m_nTracks;

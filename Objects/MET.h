@@ -36,6 +36,14 @@ class MET{
   /// set transverse momentum significance
   void set_mEtSig(float mEtSig){m_mEtSig=mEtSig;}
 
+  /// convert missing transverse energy into 4-vector
+  LorentzVector v4(){
+      LorentzVector met(0,0,0,0);
+      met.SetPt(m_pt);
+      met.SetPhi(m_phi);
+      return met;
+  }
+
  private:
   float m_pt; 
   float m_phi; 
