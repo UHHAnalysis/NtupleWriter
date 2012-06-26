@@ -23,6 +23,7 @@ class Muon : public Particle{
     m_photonIso=0;
     m_puChargedHadronIso=0;
     m_isGlobalMuon=false;
+    m_isPFMuon=false;   
     m_isStandAloneMuon=false;
     m_isTrackerMuon=false;
     m_numberOfMatchedStations=0;
@@ -32,6 +33,7 @@ class Muon : public Particle{
     m_globalTrack_d0Error=0; 
     m_globalTrack_numberOfValidHits=0;  
     m_globalTrack_numberOfLostHits=0;  
+    m_globalTrack_numberOfValidMuonHits=0;
     m_innerTrack_chi2=0;
     m_innerTrack_ndof=0;
     m_innerTrack_d0=0;
@@ -62,6 +64,7 @@ class Muon : public Particle{
   float photonIso() const{return m_photonIso;}
   float puChargedHadronIso() const{return m_puChargedHadronIso;}
   bool isGlobalMuon() const{return m_isGlobalMuon;}
+  bool isPFMuon() const{return m_isPFMuon;}
   bool isStandAloneMuon() const{return m_isStandAloneMuon;}
   bool isTrackerMuon() const{return m_isTrackerMuon;}
   int numberOfMatchedStations() const{return m_numberOfMatchedStations;}
@@ -71,6 +74,7 @@ class Muon : public Particle{
   float globalTrack_d0Error() const{return m_globalTrack_d0Error;} 
   unsigned short globalTrack_numberOfValidHits() const{return m_globalTrack_numberOfValidHits;}  
   unsigned short globalTrack_numberOfLostHits() const{return m_globalTrack_numberOfLostHits;}  
+  unsigned short globalTrack_numberOfValidMuonHits() const{return m_globalTrack_numberOfValidMuonHits;}  
   float innerTrack_chi2() const{return m_innerTrack_chi2;}
   float innerTrack_ndof() const{return m_innerTrack_ndof;}
   float innerTrack_d0() const{return m_innerTrack_d0;}
@@ -97,6 +101,7 @@ class Muon : public Particle{
   void set_photonIso(float x){m_photonIso=x;}
   void set_puChargedHadronIso(float x){m_puChargedHadronIso=x;}
   void set_isGlobalMuon(bool x){m_isGlobalMuon=x;}
+  void set_isPFMuon(bool x){m_isPFMuon=x;}
   void set_isStandAloneMuon(bool x){m_isStandAloneMuon=x;}
   void set_isTrackerMuon(bool x){m_isTrackerMuon=x;}
   void set_numberOfMatchedStations(int x){m_numberOfMatchedStations=x;}
@@ -106,6 +111,7 @@ class Muon : public Particle{
   void set_globalTrack_d0Error(float x){m_globalTrack_d0Error=x;} 
   void set_globalTrack_numberOfValidHits(unsigned short x){m_globalTrack_numberOfValidHits=x;}  
   void set_globalTrack_numberOfLostHits(unsigned short x){m_globalTrack_numberOfLostHits=x;}  
+  void set_globalTrack_numberOfValidMuonHits(unsigned short x){m_globalTrack_numberOfValidMuonHits=x;}  
   void set_innerTrack_chi2(float x){m_innerTrack_chi2=x;}
   void set_innerTrack_ndof(float x){m_innerTrack_ndof=x;}
   void set_innerTrack_d0(float x){m_innerTrack_d0=x;}
@@ -137,6 +143,7 @@ class Muon : public Particle{
   float m_photonIso;
   float m_puChargedHadronIso;
   bool m_isGlobalMuon;
+  bool m_isPFMuon;  
   bool m_isStandAloneMuon;
   bool m_isTrackerMuon;
   int m_numberOfMatchedStations;
@@ -146,6 +153,7 @@ class Muon : public Particle{
   float m_globalTrack_d0Error; 
   unsigned short m_globalTrack_numberOfValidHits;  
   unsigned short m_globalTrack_numberOfLostHits;  
+  unsigned short m_globalTrack_numberOfValidMuonHits;
   float m_innerTrack_chi2;
   float m_innerTrack_ndof;
   float m_innerTrack_d0;

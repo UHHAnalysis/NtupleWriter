@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.19 2012/06/12 11:43:16 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.20 2012/06/18 15:53:51 peiffer Exp $
 //
 //
 
@@ -418,6 +418,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 mu.set_photonIso ( pat_mu.photonIso());
 	 mu.set_puChargedHadronIso ( pat_mu.puChargedHadronIso());
 	 mu.set_isGlobalMuon ( pat_mu.isGlobalMuon());
+	 mu.set_isPFMuon ( pat_mu.isPFMuon());
 	 mu.set_isStandAloneMuon ( pat_mu.isStandAloneMuon());
 	 mu.set_isTrackerMuon ( pat_mu.isTrackerMuon());
 	 mu.set_numberOfMatchedStations ( pat_mu.numberOfMatchedStations());
@@ -429,6 +430,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   mu.set_globalTrack_d0Error ( globalTrack->d0Error());
 	   mu.set_globalTrack_numberOfValidHits ( globalTrack->numberOfValidHits());
 	   mu.set_globalTrack_numberOfLostHits ( globalTrack->numberOfLostHits());
+	   mu.set_globalTrack_numberOfValidMuonHits(globalTrack->hitPattern().numberOfValidMuonHits() );
 	 }
 	 else{
 	   mu.set_globalTrack_chi2 ( 0);
