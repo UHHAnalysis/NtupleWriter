@@ -115,6 +115,23 @@ class Jet : public Particle{
 
   bool has_genjet() const{return m_genjet_pt>0;}
 
+  bool pfID(){
+    //pf ID has already been applied when using goodPatJets
+    if(numberOfDaughters()>1 
+       && neutralHadronEnergyFraction()<0.99
+       && neutralEmEnergyFraction()<0.99){
+      
+      if(fabs(eta())>=2.4)
+	return true;
+      
+      if(chargedEmEnergyFraction()<0.99
+	 && chargedHadronEnergyFraction()>0
+	 && chargedMultiplicity()>0)
+	return true;   
+    }
+    return false;
+  }
+
  private:
   
   int m_nTracks;
