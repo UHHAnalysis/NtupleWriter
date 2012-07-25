@@ -10,17 +10,18 @@ process.options   = cms.untracked.PSet(
 )
 
 process.source = cms.Source("PoolSource",
- fileNames  = cms.untracked.vstring('file:/scratch/hh/lustre/cms/user/peiffer/ttbsm_52x_mc.root'),
+ fileNames  = cms.untracked.vstring('file:/scratch/hh/lustre/cms/user/peiffer/TLBSM_v5_Test.root'),
+
  skipEvents = cms.untracked.uint32(0)
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 
 #NtupleWriter
 useData = False
-writeAllGenParticles=True
+writeAllGenParticles=False
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/TTbarTest.root'), 
+                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/TTbarTest_v5.root'), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
@@ -31,13 +32,14 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doMET = cms.bool(True),
                                   doPV = cms.bool(True),
                                   doGenInfo = cms.bool(not useData),
-				  doAllGenParticles = cms.bool(writeAllGenParticles),
+				  doAllGenParticles = cms.bool(writeAllGenParticles), #set to true if you want to store all gen particles, otherwise, only tops and status 3 particles are stored
 				  doLumiInfo = cms.bool(useData),
                                   doTrigger = cms.bool(True),
-				  rho_source =  cms.InputTag("kt6PFJetsPFlow", "rho", "PAT"),
-                                  electron_sources = cms.vstring("selectedPatElectronsPFlow","selectedPatElectronsLoosePFlow"),
-                                  muon_sources = cms.vstring("selectedPatMuonsPFlow","selectedPatMuonsLoosePFlow"),
-                                  tau_sources = cms.vstring("selectedPatTausPFlow","selectedPatTaus"),
+				  rho_source = cms.InputTag("kt6PFJets", "rho", "RECO"),
+                                  genparticle_source = cms.InputTag("prunedGenParticles" ),
+                                  electron_sources = cms.vstring("selectedPatElectronsPFlow"), #,"selectedPatElectronsPFlowLoose"),
+                                  muon_sources = cms.vstring("selectedPatMuonsPFlow","selectedPatMuonsPFlowLoose"),
+                                  tau_sources = cms.vstring("selectedPatTausPFlow"),
                                   tau_ptmin = cms.double(0.0),
                                   tau_etamax = cms.double(999.0),
                                   jet_sources = cms.vstring("goodPatJetsPFlow"),

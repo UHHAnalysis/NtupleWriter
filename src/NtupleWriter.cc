@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.20 2012/06/18 15:53:51 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.21 2012/06/26 08:13:28 peiffer Exp $
 //
 //
 
@@ -143,6 +143,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     }
   }
   if(doGenInfo){
+    genparticle_source= iConfig.getParameter<edm::InputTag>("genparticle_source");
     tr->Branch("genInfo","GenInfo",&genInfo);
     tr->Branch("GenParticles","std::vector<GenParticle>", &genps);
   }
@@ -292,7 +293,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
 
      edm::Handle<reco::GenParticleCollection> genPartColl;
-     iEvent.getByLabel(edm::InputTag("genParticles"), genPartColl);
+     iEvent.getByLabel(genparticle_source, genPartColl);
      int index=-1;
      for(reco::GenParticleCollection::const_iterator iter = genPartColl->begin(); iter != genPartColl->end(); ++ iter){
        index++;
@@ -383,6 +384,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.set_EcalEnergy(pat_ele.ecalEnergy());
 	 ele.set_mvaTrigV0(pat_ele.electronID("mvaTrigV0"));
 	 ele.set_mvaNonTrigV0(pat_ele.electronID("mvaNonTrigV0"));
+	 float AEff03 = 0.00;
+	 if(isRealData){
+	   AEff03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pat_ele.superCluster()->eta(), ElectronEffectiveArea::kEleEAData2011);
+	 }else{
+	   AEff03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pat_ele.superCluster()->eta(), ElectronEffectiveArea::kEleEAFall11MC);
+	 }
+	 ele.set_AEff(AEff03);
 
 	 eles[j].push_back(ele);
        }
@@ -592,6 +600,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jet.set_btag_jetBProbability(pat_jet.bDiscriminator("jetBProbabilityBJetTags"));
 	 jet.set_btag_jetProbability(pat_jet.bDiscriminator("jetProbabilityBJetTags"));
 
+	 
 	 const reco::GenJet *genj = pat_jet.genJet();
 	 if(genj){
 	   jet.set_genjet_pt(genj->pt());
@@ -611,7 +620,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     if(jet.genparticles_indices().size()!= jetgenps.size())
 	       std::cout << "WARNING: Found only " << jet.genparticles_indices().size() << " from " << jetgenps.size() << " gen particles of this jet"<<std::endl;
 	   }
+	   
 	 }
+	 
 	 jets[j].push_back(jet);
        }
      }

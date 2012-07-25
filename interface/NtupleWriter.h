@@ -44,6 +44,8 @@
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "DataFormats/Luminosity/interface/LumiSummary.h"
 
+#include "EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h"
+
 #include "UHHAnalysis/NtupleWriter/Objects/Particle.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Jet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Electron.h"
@@ -155,6 +157,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       float beamspot_y0;
       float beamspot_z0;
 
+      edm::InputTag genparticle_source;
       GenInfo genInfo;
       std::vector<GenParticle> genps;
 
