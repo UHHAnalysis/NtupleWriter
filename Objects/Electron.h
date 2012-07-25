@@ -41,6 +41,7 @@ class Electron : public Particle{
     m_EcalEnergy=0;
     m_mvaTrigV0=0;
     m_mvaNonTrigV0=0;
+    m_AEff=0;
   };
 
   ~Electron(){
@@ -75,6 +76,7 @@ class Electron : public Particle{
   float EcalEnergy() const{return m_EcalEnergy;}
   float mvaTrigV0() const{return m_mvaTrigV0;}
   float mvaNonTrigV0() const{return m_mvaNonTrigV0;}
+  float AEff() const{return m_AEff;}
 
 
   void set_vertex_x(float x){m_vertex_x=x;} 
@@ -106,6 +108,7 @@ class Electron : public Particle{
   void set_EcalEnergy(float x){m_EcalEnergy=x;}
   void set_mvaTrigV0(float x){m_mvaTrigV0=x;}
   void set_mvaNonTrigV0(float x){m_mvaNonTrigV0=x;}
+  void set_AEff(float x){m_AEff=x;}
 
   float gsfTrack_dxy_vertex(const float point_x, const float point_y) const{ 
     return ( - (m_gsfTrack_vx-point_x) * m_gsfTrack_py + (m_gsfTrack_vy-point_y) * m_gsfTrack_px ) / sqrt(m_gsfTrack_px*m_gsfTrack_px+m_gsfTrack_py*m_gsfTrack_py);  
@@ -114,7 +117,13 @@ class Electron : public Particle{
     return (m_gsfTrack_vz-point_z) - ((m_gsfTrack_vx-point_x)*m_gsfTrack_px+(m_gsfTrack_vy-point_y)*m_gsfTrack_py)/(m_gsfTrack_px*m_gsfTrack_px+m_gsfTrack_py*m_gsfTrack_py) * m_gsfTrack_pz; 
   }
   float relIso() const{
+    return ( m_chargedHadronIso +  m_neutralHadronIso + m_photonIso  ) / pt();
+  }
+  float relIsodb() const{
     return ( m_chargedHadronIso + std::max( 0.0, m_neutralHadronIso + m_photonIso - 0.5*m_puChargedHadronIso ) ) / pt();
+  }
+  float relIsorho(const double rho) const{
+    return ( m_chargedHadronIso + std::max( 0.0, m_neutralHadronIso + m_photonIso - rho*m_AEff ) ) / pt();
   }
 
 enum E_eleIDType{
@@ -193,6 +202,7 @@ enum E_eleIDType{
   float m_EcalEnergy;
   float m_mvaTrigV0;
   float m_mvaNonTrigV0;
+  float m_AEff;
 
 };
 
