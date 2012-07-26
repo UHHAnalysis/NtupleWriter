@@ -17,30 +17,25 @@ writeGenParticles=False
 forceCheckClosestZVertex=False
 useSusyFilter=False
 useExtraJetColls=False
-
-
+globalTag=''
 
 if not useData :
-	inputJetCorrLabel = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
+    inputJetCorrLabel = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
 
-	process.source.fileNames = [
-		'/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/FEC0CBA1-5A81-E111-8D3A-0018F3D0968E.root',
-		'/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/920C7062-4D81-E111-A036-001A92810AE4.root',
-		'/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/3C228B10-3381-E111-A3FE-003048678FFE.root'
-		]    		
+    process.source.fileNames = [
+        '/store/mc/Summer12/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V9-v2/0000/00024240-BCB8-E111-A547-00304867901A.root'
+        
+    ]
 
 else :
-	inputJetCorrLabel = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
-	process.source.fileNames = [
-		'/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/FEBE99BB-3881-E111-B1F3-003048D42DC8.root'
-		]
-
-	
+    inputJetCorrLabel = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
+    process.source.fileNames = [
+        '/store/data/Run2012A/MuEG/AOD/29Jun2012-v1/0000/FCC05CD8-E9C2-E111-A3A2-20CF305B0508.root'
+    ]
 
 #process.source.eventsToProcess = cms.untracked.VEventRange( ['1:86747'] )
 
 #process.source.skipEvents = cms.untracked.uint32(17268) 
-
 
 print 'Running jet corrections: '
 print inputJetCorrLabel
@@ -52,15 +47,28 @@ import sys
 ####### Global Setup ##########
 ###############################
 
-
-
 # 4.2.x or 52x configuration
 fileTag = "52x"
-if useData :
-	process.GlobalTag.globaltag = cms.string( 'GR_R_52_V9B::All' )
-else :
-	process.GlobalTag.globaltag = cms.string( 'START52_V11B::All' )
 
+if useData :
+    if globalTag is '':
+        process.GlobalTag.globaltag = cms.string( 'GR_R_52_V9D::All' )
+    else:
+        process.GlobalTag.globaltag = cms.string( globalTag )
+    # Jet Probability Calibration for 52x and 53x data
+    process.GlobalTag.toGet = cms.VPSet(
+        cms.PSet(record = cms.string("BTagTrackProbability2DRcd"),
+                 tag = cms.string("TrackProbabilityCalibration_2D_2012DataTOT_v1_offline"),
+                 connect = cms.untracked.string("frontier://FrontierPrep/CMS_COND_BTAU")),
+        cms.PSet(record = cms.string("BTagTrackProbability3DRcd"),
+                 tag = cms.string("TrackProbabilityCalibration_3D_2012DataTOT_v1_offline"),
+                 connect = cms.untracked.string("frontier://FrontierPrep/CMS_COND_BTAU"))
+    )
+else :
+    if globalTag is '':
+        process.GlobalTag.globaltag = cms.string( 'START52_V11C::All' )
+    else:
+        process.GlobalTag.globaltag = cms.string( globalTag )
 
 # require scraping filter
 process.scrapingVeto = cms.EDFilter("FilterOutScraping",
@@ -80,8 +88,6 @@ process.HBHENoiseFilter.minIsolatedNoiseSumEt = cms.double(999999.)
 # switch on PAT trigger
 #from PhysicsTools.PatAlgos.tools.trigTools import switchOnTrigger
 #switchOnTrigger( process, hltProcess=hltProcess )
-
-
 
 
 ###############################
@@ -172,34 +178,51 @@ from RecoJets.JetProducers.GenJetParameters_cfi import *
 from PhysicsTools.PatAlgos.tools.pfTools import *
 postfix = "PFlow"
 usePF2PAT(process,runPF2PAT=True, jetAlgo='AK5', runOnMC=not useData, postfix=postfix,
-	  jetCorrections=inputJetCorrLabel, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'))
+	  jetCorrections=inputJetCorrLabel, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'), typeIMetCorrections=True)
+useGsfElectrons(process,postfix,dR="03")
 if not forceCheckClosestZVertex :
     process.pfPileUpPFlow.checkClosestZVertex = False
 
 
 postfixLoose = "PFlowLoose"
 usePF2PAT(process,runPF2PAT=True, jetAlgo='AK5', runOnMC=not useData, postfix=postfixLoose,
-	  jetCorrections=inputJetCorrLabel, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'))
+	  jetCorrections=inputJetCorrLabel, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'), typeIMetCorrections=True)
+useGsfElectrons(process,postfixLoose,dR="03")
 if not forceCheckClosestZVertex :
     process.pfPileUpPFlowLoose.checkClosestZVertex = False
 
-# Turn on the delta-beta corrections
-process.pfIsolatedElectronsPFlow.doDeltaBetaCorrection = True
-process.pfIsolatedMuonsPFlow.doDeltaBetaCorrection = True
-process.pfIsolatedElectronsPFlowLoose.doDeltaBetaCorrection = True
-process.pfIsolatedMuonsPFlowLoose.doDeltaBetaCorrection = True
-
 # Set up "loose" leptons. 
+
 process.pfIsolatedMuonsPFlowLoose.isolationCut = cms.double(999.0) 
 process.pfIsolatedElectronsPFlowLoose.isolationCut = cms.double(999.0)
 process.patMuonsPFlowLoose.pfMuonSource = "pfMuonsPFlowLoose"
 process.patElectronsPFlowLoose.pfElectronSource = "pfElectronsPFlowLoose"
 
+# Keep additional PF information for taus
+# embed in AOD externally stored leading PFChargedHadron candidate
+process.patTausPFlow.embedLeadPFChargedHadrCand = cms.bool(True)  
+# embed in AOD externally stored signal PFChargedHadronCandidates
+process.patTausPFlow.embedSignalPFChargedHadrCands = cms.bool(True)  
+# embed in AOD externally stored signal PFGammaCandidates
+process.patTausPFlow.embedSignalPFGammaCands = cms.bool(True) 
+# embed in AOD externally stored isolation PFChargedHadronCandidates
+process.patTausPFlow.embedIsolationPFChargedHadrCands = cms.bool(True) 
+# embed in AOD externally stored isolation PFGammaCandidates
+process.patTausPFlow.embedIsolationPFGammaCands = cms.bool(True)
+# embed in AOD externally stored leading PFChargedHadron candidate
+process.patTaus.embedLeadPFChargedHadrCand = cms.bool(True)  
+# embed in AOD externally stored signal PFChargedHadronCandidates 
+process.patTaus.embedSignalPFChargedHadrCands = cms.bool(True)  
+# embed in AOD externally stored signal PFGammaCandidates
+process.patTaus.embedSignalPFGammaCands = cms.bool(True) 
+# embed in AOD externally stored isolation PFChargedHadronCandidates 
+process.patTaus.embedIsolationPFChargedHadrCands = cms.bool(True) 
+# embed in AOD externally stored isolation PFGammaCandidates
+process.patTaus.embedIsolationPFGammaCands = cms.bool(True)
 
 # turn to false when running on data
 if useData :
     removeMCMatching( process, ['All'] )
-
 
 ###############################
 ###### Electron ID ############
@@ -216,11 +239,29 @@ process.patElectronsPFlowLoose.electronIDSources.mvaTrigV0    = cms.InputTag("mv
 process.patElectronsPFlowLoose.electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0") 
 process.patPF2PATSequencePFlowLoose.replace( process.patElectronsPFlowLoose, process.eidMVASequence * process.patElectronsPFlowLoose )
 
+#Convesion Rejection
+# this should be your last selected electron collection name since currently index is used to match with electron later. We can fix this using reference pointer.
+process.patConversionsPFlow = cms.EDProducer("PATConversionProducer",
+                                             electronSource = cms.InputTag("selectedPatElectronsPFlow")      
+                                             )
+process.patPF2PATSequencePFlow += process.patConversionsPFlow
+process.patConversionsPFlowLoose = cms.EDProducer("PATConversionProducer",
+                                                  electronSource = cms.InputTag("selectedPatElectronsPFlowLoose")  
+                                                  )
+process.patPF2PATSequencePFlowLoose += process.patConversionsPFlowLoose
+
+
 ###############################
 ###### Bare KT 0.6 jets #######
 ###############################
 
 from RecoJets.JetProducers.kt4PFJets_cfi import kt4PFJets
+from RecoJets.JetProducers.kt4PFJets_cfi import *
+process.kt6PFJetsForIsolation =  kt4PFJets.clone(
+    rParam = 0.6,
+    doRhoFastjet = True,
+    Rho_EtaMax = cms.double(2.5)
+    )
 
 ###############################
 ###### Bare CA 0.8 jets #######
@@ -524,7 +565,7 @@ addJetCollection(process,
                  doJTA=True,
                  doBTagging=True,
                  jetCorrLabel=inputJetCorrLabel,
-                 doType1MET=False,
+                 doType1MET=True,
                  doL1Cleaning=False,
                  doL1Counters=False,
                  genJetCollection = cms.InputTag("ca8GenJetsNoNu"),
@@ -538,7 +579,7 @@ addJetCollection(process,
                  doJTA=False,
                  doBTagging=False,
                  jetCorrLabel=inputJetCorrLabel,
-                 doType1MET=False,
+                 doType1MET=True,
                  doL1Cleaning=False,
                  doL1Counters=False,
                  genJetCollection = cms.InputTag("ca8GenJetsNoNu"),
@@ -553,7 +594,7 @@ addJetCollection(process,
                  doJTA=True,
                  doBTagging=True,
                  jetCorrLabel=inputJetCorrLabel,
-                 doType1MET=False,
+                 doType1MET=True,
                  doL1Cleaning=False,
                  doL1Counters=False,
                  genJetCollection = cms.InputTag("ca8GenJetsNoNu"),
@@ -568,7 +609,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ca8GenJetsNoNu"),
@@ -582,7 +623,7 @@ if useExtraJetColls:
 			 doJTA=True,
 			 doBTagging=True,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ca8GenJetsNoNu"),
@@ -596,7 +637,7 @@ if useExtraJetColls:
 			 doJTA=True,            # Run Jet-Track association & JetCharge
 			 doBTagging=True,       # Run b-tagging
 			 jetCorrLabel=None,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak5GenJetsNoNu"),
@@ -609,7 +650,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak5GenJetsNoNu"),
@@ -623,7 +664,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak5GenJetsNoNu"),
@@ -636,7 +677,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak5GenJetsNoNu"),
@@ -650,7 +691,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak7GenJetsNoNu"),
@@ -663,7 +704,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak7GenJetsNoNu"),
@@ -677,7 +718,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak7GenJetsNoNu"),
@@ -690,7 +731,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak7GenJetsNoNu"),
@@ -707,7 +748,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak8GenJetsNoNu"),
@@ -720,7 +761,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak8GenJetsNoNu"),
@@ -734,7 +775,7 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak8GenJetsNoNu"),
@@ -747,21 +788,18 @@ if useExtraJetColls:
 			 doJTA=False,
 			 doBTagging=False,
 			 jetCorrLabel=inputJetCorrLabel,
-			 doType1MET=False,
+			 doType1MET=True,
 			 doL1Cleaning=False,
 			 doL1Counters=False,
 			 genJetCollection = cms.InputTag("ak8GenJetsNoNu"),
 			 doJetID = False
 			 )
 
-
-
-
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
 		    doJTA        = False,
 		    doBTagging   = False,
 		    jetCorrLabel = inputJetCorrLabel,
-		    doType1MET   = False,
+		    doType1MET   = True,
 		    genJetCollection=cms.InputTag("ak5GenJetsNoNu"),
 		    doJetID      = False
 		    )
@@ -786,6 +824,7 @@ if useExtraJetColls:
 		      process.patJetCorrFactorsAK8FilteredPF,
 		      process.patJetCorrFactorsAK8TrimmedPF] :
 	    icorr.rho = cms.InputTag("kt6PFJets", "rho")
+
 
 
 ###############################
@@ -1238,6 +1277,7 @@ process.patseq = cms.Sequence(
     process.caPrunedGen*
     process.caTopTagGen*
     process.CATopTagInfosGen*
+    process.kt6PFJetsForIsolation*
     getattr(process,"patPF2PATSequence"+postfixLoose)#*
 #    process.miniPFLeptonSequence
     )
@@ -1282,7 +1322,7 @@ if useExtraJetColls:
 	process.patseq *= process.extraJetSeq
 
 
-if useData == True :
+if useData :
     process.patseq.remove( process.genParticlesForJetsNoNu )
     process.patseq.remove( process.genJetParticles )
     process.patseq.remove( process.ak8GenJetsNoNu )
@@ -1293,6 +1333,8 @@ if useData == True :
     process.patseq.remove( process.caTopTagGen )
     process.patseq.remove( process.CATopTagInfosGen )
     process.patseq.remove( process.prunedGenParticles )
+    process.patseq.remove( process.caMassDropFilteredGenJetsNoNu )
+
     if useExtraJetColls:
 	    process.patseq.remove( process.ak8GenJetsNoNu )
 	    process.patseq.remove( process.caFilteredGenJetsNoNu )
@@ -1305,7 +1347,6 @@ if useData == True :
             process.patseq.remove( process.ca8PrunedGenLite )
             process.patseq.remove( process.ca12FilteredGenLite )
             process.patseq.remove( process.ca12MassDropFilteredGenLite )
-
 
 if writeSimpleInputs :
 	process.patseq *= cms.Sequence(process.pfInputs)
@@ -1330,7 +1371,7 @@ else :
 
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/TTbarTest_v5.root'), 
+                                  fileName = cms.string('Ntuple.root'), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
@@ -1341,37 +1382,37 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doMET = cms.bool(True),
                                   doPV = cms.bool(True),
                                   doGenInfo = cms.bool(not useData),
-                                  doAllGenParticles = cms.bool(writeAllGenParticles),
-                                  doLumiInfo = cms.bool(useData),
+				  doAllGenParticles = cms.bool(writeAllGenParticles), #set to true if you want to store all gen particles, otherwise, only tops and status 3 particles are stored
+				  doLumiInfo = cms.bool(useData),
                                   doTrigger = cms.bool(True),
-				  rho_source =  cms.InputTag("kt6PFJets", "rho"),
-                                  electron_sources = cms.vstring("selectedPatElectronsPFlow","selectedPatElectronsPFlowLoose"),
+				  rho_source = cms.InputTag("kt6PFJets", "rho", "RECO"),
+                                  genparticle_source = cms.InputTag("genParticles" ),
+                                  electron_sources = cms.vstring("selectedPatElectronsPFlow"), #,"selectedPatElectronsPFlowLoose"),
                                   muon_sources = cms.vstring("selectedPatMuonsPFlow","selectedPatMuonsPFlowLoose"),
-                                  tau_sources = cms.vstring("selectedPatTausPFlow","selectedPatTaus"),
+                                  tau_sources = cms.vstring("selectedPatTausPFlow"),
                                   tau_ptmin = cms.double(0.0),
                                   tau_etamax = cms.double(999.0),
                                   jet_sources = cms.vstring("goodPatJetsPFlow"),
                                   jet_ptmin = cms.double(10.0),
                                   jet_etamax = cms.double(5.0),
-                                  #photon_sources = cms.vstring("selectedPatPhotons"),
+				  #photon_sources = cms.vstring("selectedPatPhotons"),
                                   topjet_sources = cms.vstring("goodPatJetsCATopTagPF","goodPatJetsCA8PrunedPF"),
                                   topjet_ptmin = cms.double(150.0), 
                                   topjet_etamax = cms.double(5.0),
-                                  doGenTopJets = cms.bool(not useData),
+				  doGenTopJets = cms.bool(not useData),
                                   gentopjet_sources = cms.vstring("caTopTagGen" ),
                                   gentopjet_ptmin = cms.double(150.0), 
                                   gentopjet_etamax = cms.double(5.0),
-                                  met_sources =  cms.vstring("patMETs", "patMETsPFlow"),
+                                  met_sources =  cms.vstring("patMETs","patMETsPFlow"),
                                   pv_sources = cms.vstring("goodOfflinePrimaryVertices"),
                                   trigger_prefixes = cms.vstring(#"HLT_IsoMu", "HLT_Mu",
                                                                  #"HLT_L1SingleMu", "HLT_L2Mu",
                                                                  #"HLT_Ele",
                                                                  "HLT_",
                                                                  #"HLT_DoubleMu", "HLT_DoubleEle"
-                                                                 ),
+	                                                         ),
                                   
 )
-
 
 process.p0 *= process.MyNtuple
 
@@ -1379,13 +1420,16 @@ process.outpath = cms.EndPath()
 
 
 # reduce verbosity
-process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(10)
+process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(100)
 
 
 # process all the events
-process.maxEvents.input = -1
-process.options.wantSummary =False
+process.maxEvents.input = 100
+process.options.wantSummary = False
+process.out.dropMetaData = cms.untracked.string("DROPPED")
+
 
 process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
+
 
 #open('junk.py','w').write(process.dumpPython())
