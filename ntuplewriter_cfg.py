@@ -21,7 +21,7 @@ useData = False
 writeAllGenParticles=False
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/SFrame_Ntuples/TTbarTest_v5.root'), 
+                                  fileName = cms.string('Ntuple.root'), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
