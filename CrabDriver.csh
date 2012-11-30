@@ -1,8 +1,7 @@
 #!/bin/csh
 if ($#argv == 0) then
     echo "Usage: source CrabDriver.csh {DataSetPath} {DataSetName} [LumiMask]"
-    echo " {..} are required, (..) is optional, [LumiMask] is required for data samples"
-    echo " If no RemoteOutputDir is specified then /store/user/"${user}"/53xNTuples will be used"
+    echo " {..} are required, LumiMask] is required for data samples"
     echo " Example: source CrabDiver.csh /ElectronHad/pturner-Run2012A-13Jul2012-v1_TLBSM_53x_v2-e3fb55b810dc7a0811f4c66dfa2267c9/USER ElectronHad_Run2012A MyJSON.txt"
     exit
 endif
