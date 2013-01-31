@@ -41,6 +41,7 @@ class Jet : public Particle{
      m_genjet_phi=0;
      m_genjet_energy=0;
      m_genparticles_indices.clear();
+     m_pfconstituents.clear();
   };
 
   ~Jet(){
@@ -54,6 +55,10 @@ class Jet : public Particle{
     v4.SetE(m_genjet_energy);
     return v4;
   };
+
+  std::vector<Particle> pfconstituents() const{return m_pfconstituents;}
+
+  void add_pfconstituents(Particle p){m_pfconstituents.push_back(p);}
 
   int nTracks() const{return m_nTracks;}
   float jetArea() const{return m_jetArea;}
@@ -163,6 +168,8 @@ class Jet : public Particle{
   float m_genjet_energy;
 
   std::vector<unsigned int> m_genparticles_indices;
+
+  std::vector<Particle> m_pfconstituents;
 
 };
 
