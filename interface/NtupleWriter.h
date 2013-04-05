@@ -103,6 +103,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doLumiInfo;
       bool doPV;
       bool doTrigger;
+      bool doTagInfos;
 
       int run;
       int luminosityBlock;
@@ -160,7 +161,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       edm::InputTag genparticle_source;
       GenInfo genInfo;
       std::vector<GenParticle> genps;
-
+      edm::InputTag SVComputer_;
       std::vector<std::string> trigger_prefixes;
       //std::map<std::string, bool> triggerResults;
       std::vector<std::string> triggerNames;

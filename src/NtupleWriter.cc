@@ -13,13 +13,16 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.21 2012/06/26 08:13:28 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.22 2012/07/25 09:56:57 peiffer Exp $
 //
 //
 
-#include "UHHAnalysis//NtupleWriter/interface/NtupleWriter.h"
-
-
+#include "UHHAnalysis/NtupleWriter/interface/NtupleWriter.h"
+#include "RecoBTau/JetTagComputer/interface/GenericMVAJetTagComputer.h"
+#include "RecoBTau/JetTagComputer/interface/GenericMVAJetTagComputerWrapper.h"
+#include "RecoBTau/JetTagComputer/interface/JetTagComputer.h"
+#include "RecoBTau/JetTagComputer/interface/JetTagComputerRecord.h"
+#include "RecoBTag/SecondaryVertex/interface/CombinedSVComputer.h"
 
 //
 // constants, enums and typedefs
@@ -60,7 +63,8 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
   doTrigger = iConfig.getParameter<bool>("doTrigger");
-
+  SVComputer_  = iConfig.getUntrackedParameter<edm::InputTag>("svComputer",edm::InputTag("combinedSecondaryVertex"));
+  doTagInfos = iConfig.getUntrackedParameter<bool>("doTagInfos",false);
   // initialization of tree variables
 
   tr->Branch("run",&run);
@@ -705,24 +709,115 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	 for (unsigned int k = 0; k < pat_topjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
-	   subjet_v4.set_pt(pat_topjet.daughter(k)->p4().pt());
-	   subjet_v4.set_eta(pat_topjet.daughter(k)->p4().eta());
-	   subjet_v4.set_phi(pat_topjet.daughter(k)->p4().phi()); 
-	   subjet_v4.set_energy(pat_topjet.daughter(k)->p4().E()); 
-	   topjet.add_subjet(subjet_v4);
+
+	   reco::Candidate const * subjetd =  pat_topjet.daughter(k);
+           pat::Jet const * patsubjetd = dynamic_cast<pat::Jet const *>(subjetd);
+	   if(patsubjetd)
+	   {
+	      subjet_v4.set_pt(patsubjetd->correctedP4(0).pt());
+              subjet_v4.set_eta(patsubjetd->correctedP4(0).eta());
+              subjet_v4.set_phi(patsubjetd->correctedP4(0).phi()); 
+              subjet_v4.set_energy(patsubjetd->correctedP4(0).E());
+              topjet.add_subjet(subjet_v4);
+	      //btag info
+              topjet.add_subFlavour(patsubjetd->partonFlavour());
+              topjet.add_subCSV(patsubjetd->bDiscriminator("combinedSecondaryVertexBJetTags"));
+	      if (doTagInfos)
+		{
+		  //ip tag info
+		  reco::TaggingVariableList tvlIP=patsubjetd->tagInfoTrackIP("impactParameter")->taggingVariables();
+		  topjet.add_subTrackMomentum(tvlIP.getList(reco::btau::trackMomentum,false));
+		  topjet.add_subTrackEta(tvlIP.getList(reco::btau::trackEta,false));
+		  topjet.add_subTrackEtaRel(tvlIP.getList(reco::btau::trackEtaRel,false));
+		  topjet.add_subTrackDeltaR(tvlIP.getList(reco::btau::trackDeltaR,false));
+		  topjet.add_subTrackSip3dVal(tvlIP.getList(reco::btau::trackSip3dVal,false));
+		  topjet.add_subTrackSip3dSig(tvlIP.getList(reco::btau::trackSip3dSig,false));
+		  topjet.add_subTrackSip2dVal(tvlIP.getList(reco::btau::trackSip2dVal,false));
+		  topjet.add_subTrackSip2dSig(tvlIP.getList(reco::btau::trackSip2dSig,false));
+		  topjet.add_subTrackDecayLenVal(tvlIP.getList(reco::btau::trackDecayLenVal,false));
+		  topjet.add_subTrackChi2(tvlIP.getList(reco::btau::trackChi2,false));
+		  topjet.add_subTrackNTotalHits(tvlIP.getList(reco::btau::trackNTotalHits,false));
+		  topjet.add_subTrackNPixelHits(tvlIP.getList(reco::btau::trackNPixelHits,false));     
+		  topjet.add_subTrackPtRel(tvlIP.getList(reco::btau::trackPtRel,false));
+		  topjet.add_subTrackPPar(tvlIP.getList(reco::btau::trackPPar,false));
+		  topjet.add_subTrackPtRatio(tvlIP.getList(reco::btau::trackPtRatio,false));
+		  topjet.add_subTrackPParRatio(tvlIP.getList(reco::btau::trackPParRatio,false));
+		  topjet.add_subTrackJetDistVal(tvlIP.getList(reco::btau::trackJetDistVal,false));
+		  topjet.add_subTrackJetDistSig(tvlIP.getList(reco::btau::trackJetDistSig,false));
+		  topjet.add_subTrackGhostTrackDistVal(tvlIP.getList(reco::btau::trackGhostTrackDistVal,false));
+		  topjet.add_subTrackGhostTrackDistSig(tvlIP.getList(reco::btau::trackGhostTrackDistSig,false));
+		  topjet.add_subTrackGhostTrackWeight(tvlIP.getList(reco::btau::trackGhostTrackWeight,false));
+		  //sv tag info
+		  reco::TaggingVariableList tvlSV=patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->taggingVariables();
+		  topjet.add_subFlightDistance2dVal(tvlSV.getList(reco::btau::flightDistance2dVal,false));
+		  topjet.add_subFlightDistance2dSig(tvlSV.getList(reco::btau::flightDistance2dSig,false));
+		  topjet.add_subFlightDistance3dVal(tvlSV.getList(reco::btau::flightDistance3dVal,false));
+		  topjet.add_subFlightDistance3dSig(tvlSV.getList(reco::btau::flightDistance3dSig,false));
+		  topjet.add_subVertexJetDeltaR(tvlSV.getList(reco::btau::vertexJetDeltaR,false));
+		  topjet.add_subJetNSecondaryVertices(tvlSV.get(reco::btau::jetNSecondaryVertices,-9999));
+		  topjet.add_subVertexNTracks(tvlSV.get(reco::btau::vertexNTracks,-9999));
+		  std::vector<TLorentzVector> vp4; vp4.clear();
+		  std::vector<float> vchi2; vchi2.clear();
+		  std::vector<float> vndof; vndof.clear();
+		  std::vector<float> vchi2ndof; vchi2ndof.clear();
+		  std::vector<float> vtrsize; vtrsize.clear();
+		  for(unsigned int i=0; i<patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->nVertices(); i++)
+		    {
+		      ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > p4 = patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->secondaryVertex(i).p4();
+		      vp4.push_back(TLorentzVector(p4.px(),p4.py(),p4.pz(),p4.e()));
+		      vchi2.push_back(patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->secondaryVertex(i).chi2());  
+		      vndof.push_back(patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->secondaryVertex(i).ndof());  
+		      vchi2ndof.push_back(patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->secondaryVertex(i).normalizedChi2());  
+		      vtrsize.push_back(patsubjetd->tagInfoSecondaryVertex("secondaryVertex")->secondaryVertex(i).tracksSize());  
+		    }
+		  topjet.add_subSecondaryVertex(vp4);
+		  topjet.add_subVertexChi2(vchi2);
+		  topjet.add_subVertexNdof(vndof);
+		  topjet.add_subVertexNormalizedChi2(vchi2ndof);
+		  topjet.add_subVertexTracksSize(vtrsize);
+		  //try computer
+		  edm::ESHandle<JetTagComputer> computerHandle;
+		  iSetup.get<JetTagComputerRecord>().get( SVComputer_.label(), computerHandle );
+		  const GenericMVAJetTagComputer *computer = dynamic_cast<const GenericMVAJetTagComputer*>( computerHandle.product() );
+		  if(computer)
+		    {
+		      computer->passEventSetup(iSetup);
+		      std::vector<const reco::BaseTagInfo*>  baseTagInfos;
+		      baseTagInfos.push_back(patsubjetd->tagInfoTrackIP("impactParameter") );
+		      baseTagInfos.push_back(patsubjetd->tagInfoSecondaryVertex("secondaryVertex") );      
+		      JetTagComputer::TagInfoHelper helper(baseTagInfos);
+		      reco::TaggingVariableList vars = computer->taggingVariables(helper);
+		      topjet.add_subVertexMassJTC(vars.get(reco::btau::vertexMass,-9999));
+		      topjet.add_subVertexCategoryJTC(vars.get(reco::btau::vertexCategory,-9999));
+		      topjet.add_subVertexEnergyRatioJTC(vars.get(reco::btau::vertexEnergyRatio,-9999));
+		      topjet.add_subTrackSip3dSigAboveCharmJTC(vars.get(reco::btau::trackSip3dSigAboveCharm,-9999));
+		    }
+		}
+	   }
+	   else
+	     {
+	       //filling only standard information in case the subjet has not been pat-tified during the pattuples production
+	       subjet_v4.set_pt(pat_topjet.daughter(k)->p4().pt());
+	       subjet_v4.set_eta(pat_topjet.daughter(k)->p4().eta());
+	       subjet_v4.set_phi(pat_topjet.daughter(k)->p4().phi());
+	       subjet_v4.set_energy(pat_topjet.daughter(k)->p4().E());
+	       topjet.add_subjet(subjet_v4);
+	     }
+	   
+	   
 	 }
 	 topjets[j].push_back(topjet);
        }
      }
    }
-
-
+   
+   
    // ------------- generator top jets -------------
    if(doGenTopJets){
      for(size_t j=0; j< gentopjet_sources.size(); ++j){
        
        gentopjets[j].clear();
-
+       
        edm::Handle<reco::BasicJetCollection> reco_gentopjets;
        //edm::Handle<std::vector<reco::Jet> > reco_gentopjets;
        iEvent.getByLabel(gentopjet_sources[j], reco_gentopjets);
