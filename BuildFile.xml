@@ -16,6 +16,7 @@
 <use name="JetMETCorrections/Objects"/>
 <use name="RecoEgamma/EgammaTools"/>
 <use name="DataFormats/Luminosity"/>
+<use   name="RecoBTau/JetTagComputer"/>
 
 <export>
    <lib name="1"/>
