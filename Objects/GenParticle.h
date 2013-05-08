@@ -18,6 +18,7 @@ class GenParticle : public Particle{
     m_mother2=0;
     m_daughter1=0;
     m_daughter2=0;
+    m_spin=0;
   };
   ~GenParticle(){
   };
@@ -29,6 +30,7 @@ class GenParticle : public Particle{
   int mother2() const{return m_mother2;}
   int daughter1() const{return m_daughter1;}
   int daughter2() const{return m_daughter2;}
+  int spin() const{return m_spin;}
 
   //return mother 1 or 2 (ind<=1 or ind>=2)
   GenParticle* mother(std::vector<GenParticle> *gplist, int ind=1){
@@ -72,6 +74,7 @@ class GenParticle : public Particle{
   void set_mother2(int x){  m_mother2=x;}
   void set_daughter1(int x){  m_daughter1=x;}
   void set_daughter2(int x){  m_daughter2=x;}
+  void set_spin(int x){  m_spin=x;}
 
  private:
   int m_pdgId;
@@ -82,6 +85,7 @@ class GenParticle : public Particle{
   int m_mother2;
   int m_daughter1;
   int m_daughter2;
+  int m_spin;
  
 
 };
