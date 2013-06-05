@@ -93,6 +93,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doMuons;
       bool doTaus;
       bool doJets;
+      bool doGenJets;
       bool doJECUncertainty;
       bool doTopJets;
       bool doGenTopJets;
@@ -134,6 +135,11 @@ class NtupleWriter : public edm::EDAnalyzer {
       std::vector<Jet> jets[Nmax];
       double jet_ptmin;
       double jet_etamax;
+
+      std::vector<std::string> genjet_sources;
+      std::vector<Particle> genjets[Nmax];
+      double genjet_ptmin;
+      double genjet_etamax;
 
       std::vector<std::string> topjet_sources;
       std::vector<TopJet> topjets[Nmax];

@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.22 2012/07/25 09:56:57 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.23 2013/04/05 13:23:16 eusai Exp $
 //
 //
 
@@ -53,6 +53,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doMuons = iConfig.getParameter<bool>("doMuons");
   doTaus = iConfig.getParameter<bool>("doTaus"); 
   doJets = iConfig.getParameter<bool>("doJets");
+  doGenJets = iConfig.getParameter<bool>("doGenJets");
   doJECUncertainty = iConfig.getParameter<bool>("doJECUncertainty");
   doGenTopJets = iConfig.getParameter<bool>("doGenTopJets");  
   doPhotons = iConfig.getParameter<bool>("doPhotons");
@@ -110,6 +111,14 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     jet_etamax = iConfig.getParameter<double> ("jet_etamax");
     for(size_t j=0; j< jet_sources.size(); ++j){  
       tr->Branch( jet_sources[j].c_str(), "std::vector<Jet>", &jets[j]);
+    }
+  }
+  if(doGenJets){
+    genjet_sources = iConfig.getParameter<std::vector<std::string> >("genjet_sources");
+    genjet_ptmin = iConfig.getParameter<double> ("genjet_ptmin");
+    genjet_etamax = iConfig.getParameter<double> ("genjet_etamax");
+    for(size_t j=0; j< genjet_sources.size(); ++j){  
+      tr->Branch( genjet_sources[j].c_str(), "std::vector<Particle>", &genjets[j]);
     }
   }
   if(doTopJets){
@@ -628,6 +637,35 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }
 	 
 	 jets[j].push_back(jet);
+       }
+     }
+   }
+
+   //-------------- gen jets -------------
+
+   if(doGenJets){
+     for(size_t j=0; j< genjet_sources.size(); ++j){
+       
+       genjets[j].clear();
+
+       edm::Handle< std::vector<reco::GenJet> > genjet_handle;
+       iEvent.getByLabel(genjet_sources[j], genjet_handle);
+       const std::vector<reco::GenJet>& gen_jets = *(genjet_handle.product());
+  
+       for (unsigned int i = 0; i < gen_jets.size(); ++i) {
+	 pat::Jet gen_jet = gen_jets[i];
+	 if(gen_jet.pt() < genjet_ptmin) continue;
+	 if(fabs(gen_jet.eta()) > genjet_etamax) continue;
+
+	 Particle jet;
+	 jet.set_charge(gen_jet.charge());
+	 jet.set_pt(gen_jet.pt());
+	 jet.set_eta(gen_jet.eta());
+	 jet.set_phi(gen_jet.phi());
+	 jet.set_energy(gen_jet.energy());
+
+	 genjets[j].push_back(jet);
+
        }
      }
    }
