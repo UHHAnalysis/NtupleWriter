@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.23 2013/04/05 13:23:16 eusai Exp $
+// $Id: NtupleWriter.cc,v 1.24 2013/06/05 14:13:58 peiffer Exp $
 //
 //
 
@@ -555,6 +555,35 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
    }
 
+   //-------------- gen jets -------------
+
+   if(doGenJets){
+     for(size_t j=0; j< genjet_sources.size(); ++j){
+       
+       genjets[j].clear();
+
+       edm::Handle< std::vector<reco::GenJet> > genjet_handle;
+       iEvent.getByLabel(genjet_sources[j], genjet_handle);
+       const std::vector<reco::GenJet>& gen_jets = *(genjet_handle.product());
+  
+       for (unsigned int i = 0; i < gen_jets.size(); ++i) {
+	 const reco::GenJet* gen_jet = &gen_jets[i];
+	 if(gen_jet->pt() < genjet_ptmin) continue;
+	 if(fabs(gen_jet->eta()) > genjet_etamax) continue;
+
+	 Particle jet;
+	 jet.set_charge(gen_jet->charge());
+	 jet.set_pt(gen_jet->pt());
+	 jet.set_eta(gen_jet->eta());
+	 jet.set_phi(gen_jet->phi());
+	 jet.set_energy(gen_jet->energy());
+
+	 genjets[j].push_back(jet);
+
+       }
+     }
+   }
+
    // ------------- jets -------------
    if(doJets){
      for(size_t j=0; j< jet_sources.size(); ++j){
@@ -616,10 +645,15 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 
 	 const reco::GenJet *genj = pat_jet.genJet();
 	 if(genj){
-	   jet.set_genjet_pt(genj->pt());
-	   jet.set_genjet_eta(genj->eta());
-	   jet.set_genjet_phi(genj->phi());
-	   jet.set_genjet_energy(genj->energy());
+
+	   for(unsigned int k=0; k<genjets->size(); ++k){
+	     if(genj->pt()==genjets->at(k).pt() && genj->eta()==genjets->at(k).eta())
+	       jet.set_genjet_index(k);
+	   }
+// 	   if( jet.genjet_index()<0){
+// 	     std::cout<< "genjet not found for " << genj->pt() << "  " << genj->eta() << std::endl;
+// 	   }
+
 	   if(doAllGenParticles){
 	     std::vector<const reco::GenParticle * > jetgenps = genj->getGenConstituents();
 	     for(unsigned int l = 0; l<jetgenps.size(); ++l){
@@ -641,34 +675,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
    }
 
-   //-------------- gen jets -------------
 
-   if(doGenJets){
-     for(size_t j=0; j< genjet_sources.size(); ++j){
-       
-       genjets[j].clear();
-
-       edm::Handle< std::vector<reco::GenJet> > genjet_handle;
-       iEvent.getByLabel(genjet_sources[j], genjet_handle);
-       const std::vector<reco::GenJet>& gen_jets = *(genjet_handle.product());
-  
-       for (unsigned int i = 0; i < gen_jets.size(); ++i) {
-	 pat::Jet gen_jet = gen_jets[i];
-	 if(gen_jet.pt() < genjet_ptmin) continue;
-	 if(fabs(gen_jet.eta()) > genjet_etamax) continue;
-
-	 Particle jet;
-	 jet.set_charge(gen_jet.charge());
-	 jet.set_pt(gen_jet.pt());
-	 jet.set_eta(gen_jet.eta());
-	 jet.set_phi(gen_jet.phi());
-	 jet.set_energy(gen_jet.energy());
-
-	 genjets[j].push_back(jet);
-
-       }
-     }
-   }
 
    // ------------- top jets -------------
    if(doTopJets){

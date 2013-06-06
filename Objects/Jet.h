@@ -36,24 +36,28 @@ class Jet : public Particle{
      m_btag_jetProbability=0;
      m_JEC_uncertainty=0;
      m_JEC_factor_raw=0;
-     m_genjet_pt=0;
-     m_genjet_eta=0;
-     m_genjet_phi=0;
-     m_genjet_energy=0;
+     m_genjet_index=-1;
      m_genparticles_indices.clear();
      m_pfconstituents.clear();
+     m_genjet=NULL;
   };
 
   ~Jet(){
   };
 
   LorentzVector genjet_v4() const{
-    LorentzVector v4;
-    v4.SetPt(m_genjet_pt);
-    v4.SetEta(m_genjet_eta);
-    v4.SetPhi(m_genjet_phi);
-    v4.SetE(m_genjet_energy);
-    return v4;
+   
+    return genjet().v4();
+  };
+
+  Particle genjet() const{
+    if(m_genjet)
+      return *m_genjet;
+    else{
+      //return 0 particle
+      Particle p;
+      return p;
+    }
   };
 
   std::vector<Particle> pfconstituents() const{return m_pfconstituents;}
@@ -83,10 +87,11 @@ class Jet : public Particle{
   float btag_jetProbability() const{return m_btag_jetProbability;}
   float JEC_uncertainty() const{return m_JEC_uncertainty;}
   float JEC_factor_raw() const{return m_JEC_factor_raw;}
-  float genjet_pt() const{return m_genjet_pt;}
-  float genjet_eta() const{return m_genjet_eta;}
-  float genjet_phi() const{return m_genjet_phi;}
-  float genjet_energy() const{return m_genjet_energy;}
+  float genjet_pt() const{return genjet().pt();}
+  float genjet_eta() const{return genjet().eta();}
+  float genjet_phi() const{return genjet().phi();}
+  float genjet_energy() const{return genjet().energy();}
+  float genjet_index() const{return m_genjet_index;}
   std::vector<unsigned int> genparticles_indices() const{return m_genparticles_indices;}
 
   void set_nTracks(int x){m_nTracks=x;}
@@ -112,13 +117,16 @@ class Jet : public Particle{
   void set_btag_jetProbability(float x){m_btag_jetProbability=x;}
   void set_JEC_uncertainty(float x){m_JEC_uncertainty=x;}
   void set_JEC_factor_raw(float x){m_JEC_factor_raw=x;}
-  void set_genjet_pt(float x){m_genjet_pt=x;}
-  void set_genjet_eta(float x){m_genjet_eta=x;}
-  void set_genjet_phi(float x){m_genjet_phi=x;}
-  void set_genjet_energy(float x){m_genjet_energy=x;}
+  void set_genjet_index(int x){m_genjet_index=x;}
   void add_genparticles_index(unsigned int x){m_genparticles_indices.push_back(x);}
 
-  bool has_genjet() const{return m_genjet_pt>0;}
+  bool has_genjet() const{return m_genjet_index>=0;}
+
+  void set_genjet(std::vector<Particle>* genjets){
+    if(!genjets) return;
+    if(m_genjet_index<0 || m_genjet_index>(int)genjets->size()) return;
+    m_genjet = &genjets->at(m_genjet_index);
+  }
 
   bool pfID(){
     //pf ID has already been applied when using goodPatJets
@@ -162,10 +170,8 @@ class Jet : public Particle{
   float m_btag_jetProbability;
   float m_JEC_uncertainty;
   float m_JEC_factor_raw;
-  float m_genjet_pt;
-  float m_genjet_eta;
-  float m_genjet_phi;
-  float m_genjet_energy;
+  int m_genjet_index;
+  Particle* m_genjet;  //!
 
   std::vector<unsigned int> m_genparticles_indices;
 
