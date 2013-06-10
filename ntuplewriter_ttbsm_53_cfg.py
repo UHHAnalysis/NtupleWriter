@@ -128,7 +128,8 @@ if not options.useData :
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
 
     process.source.fileNames = [
-        '/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/001C868B-B2E1-E111-9BE3-003048D4DCD8.root'
+#        '/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/001C868B-B2E1-E111-9BE3-003048D4DCD8.root'
+        '/store/mc/Summer12_DR53X/TT_CT10_TuneZ2star_8TeV-powheg-tauola/AODSIM/PU_S10_START53_V7A-v2/0002/F02B8737-3502-E211-B560-003048FFD756.root'
     ]
 
 else :
@@ -1801,10 +1802,10 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
 				  doLumiInfo = cms.bool(options.useData),
                                   doTrigger = cms.bool(True),
 				  rho_source = cms.InputTag("kt6PFJets", "rho"),
-                                  genparticle_source = cms.InputTag("genParticles" ),
+                                  genparticle_source = cms.InputTag("prunedGenParticles" ),
                                   electron_sources = cms.vstring("selectedPatElectronsPFlow","selectedPatElectronsPFlowLoose"),
                                   muon_sources = cms.vstring("selectedPatMuonsPFlow","selectedPatMuonsPFlowLoose"),
-                                  tau_sources = cms.vstring("selectedPatTausPFlow"),
+                                  tau_sources = cms.vstring("selectedPatTausPFlow" ),
                                   tau_ptmin = cms.double(0.0),
                                   tau_etamax = cms.double(999.0),
                                   jet_sources = cms.vstring("goodPatJetsPFlow"),

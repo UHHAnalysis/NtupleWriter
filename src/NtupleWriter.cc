@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.24 2013/06/05 14:13:58 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.25 2013/06/06 07:38:31 peiffer Exp $
 //
 //
 
@@ -311,8 +311,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      for(reco::GenParticleCollection::const_iterator iter = genPartColl->begin(); iter != genPartColl->end(); ++ iter){
        index++;
        
-       //write out only top quarks and status 3 particles (works fine only for MadGraph)
-       if(abs(iter->pdgId())==6 || iter->status()==3 || doAllGenParticles){
+       //write out only top quarks,final state leptons and status 3 particles (works fine only for MadGraph)
+       bool islepton = iter->status()==1 && abs(iter->pdgId())>=11 && abs(iter->pdgId())<=16 ;
+       if(abs(iter->pdgId())==6 || iter->status()==3 || islepton ||  doAllGenParticles){
 	 GenParticle genp;
 	 genp.set_charge(iter->charge());
 	 genp.set_pt(iter->p4().pt());
@@ -527,18 +528,34 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 tau.set_phi( pat_tau.phi());
 	 tau.set_energy( pat_tau.energy());
 	 tau.set_decayModeFinding ( pat_tau.tauID("decayModeFinding")>0.5); 
-	 tau.set_byVLooseCombinedIsolationDeltaBetaCorr  ( pat_tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5); 
+	 //tau.set_byVLooseCombinedIsolationDeltaBetaCorr  ( pat_tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5); 
 	 tau.set_byLooseCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5); 
 	 tau.set_byMediumCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5); 
 	 tau.set_byTightCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5); 
-	 tau.set_againstElectronLoose  ( pat_tau.tauID("againstElectronLoose")>0.5); 
-	 tau.set_againstElectronMedium ( pat_tau.tauID("againstElectronMedium")>0.5); 
-	 tau.set_againstElectronTight ( pat_tau.tauID("againstElectronTight")>0.5); 
-	 tau.set_againstElectronMVA  ( pat_tau.tauID("againstElectronMVA")>0.5); 
-	 tau.set_againstMuonLoose ( pat_tau.tauID("againstMuonLoose")>0.5); 
-	 tau.set_againstMuonMedium ( pat_tau.tauID("againstMuonMedium")>0.5); 
-	 tau.set_againstMuonTight ( pat_tau.tauID("againstMuonTight")>0.5); 
+	 tau.set_byLooseIsolationMVA( pat_tau.tauID("byLooseIsolationMVA")>0.5); 
+	 tau.set_byMediumIsolationMVA( pat_tau.tauID("byMediumIsolationMVA")>0.5); 
+	 tau.set_byTightIsolationMVA( pat_tau.tauID("byTightIsolationMVA")>0.5); 
+	 tau.set_byLooseIsolationMVA2( pat_tau.tauID("byLooseIsolationMVA2")>0.5); 
+	 tau.set_byMediumIsolationMVA2( pat_tau.tauID("byMediumIsolationMVA2")>0.5); 
+	 tau.set_byTightIsolationMVA2( pat_tau.tauID("byTightIsolationMVA2")>0.5);
+	 tau.set_byLooseCombinedIsolationDeltaBetaCorr3Hits(  pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")>0.5); 
+	 tau.set_byMediumCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits")>0.5); 
+	 tau.set_byTightCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits")>0.5); 
+	 tau.set_againstElectronLooseMVA3  ( pat_tau.tauID("againstElectronLooseMVA3")>0.5); 
+	 tau.set_againstElectronMediumMVA3 ( pat_tau.tauID("againstElectronMediumMVA3")>0.5); 
+	 tau.set_againstElectronTightMVA3 ( pat_tau.tauID("againstElectronTightMVA3")>0.5); 
+	 tau.set_againstElectronVTightMVA3 ( pat_tau.tauID("againstElectronVTightMVA3")>0.5); 
+	 tau.set_againstMuonLoose2 ( pat_tau.tauID("againstMuonLoose2")>0.5); 
+	 tau.set_againstMuonMedium2 ( pat_tau.tauID("againstMuonMedium2")>0.5); 
+	 tau.set_againstMuonTight2 ( pat_tau.tauID("againstMuonTight2")>0.5); 
+	 tau.set_byIsolationMVAraw(  pat_tau.tauID("byIsolationMVAraw"));
+	 tau.set_byIsolationMVA2raw(  pat_tau.tauID("byIsolationMVA2raw"));
+	 tau.set_decayMode( pat_tau.decayMode() );
+	 tau.set_byCombinedIsolationDeltaBetaCorrRaw( pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw"));
+	 tau.set_byCombinedIsolationDeltaBetaCorrRaw3Hits( pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits"));
 
+//       std::cout << pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits") << std::endl;
+	 
 // 	 reco::PFCandidateRef leadPFCand = pat_tau.leadPFCand();
 // 	 if(!leadPFCand.isNull()){
 // 	   tau.set_leadPFCand_px ( leadPFCand->px());
