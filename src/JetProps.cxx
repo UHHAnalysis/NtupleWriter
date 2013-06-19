@@ -62,15 +62,6 @@ double JetProps::GetNsubjettiness(int N, Njettiness::AxesMode mode, double beta,
   fastjet::Nsubjettiness Nsubj(N, mode, beta, R0, Rcutoff);
   
   double sub=Nsubj.result(fjet);
-  if (sub < -0.5){ 
-    cout << "Nsub jettiness " << N << " = " << sub << endl;
-    cout << "jet: pt = " << m_jet->pt() << " phi = " << m_jet->phi() << " eta = " << m_jet->eta() << " N = " << m_jet->pfconstituents_indices().size() << endl;
-    for (unsigned int i=0; i<FJparticles.size(); ++i){
-      fastjet::PseudoJet p = FJparticles[i];
-      cout << "part " << i << ": pt = " << p.pt() << " phi = " << p.phi() << " eta = " << p.pseudorapidity() << endl;      
-    }
-  }
-
   
   return sub;
 
