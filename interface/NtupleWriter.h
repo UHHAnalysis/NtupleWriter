@@ -86,6 +86,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       void StoreJetConstituents(pat::Jet* pat_jet, Jet* topjet);
+      void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0);
 
       // ----------member data ---------------------------
       TFile *outfile;
@@ -108,6 +109,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doPV;
       bool doTrigger;
       bool doTagInfos;
+      bool storePFsAroundLeptons;
 
       int run;
       int luminosityBlock;
@@ -170,6 +172,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       float beamspot_y0;
       float beamspot_z0;
 
+      std::string pf_around_leptons_source;
+
       edm::InputTag genparticle_source;
       GenInfo genInfo;
       std::vector<GenParticle> genps;
@@ -185,7 +189,6 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool newrun;
       bool previouslumiblockwasfilled;
 
-      std::vector<const reco::PFCandidate*> m_stored_pfs;
 };
 
 

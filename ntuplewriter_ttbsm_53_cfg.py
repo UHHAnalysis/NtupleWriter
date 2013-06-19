@@ -128,8 +128,8 @@ if not options.useData :
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
 
     process.source.fileNames = [
-#        '/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/001C868B-B2E1-E111-9BE3-003048D4DCD8.root'
-        '/store/mc/Summer12_DR53X/TT_CT10_TuneZ2star_8TeV-powheg-tauola/AODSIM/PU_S10_START53_V7A-v2/0002/F02B8737-3502-E211-B560-003048FFD756.root'
+        '/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/001C868B-B2E1-E111-9BE3-003048D4DCD8.root'
+#        '/store/mc/Summer12_DR53X/TT_CT10_TuneZ2star_8TeV-powheg-tauola/AODSIM/PU_S10_START53_V7A-v2/0002/F02B8737-3502-E211-B560-003048FFD756.root'
     ]
 
 else :
@@ -1845,6 +1845,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doPhotons = cms.bool(False),
                                   doMET = cms.bool(True),
                                   doPV = cms.bool(True),
+				  storePFsAroundLeptons = cms.untracked.bool(True),
                                   doGenInfo = cms.bool(not options.useData),
 				  doAllGenParticles = cms.bool(options.writeAllGenParticles), #set to true if you want to store all gen particles, otherwise, only tops and status 3 particles are stored
 				  doLumiInfo = cms.bool(options.useData),
@@ -1869,6 +1870,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   topjet_constituents_sources = cms.vstring("goodPatJetsCA8PF", "goodPatJetsCA15PF"),
                                   topjet_ptmin = cms.double(150.0), 
                                   topjet_etamax = cms.double(5.0),
+                                  pf_around_leptons_source = cms.string("pfNoPileUpPFlow"),
 				  doGenTopJets = cms.bool(not options.useData),
                                   gentopjet_sources = cms.vstring("caTopTagGen", "caFilteredGenJetsNoNu", "caHEPTopTagGen" ),
                                   gentopjet_ptmin = cms.double(150.0), 
@@ -1901,5 +1903,5 @@ process.out.dropMetaData = cms.untracked.string("DROPPED")
 
 process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 
-open('junk.py','w').write(process.dumpPython())
+#open('junk.py','w').write(process.dumpPython())
 

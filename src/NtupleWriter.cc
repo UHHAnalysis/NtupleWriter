@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.27 2013/06/19 13:22:06 rkogler Exp $
+// $Id: NtupleWriter.cc,v 1.28 2013/06/19 16:02:37 peiffer Exp $
 //
 //
 
@@ -68,6 +68,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doTrigger = iConfig.getParameter<bool>("doTrigger");
   SVComputer_  = iConfig.getUntrackedParameter<edm::InputTag>("svComputer",edm::InputTag("combinedSecondaryVertex"));
   doTagInfos = iConfig.getUntrackedParameter<bool>("doTagInfos",false);
+  storePFsAroundLeptons = iConfig.getUntrackedParameter<bool>("storePFsAroundLeptons",false);
 
   // initialization of tree variables
 
@@ -174,6 +175,9 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     tr->Branch("triggerResults", "std::vector<bool>", &triggerResults);
     //tr->Branch("L1_prescale", "std::vector<int>", &L1_prescale);
     //tr->Branch("HLT_prescale", "std::vector<int>", &HLT_prescale);
+  }
+  if (storePFsAroundLeptons){
+    pf_around_leptons_source = iConfig.getParameter<std::string>("pf_around_leptons_source");
   }
   newrun = true;
 }
@@ -350,6 +354,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
    }
 
+   // ------------- full PF collection -------------   
+
+
    // ------------- electrons -------------   
    if(doElectrons){
 
@@ -414,6 +421,14 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 ele.set_AEff(AEff03);
 
 	 eles[j].push_back(ele);
+	 
+	 if (storePFsAroundLeptons){
+	   edm::Handle< std::vector<reco::PFCandidate> > pfcand_handle;
+	   iEvent.getByLabel(pf_around_leptons_source, pfcand_handle);  // default: "pfNoPileUpPFlow"
+	   const std::vector<reco::PFCandidate>& pf_cands = *(pfcand_handle.product());
+	   StorePFCandsInCone(&ele, pf_cands, 0.4);
+	 }
+
        }
      }
    }
@@ -509,6 +524,14 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }
 
 	 mus[j].push_back(mu);
+
+	 if (storePFsAroundLeptons){
+	   edm::Handle< std::vector<reco::PFCandidate> > pfcand_handle;
+	   iEvent.getByLabel(pf_around_leptons_source, pfcand_handle);  // default: "pfNoPileUpPFlow"
+	   const std::vector<reco::PFCandidate>& pf_cands = *(pfcand_handle.product());
+	   StorePFCandsInCone(&mu, pf_cands, 0.4);
+	 }
+	 
        }
      }
    }
@@ -575,6 +598,17 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	   tau.set_leadPFCand_pz ( 0);
 // 	 }
 	 taus[j].push_back(tau);
+
+	 // store isolation info only for identified taus
+	 if (pat_tau.tauID("decayModeFinding")>0.5){
+	   bool storepfs = (pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5) || (pat_tau.tauID("byLooseIsolationMVA")>0.5); 	   
+	   if (storePFsAroundLeptons && storepfs){	   
+	     edm::Handle< std::vector<reco::PFCandidate> > pfcand_handle;
+	     iEvent.getByLabel(pf_around_leptons_source, pfcand_handle);  // default: "pfNoPileUpPFlow"
+	     const std::vector<reco::PFCandidate>& pf_cands = *(pfcand_handle.product());
+	     StorePFCandsInCone(&tau, pf_cands, 0.4);
+	   }
+	 }
        }
      }
    }
@@ -647,7 +681,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 const reco::TrackRefVector&  jettracks = pat_jet.associatedTracks();
 	 jet.set_nTracks ( jettracks.size());
 	 jet.set_jetArea(pat_jet.jetArea());
-	 jet.set_pileup(pat_jet.pileup());
 	 if(pat_jet.isPFJet()){
 	   jet.set_neutralEmEnergyFraction (pat_jet.neutralEmEnergyFraction());
 	   jet.set_neutralHadronEnergyFraction (pat_jet.neutralHadronEnergyFraction());
@@ -683,20 +716,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	   if( jet.genjet_index()<0){
 // 	     std::cout<< "genjet not found for " << genj->pt() << "  " << genj->eta() << std::endl;
 // 	   }
-
-	   if(doAllGenParticles){
-	     std::vector<const reco::GenParticle * > jetgenps = genj->getGenConstituents();
-	     for(unsigned int l = 0; l<jetgenps.size(); ++l){
-	       for(unsigned int k=0; k< genps.size(); ++k){
-		 if(jetgenps[l]->pt() == genps[k].pt() && jetgenps[l]->pdgId() == genps[k].pdgId()){
-		   jet.add_genparticles_index(genps[k].index());
-		   break;
-		 }
-	       }
-	     }
-	     if(jet.genparticles_indices().size()!= jetgenps.size())
-	       std::cout << "WARNING: Found only " << jet.genparticles_indices().size() << " from " << jetgenps.size() << " gen particles of this jet"<<std::endl;
-	   }
 	   
 	 }
 	 
@@ -734,7 +753,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 const reco::TrackRefVector&  topjettracks = pat_topjet.associatedTracks();
 	 topjet.set_nTracks( topjettracks.size());
 	 topjet.set_jetArea( pat_topjet.jetArea());
-	 topjet.set_pileup( pat_topjet.pileup());
 
 	 topjet.set_JEC_factor_raw( pat_topjet.jecFactor("Uncorrected"));
 
@@ -1056,10 +1074,12 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      previouslumiblockwasfilled=true;
 
    // clean up
-   m_stored_pfs.clear();
    if(doTopJetsConstituents){
      pfparticles.clear();
    }
+   
+   // need to do a check if necessary
+   pfparticles.clear();
 
 }
 
@@ -1152,12 +1172,14 @@ NtupleWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 void
 NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
 {
-  // checks if the pf cand has already been stored, only stores so far missing
+  // checks if the pf cand has already been stored, only stores so far missing ones
   // PF candidates, then stores a reference to the pf candidate in the jet
   // also calculates the jet charge and sets it
 
 
   const std::vector<reco::PFCandidatePtr> jconstits = pat_jet->getPFConstituents();
+
+  unsigned int NstoredPFs = pfparticles.size();
 
   // loop over all jet constituents and store them 
   for (unsigned int i=0; i<jconstits.size(); ++i){
@@ -1167,21 +1189,20 @@ NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
 
     // check if it has already been stored, omit if true
     int is_already_in_list = -1;
-    for (unsigned int j=0; j<m_stored_pfs.size(); ++j){
-      
-      const reco::PFCandidate* spf = m_stored_pfs[j];
-      double r2 = pow(pf->eta()-spf->eta(),2) + pow(pf->phi()-spf->phi(),2);
-      double dpt = fabs( pf->pt() - spf->pt() );
+    for (unsigned int j=0; j<NstoredPFs; ++j){
+      PFParticle spf = pfparticles[j];
+      double r2 = pow(pf->eta()-spf.eta(),2) + pow(pf->phi()-spf.phi(),2);
+      double dpt = fabs( pf->pt() - spf.pt() );
       if (r2<1e-10 && dpt<1e-10){
 	is_already_in_list = j;
 	break;
       }            
     }
     
-    if (is_already_in_list>-1){
-      jet->add_pfconstituents_index(is_already_in_list);
+    if (is_already_in_list>-1){     
       continue;
     }
+
 
     part.set_pt(pf->pt());
     part.set_eta(pf->eta());
@@ -1210,7 +1231,6 @@ NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
     part.set_particleID(id);
 
     pfparticles.push_back(part);
-    m_stored_pfs.push_back(pf);
 
     // add a reference to the particle 
     jet->add_pfconstituents_index(pfparticles.size()-1);
@@ -1219,7 +1239,7 @@ NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
   
   if(pat_jet->isPFJet()){
     jet->set_charge(pat_jet->charge());
-    jet->set_neutralEmEnergyFraction (pat_jet->neutralEmEnergyFraction());
+    jet->set_neutralEmEnergyFraction(pat_jet->neutralEmEnergyFraction());
     jet->set_neutralHadronEnergyFraction (pat_jet->neutralHadronEnergyFraction());
     jet->set_chargedEmEnergyFraction (pat_jet->chargedEmEnergyFraction());
     jet->set_chargedHadronEnergyFraction (pat_jet->chargedHadronEnergyFraction());
@@ -1230,6 +1250,98 @@ NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
     jet->set_muonMultiplicity (pat_jet->muonMultiplicity());
     jet->set_electronMultiplicity (pat_jet->electronMultiplicity());
     jet->set_photonMultiplicity (pat_jet->photonMultiplicity());
+  }
+  
+  return;
+
+}
+
+// ------------ method fills PF candidates in a cone of radius R around 
+// ------------ a given particle (lepton, most likely)
+// ------------ it is checked if the constituents have been stored already
+void
+NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::PFCandidate>& pf_cands, double R0)
+{
+  // checks if the pf cand has already been stored, only stores so far missing ones
+
+  //cout << "\nStorePFCandsInCone: R0 = " << R0 << endl;
+  //cout << "found " << pf_cands.size() << " PF candidates in the event" << endl;
+  //cout << "Input inparticle: pt = " << inpart->pt() << " eta = " << inpart->eta() << " phi = " << inpart->phi() << endl;
+  
+  unsigned int NstoredPFs = pfparticles.size();
+  //cout << "got already " <<  NstoredPFs << " which need to be checked to avoid double counting" << endl;
+
+  // loop over all PF candidates and store the ones in a cone with radius R0
+  for (unsigned int i=0; i<pf_cands.size(); ++i){
+
+    reco::PFCandidate pf = pf_cands[i];
+
+    // calculate distance in eta/phi
+    double dphi = pf.phi() - inpart->phi();
+    if (dphi > TMath::Pi()) dphi -= 2*TMath::Pi();
+    if (dphi < -TMath::Pi()) dphi += 2*TMath::Pi();
+    double dr2 = dphi*dphi + pow(pf.eta() - inpart->eta(),2);
+    
+    // check if PF candidate is in cone around particle
+    if (sqrt(dr2)>R0) continue;
+
+    //cout << "found particle with distance " << dr2 << " at position " << i << endl;
+    //cout << "PF: pt = " << pf.pt() << " eta = " << pf.eta() << " phi = " << pf.phi() << endl;
+
+    // check if it's the same as the input particle
+    double dpt = fabs( inpart->pt() - pf.pt() );
+    if (dr2<1e-10 && dpt<1e-10){ 
+      //cout << "same particle, don't store" << endl;
+      continue;
+    }
+
+    // check if it has already been stored, omit if true
+    int is_already_in_list = -1;
+    for (unsigned int j=0; j<NstoredPFs; ++j){
+      PFParticle spf = pfparticles[j];
+      double r2 = pow(pf.eta()-spf.eta(),2) + pow(pf.phi()-spf.phi(),2);
+      double dpt = fabs( pf.pt() - spf.pt() );
+      if (r2<1e-10 && dpt<1e-10){
+	is_already_in_list = j;
+	break;
+      }            
+    }
+    
+    if (is_already_in_list>-1){     
+      //cout << "is already in list, continue" << endl;
+      continue;
+    }
+
+
+    PFParticle part;
+    part.set_pt(pf.pt());
+    part.set_eta(pf.eta());
+    part.set_phi(pf.phi());
+    part.set_energy(pf.energy());
+    part.set_charge(pf.charge());
+
+    part.set_ecal_en(pf.ecalEnergy());
+    part.set_hcal_en(pf.hcalEnergy());
+    reco::TrackRef trackref = pf.trackRef();
+    if (!trackref.isNull()){
+      part.set_track_mom(trackref->p());
+    }
+
+    PFParticle::EParticleID id = PFParticle::eX;
+    switch ( pf.translatePdgIdToType(pf.pdgId()) ){
+    case reco::PFCandidate::X : id = PFParticle::eX; break;
+    case reco::PFCandidate::h : id = PFParticle::eH; break;
+    case reco::PFCandidate::e : id = PFParticle::eE; break;
+    case reco::PFCandidate::mu : id = PFParticle::eMu; break;
+    case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
+    case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
+    case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
+    case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
+    }
+    part.set_particleID(id);
+    
+    pfparticles.push_back(part);
+    
   }
   
   return;
