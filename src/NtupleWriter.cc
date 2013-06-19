@@ -13,16 +13,18 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.25 2013/06/06 07:38:31 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.26 2013/06/10 13:33:05 peiffer Exp $
 //
 //
 
 #include "UHHAnalysis/NtupleWriter/interface/NtupleWriter.h"
+#include "UHHAnalysis/NtupleWriter/interface/JetProps.h"
 #include "RecoBTau/JetTagComputer/interface/GenericMVAJetTagComputer.h"
 #include "RecoBTau/JetTagComputer/interface/GenericMVAJetTagComputerWrapper.h"
 #include "RecoBTau/JetTagComputer/interface/JetTagComputer.h"
 #include "RecoBTau/JetTagComputer/interface/JetTagComputerRecord.h"
 #include "RecoBTag/SecondaryVertex/interface/CombinedSVComputer.h"
+#include "DataFormats/TrackReco/interface/Track.h"
 
 //
 // constants, enums and typedefs
@@ -54,7 +56,6 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doTaus = iConfig.getParameter<bool>("doTaus"); 
   doJets = iConfig.getParameter<bool>("doJets");
   doGenJets = iConfig.getParameter<bool>("doGenJets");
-  doJECUncertainty = iConfig.getParameter<bool>("doJECUncertainty");
   doGenTopJets = iConfig.getParameter<bool>("doGenTopJets");  
   doPhotons = iConfig.getParameter<bool>("doPhotons");
   doMET = iConfig.getParameter<bool>("doMET");
@@ -63,9 +64,11 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doLumiInfo = iConfig.getParameter<bool>("doLumiInfo");
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
+  doTopJetsConstituents = iConfig.getParameter<bool>("doTopJetsConstituents");
   doTrigger = iConfig.getParameter<bool>("doTrigger");
   SVComputer_  = iConfig.getUntrackedParameter<edm::InputTag>("svComputer",edm::InputTag("combinedSecondaryVertex"));
   doTagInfos = iConfig.getUntrackedParameter<bool>("doTagInfos",false);
+
   // initialization of tree variables
 
   tr->Branch("run",&run);
@@ -129,12 +132,16 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
       tr->Branch( topjet_sources[j].c_str(), "std::vector<TopJet>", &topjets[j]);
     }
   }
+  if(doTopJetsConstituents){
+    topjet_constituents_sources = iConfig.getParameter<std::vector<std::string> >("topjet_constituents_sources");
+    tr->Branch( "PFParticles", "std::vector<PFParticle>", &pfparticles);
+  }
   if(doGenTopJets){
     gentopjet_sources = iConfig.getParameter<std::vector<std::string> >("gentopjet_sources");
     gentopjet_ptmin = iConfig.getParameter<double> ("gentopjet_ptmin");
     gentopjet_etamax = iConfig.getParameter<double> ("gentopjet_etamax");
     for(size_t j=0; j< gentopjet_sources.size(); ++j){  
-      tr->Branch( gentopjet_sources[j].c_str(), "std::vector<TopJet>", &gentopjets[j]);
+      tr->Branch( gentopjet_sources[j].c_str(), "std::vector<GenTopJet>", &gentopjets[j]);
     }
   }
   if(doPhotons){
@@ -584,6 +591,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        const std::vector<reco::GenJet>& gen_jets = *(genjet_handle.product());
   
        for (unsigned int i = 0; i < gen_jets.size(); ++i) {
+
 	 const reco::GenJet* gen_jet = &gen_jets[i];
 	 if(gen_jet->pt() < genjet_ptmin) continue;
 	 if(fabs(gen_jet->eta()) > genjet_etamax) continue;
@@ -595,8 +603,15 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jet.set_phi(gen_jet->phi());
 	 jet.set_energy(gen_jet->energy());
 
-	 genjets[j].push_back(jet);
+	 // recalculate the jet charge
+	 int jet_charge = 0;
+	 std::vector<const reco::GenParticle * > jetgenps = gen_jet->getGenConstituents();
+	 for(unsigned int l = 0; l<jetgenps.size(); ++l){
+	   jet_charge +=  jetgenps[l]->charge();
+	 }
+	 jet.set_charge(jet_charge);
 
+	 genjets[j].push_back(jet);
        }
      }
    }
@@ -645,11 +660,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   jet.set_electronMultiplicity (pat_jet.electronMultiplicity());
 	   jet.set_photonMultiplicity (pat_jet.photonMultiplicity());
 	 }
-	 if(doJECUncertainty){
-	   jecUnc->setJetEta(pat_jet.eta());
-	   jecUnc->setJetPt(pat_jet.pt());
-	   jet.set_JEC_uncertainty(jecUnc->getUncertainty(true));
-	 }
+
 	 jet.set_JEC_factor_raw(pat_jet.jecFactor("Uncorrected"));
 	 
 	 jet.set_btag_simpleSecondaryVertexHighEff(pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
@@ -664,8 +675,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 if(genj){
 
 	   for(unsigned int k=0; k<genjets->size(); ++k){
-	     if(genj->pt()==genjets->at(k).pt() && genj->eta()==genjets->at(k).eta())
+	     if(genj->pt()==genjets->at(k).pt() && genj->eta()==genjets->at(k).eta()){
 	       jet.set_genjet_index(k);
+	     }
 	   }
 // 	   if( jet.genjet_index()<0){
 // 	     std::cout<< "genjet not found for " << genj->pt() << "  " << genj->eta() << std::endl;
@@ -693,9 +705,9 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
 
-
    // ------------- top jets -------------
    if(doTopJets){
+
      for(size_t j=0; j< topjet_sources.size(); ++j){
        
        topjets[j].clear();
@@ -721,22 +733,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 topjet.set_nTracks( topjettracks.size());
 	 topjet.set_jetArea( pat_topjet.jetArea());
 	 topjet.set_pileup( pat_topjet.pileup());
-//  	 topjet.set_neutralEmEnergyFraction(pat_topjet.neutralEmEnergyFraction());
-//  	 topjet.set_neutralHadronEnergyFraction(pat_topjet.neutralHadronEnergyFraction());
-//  	 topjet.set_chargedEmEnergyFraction(pat_topjet.chargedEmEnergyFraction());
-//  	 topjet.set_chargedHadronEnergyFraction(pat_topjet.chargedHadronEnergyFraction());
-//  	 topjet.set_muonEnergyFraction(pat_topjet.muonEnergyFraction());
-//  	 topjet.set_photonEnergyFraction(pat_topjet.photonEnergyFraction());
-// 	 topjet.set_chargedMultiplicity(pat_topjet.chargedMultiplicity());
-// 	 topjet.set_neutralMultiplicity(pat_topjet.neutralMultiplicity());
-// 	 topjet.set_muonMultiplicity(pat_topjet.muonMultiplicity());
-// 	 topjet.set_electronMultiplicity(pat_topjet.electronMultiplicity());
-// 	 topjet.set_photonMultiplicity(pat_topjet.photonMultiplicity());
-	 if(doJECUncertainty){
-	   jecUnc->setJetEta(pat_topjet.eta());
-	   jecUnc->setJetPt(pat_topjet.pt());
-	   topjet.set_JEC_uncertainty( jecUnc->getUncertainty(true));
-	 }
+
 	 topjet.set_JEC_factor_raw( pat_topjet.jecFactor("Uncorrected"));
 
 	 topjet.set_btag_simpleSecondaryVertexHighEff(pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
@@ -768,6 +765,47 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   }
 	 }
 	 */
+
+	 // add constituents to the jet, if requested
+	 if (doTopJetsConstituents){
+
+	   if (topjet_constituents_sources.size()>j){ //only add constituents if they are defined
+
+	     edm::Handle<pat::JetCollection> pat_topjets_with_cands;
+	     iEvent.getByLabel(topjet_constituents_sources[j], pat_topjets_with_cands);
+	     pat::Jet* pat_topjet_wc = NULL;
+
+	     for (unsigned int it = 0; it < pat_topjets_with_cands->size(); it++) {
+	       const pat::Jet* cand =  dynamic_cast<pat::Jet const *>(&pat_topjets_with_cands->at(it));
+	       double dphi = cand->phi() - pat_topjet.phi();
+	       if (dphi > TMath::Pi()) dphi -= 2*TMath::Pi();
+	       if (dphi < -TMath::Pi()) dphi += 2*TMath::Pi();	       
+	       if (fabs(dphi)<0.5 && fabs(cand->eta()-pat_topjet.eta())<0.5){ // be generous: filtering, pruning... can change jet axis
+		 pat_topjet_wc = const_cast<pat::Jet*>(cand);
+		 break;
+	       }
+	     }
+
+	     if (pat_topjet_wc){
+	       StoreJetConstituents(pat_topjet_wc, &topjet);
+
+	       // now run substructure information
+	       JetProps substructure(&topjet);
+	       substructure.set_pf_cands(&pfparticles);
+	       double tau1 = substructure.GetNsubjettiness(1, Njettiness::onepass_kt_axes, 1., 2.0);
+	       double tau2 = substructure.GetNsubjettiness(2, Njettiness::onepass_kt_axes, 1., 2.0);
+	       double tau3 = substructure.GetNsubjettiness(3, Njettiness::onepass_kt_axes, 1., 2.0);
+	       double qjets = substructure.GetQjetVolatility(iEvent.id().event(), 2.0);
+	       topjet.set_tau1(tau1);
+	       topjet.set_tau2(tau2);
+	       topjet.set_tau3(tau3);
+	       topjet.set_qjets_volatility(qjets);
+
+	     }
+	   }
+	 }
+
+
 
 	 for (unsigned int k = 0; k < pat_topjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
@@ -872,7 +910,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }
    }
-   
+
    
    // ------------- generator top jets -------------
    if(doGenTopJets){
@@ -881,7 +919,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        gentopjets[j].clear();
        
        edm::Handle<reco::BasicJetCollection> reco_gentopjets;
-       //edm::Handle<std::vector<reco::Jet> > reco_gentopjets;
        iEvent.getByLabel(gentopjet_sources[j], reco_gentopjets);
 
        for (unsigned int i = 0; i < reco_gentopjets->size(); i++) {
@@ -890,13 +927,12 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 if(reco_gentopjet.pt() < gentopjet_ptmin) continue;
 	 if(fabs(reco_gentopjet.eta()) > gentopjet_etamax) continue;
 
-	 TopJet gentopjet;
+	 GenTopJet gentopjet;
 	 gentopjet.set_charge(reco_gentopjet.charge());
 	 gentopjet.set_pt(reco_gentopjet.pt());
 	 gentopjet.set_eta(reco_gentopjet.eta());
 	 gentopjet.set_phi(reco_gentopjet.phi());
 	 gentopjet.set_energy(reco_gentopjet.energy());
-	 gentopjet.set_numberOfDaughters(reco_gentopjet.numberOfDaughters());
 
 	 for (unsigned int k = 0; k < reco_gentopjet.numberOfDaughters(); k++) {
 	   Particle subjet_v4;
@@ -910,6 +946,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }
    }
+
 
    // ------------- photons ------------- 
    if(doPhotons){
@@ -1015,6 +1052,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    tr->Fill();
    if(doLumiInfo)
      previouslumiblockwasfilled=true;
+
+   // clean up
+   m_stored_pfs.clear();
+   if(doTopJetsConstituents){
+     pfparticles.clear();
+   }
+
 }
 
 
@@ -1048,14 +1092,6 @@ NtupleWriter::beginRun(edm::Run const& iRun, edm::EventSetup const&  iSetup)
     newrun=true;
   }
 
-  if(doJets || doTopJets){
-    if(doJECUncertainty){
-      edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
-      iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
-      JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
-      jecUnc = new JetCorrectionUncertainty(JetCorPar);
-    }
-  }
 }
 
 // ------------ method called when ending the processing of a run  ------------
@@ -1106,6 +1142,96 @@ NtupleWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
+}
+
+// ------------ method fills constituents of the pat_jet into the Ntuple and stores a reference 
+// ------------ to those in the topjet
+// ------------ it is checked if the constituents have been stored already
+void
+NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
+{
+  // checks if the pf cand has already been stored, only stores so far missing
+  // PF candidates, then stores a reference to the pf candidate in the jet
+  // also calculates the jet charge and sets it
+
+
+  const std::vector<reco::PFCandidatePtr> jconstits = pat_jet->getPFConstituents();
+
+  // loop over all jet constituents and store them 
+  for (unsigned int i=0; i<jconstits.size(); ++i){
+
+    PFParticle part;
+    const reco::PFCandidate* pf = jconstits[i].get();
+
+    // check if it has already been stored, omit if true
+    int is_already_in_list = -1;
+    for (unsigned int j=0; j<m_stored_pfs.size(); ++j){
+      
+      const reco::PFCandidate* spf = m_stored_pfs[j];
+      double r2 = pow(pf->eta()-spf->eta(),2) + pow(pf->phi()-spf->phi(),2);
+      double dpt = fabs( pf->pt() - spf->pt() );
+      if (r2<1e-10 && dpt<1e-10){
+	is_already_in_list = j;
+	break;
+      }            
+    }
+    
+    if (is_already_in_list>-1){
+      jet->add_pfconstituents_index(is_already_in_list);
+      continue;
+    }
+
+    part.set_pt(pf->pt());
+    part.set_eta(pf->eta());
+    part.set_phi(pf->phi());
+    part.set_energy(pf->energy());
+    part.set_charge(pf->charge());
+
+    part.set_ecal_en(pf->ecalEnergy());
+    part.set_hcal_en(pf->hcalEnergy());
+    reco::TrackRef trackref = pf->trackRef();
+    if (!trackref.isNull()){
+      part.set_track_mom(trackref->p());
+    }
+
+    PFParticle::EParticleID id = PFParticle::eX;
+    switch ( pf->translatePdgIdToType(pf->pdgId()) ){
+    case reco::PFCandidate::X : id = PFParticle::eX; break;
+    case reco::PFCandidate::h : id = PFParticle::eH; break;
+    case reco::PFCandidate::e : id = PFParticle::eE; break;
+    case reco::PFCandidate::mu : id = PFParticle::eMu; break;
+    case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
+    case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
+    case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
+    case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
+    }
+    part.set_particleID(id);
+
+    pfparticles.push_back(part);
+    m_stored_pfs.push_back(pf);
+
+    // add a reference to the particle 
+    jet->add_pfconstituents_index(pfparticles.size()-1);
+    
+  }
+  
+  if(pat_jet->isPFJet()){
+    jet->set_charge(pat_jet->charge());
+    jet->set_neutralEmEnergyFraction (pat_jet->neutralEmEnergyFraction());
+    jet->set_neutralHadronEnergyFraction (pat_jet->neutralHadronEnergyFraction());
+    jet->set_chargedEmEnergyFraction (pat_jet->chargedEmEnergyFraction());
+    jet->set_chargedHadronEnergyFraction (pat_jet->chargedHadronEnergyFraction());
+    jet->set_muonEnergyFraction (pat_jet->muonEnergyFraction());
+    jet->set_photonEnergyFraction (pat_jet->photonEnergyFraction());
+    jet->set_chargedMultiplicity (pat_jet->chargedMultiplicity());
+    jet->set_neutralMultiplicity (pat_jet->neutralMultiplicity());
+    jet->set_muonMultiplicity (pat_jet->muonMultiplicity());
+    jet->set_electronMultiplicity (pat_jet->electronMultiplicity());
+    jet->set_photonMultiplicity (pat_jet->photonMultiplicity());
+  }
+  
+  return;
+
 }
 
 //define this as a plug-in

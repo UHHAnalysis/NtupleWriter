@@ -15,6 +15,12 @@ class TopJet : public Jet{
   TopJet(){
     m_subjets.clear();
 
+    // initialize substructure variables to -1
+    m_qjets_volatility = -1.; 
+    m_tau1 = -1.;
+    m_tau2 = -1.;
+    m_tau3 = -1.;
+
     //clear btag variables
     m_subCSV.clear();
     m_subFlavour.clear();
@@ -66,6 +72,12 @@ class TopJet : public Jet{
   ~TopJet(){
   };
 
+  // substructure getters
+  float qjets_volatility(){return m_qjets_volatility;}
+  float tau1(){return m_tau1;}
+  float tau2(){return m_tau2;}
+  float tau3(){return m_tau3;}
+
   //btag variables getters
   std::vector<Particle> subjets() const{return m_subjets;}
   std::vector<float> subCSV() const{return m_subCSV;}
@@ -116,6 +128,11 @@ class TopJet : public Jet{
   std::vector<float> subVertexEnergyRatioJTC() const{return m_subVertexEnergyRatioJTC;}
   std::vector<float> subTrackSip3dSigAboveCharmJTC() const{return m_subTrackSip3dSigAboveCharmJTC;}
 
+  // substructure setters
+  void set_qjets_volatility(float x){m_qjets_volatility = x;}
+  void set_tau1(float x){m_tau1 = x;}
+  void set_tau2(float x){m_tau2 = x;}
+  void set_tau3(float x){m_tau3 = x;}
 
   //btag variables setters
   void add_subjet(Particle p){m_subjets.push_back(p);}
@@ -168,6 +185,12 @@ class TopJet : public Jet{
 
  private:
   std::vector<Particle> m_subjets;
+
+  // substructure information
+  float m_qjets_volatility;
+  float m_tau1;
+  float m_tau2;
+  float m_tau3;
 
   //btag variables
   std::vector<float> m_subCSV;

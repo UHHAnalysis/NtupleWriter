@@ -47,6 +47,7 @@
 #include "EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h"
 
 #include "UHHAnalysis/NtupleWriter/Objects/Particle.h"
+#include "UHHAnalysis/NtupleWriter/Objects/PFParticle.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Jet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Electron.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Muon.h"
@@ -55,6 +56,7 @@
 #include "UHHAnalysis/NtupleWriter/Objects/MET.h"
 #include "UHHAnalysis/NtupleWriter/Objects/PrimaryVertex.h"
 #include "UHHAnalysis/NtupleWriter/Objects/TopJet.h"
+#include "UHHAnalysis/NtupleWriter/Objects/GenTopJet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenInfo.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenParticle.h"
 
@@ -83,6 +85,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       virtual void endRun(edm::Run const&, edm::EventSetup const&);
       virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
+      void StoreJetConstituents(pat::Jet* pat_jet, Jet* topjet);
 
       // ----------member data ---------------------------
       TFile *outfile;
@@ -94,8 +97,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doTaus;
       bool doJets;
       bool doGenJets;
-      bool doJECUncertainty;
       bool doTopJets;
+      bool doTopJetsConstituents;
       bool doGenTopJets;
       bool doMET;
       bool doPhotons;
@@ -146,8 +149,11 @@ class NtupleWriter : public edm::EDAnalyzer {
       double topjet_ptmin;
       double topjet_etamax;
 
+      std::vector<std::string> topjet_constituents_sources;
+      std::vector<PFParticle> pfparticles; // only one collection allowed!
+
       std::vector<std::string> gentopjet_sources;
-      std::vector<TopJet> gentopjets[Nmax];
+      std::vector<GenTopJet> gentopjets[Nmax];
       double gentopjet_ptmin;
       double gentopjet_etamax;
 
@@ -172,14 +178,14 @@ class NtupleWriter : public edm::EDAnalyzer {
       //std::map<std::string, bool> triggerResults;
       std::vector<std::string> triggerNames;
       std::vector<bool> triggerResults;
-/*       std::vector<int> L1_prescale; */
-/*       std::vector<int> HLT_prescale; */
+      //std::vector<int> L1_prescale;
+      //std::vector<int> HLT_prescale; 
       
       //HLTConfigProvider hlt_cfg;
       bool newrun;
       bool previouslumiblockwasfilled;
 
-      JetCorrectionUncertainty *jecUnc;
+      std::vector<const reco::PFCandidate*> m_stored_pfs;
 };
 
 

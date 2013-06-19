@@ -38,7 +38,7 @@ class Jet : public Particle{
      m_JEC_factor_raw=0;
      m_genjet_index=-1;
      m_genparticles_indices.clear();
-     m_pfconstituents.clear();
+     m_pfconstituents_indices.clear();
      m_genjet=NULL;
   };
 
@@ -60,9 +60,9 @@ class Jet : public Particle{
     }
   };
 
-  std::vector<Particle> pfconstituents() const{return m_pfconstituents;}
+  std::vector<unsigned int> pfconstituents_indices() const{return m_pfconstituents_indices;}
 
-  void add_pfconstituents(Particle p){m_pfconstituents.push_back(p);}
+  void add_pfconstituents_index(int ind){m_pfconstituents_indices.push_back(ind);}
 
   int nTracks() const{return m_nTracks;}
   float jetArea() const{return m_jetArea;}
@@ -171,11 +171,12 @@ class Jet : public Particle{
   float m_JEC_uncertainty;
   float m_JEC_factor_raw;
   int m_genjet_index;
-  Particle* m_genjet;  //!
+  Particle* m_genjet;
 
   std::vector<unsigned int> m_genparticles_indices;
 
-  std::vector<Particle> m_pfconstituents;
+  std::vector<unsigned int> m_pfconstituents_indices;
+
 
 };
 

@@ -1,4 +1,5 @@
 #include "UHHAnalysis/NtupleWriter/Objects/Particle.h"
+#include "UHHAnalysis/NtupleWriter/Objects/PFParticle.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Jet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Electron.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Muon.h"
@@ -7,6 +8,7 @@
 #include "UHHAnalysis/NtupleWriter/Objects/MET.h"
 #include "UHHAnalysis/NtupleWriter/Objects/PrimaryVertex.h"
 #include "UHHAnalysis/NtupleWriter/Objects/TopJet.h"
+#include "UHHAnalysis/NtupleWriter/Objects/GenTopJet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenInfo.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenParticle.h"
 
@@ -16,10 +18,14 @@ namespace {
   namespace {
     Particle p;
     std::vector<Particle> ps;
+    PFParticle pf;
+    std::vector<PFParticle> pfs;
     Jet jet;
     std::vector<Jet> jets;
     TopJet topjet;
     std::vector<TopJet> topjets;
+    GenTopJet gentopjet;
+    std::vector<GenTopJet> gentopjets;
     Electron ele; 
     std::vector<Electron> eles; 
     Muon mu; 

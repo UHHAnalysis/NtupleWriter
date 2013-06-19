@@ -1,10 +1,14 @@
 <lcgdict>
 <class name="Particle"/>
 <class name="std::vector<Particle>"/>
+<class name="PFParticle"/>
+<class name="std::vector<PFParticle>"/>
 <class name="Jet"/>
 <class name="std::vector<Jet>"/>
 <class name="TopJet"/>
 <class name="std::vector<TopJet>"/>
+<class name="GenTopJet"/>
+<class name="std::vector<GenTopJet>"/>
 <class name="Electron"/>
 <class name="std::vector<Electron>"/>
 <class name="Muon"/>
