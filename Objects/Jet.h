@@ -15,7 +15,6 @@ class Jet : public FlavorParticle{
   Jet(){
      m_nTracks=0;
      m_jetArea=0;
-     m_pileup=0;
      m_numberOfDaughters=0; 
      m_neutralEmEnergyFraction=0;
      m_neutralHadronEnergyFraction=0;
@@ -34,10 +33,8 @@ class Jet : public FlavorParticle{
      m_btag_combinedSecondaryVertexMVA=0;
      m_btag_jetBProbability=0;
      m_btag_jetProbability=0;
-     m_JEC_uncertainty=0;
      m_JEC_factor_raw=0;
      m_genjet_index=-1;
-     m_genparticles_indices.clear();
      m_pfconstituents_indices.clear();
      m_genjet=NULL;
   };
@@ -66,7 +63,6 @@ class Jet : public FlavorParticle{
 
   int nTracks() const{return m_nTracks;}
   float jetArea() const{return m_jetArea;}
-  float pileup() const{return m_pileup;}
   int numberOfDaughters() const{return m_numberOfDaughters;} 
   float neutralEmEnergyFraction() const{return m_neutralEmEnergyFraction;}
   float neutralHadronEnergyFraction() const{return m_neutralHadronEnergyFraction;}
@@ -85,18 +81,15 @@ class Jet : public FlavorParticle{
   float btag_combinedSecondaryVertexMVA() const{return m_btag_combinedSecondaryVertexMVA;}
   float btag_jetBProbability() const{return m_btag_jetBProbability;}
   float btag_jetProbability() const{return m_btag_jetProbability;}
-  float JEC_uncertainty() const{return m_JEC_uncertainty;}
   float JEC_factor_raw() const{return m_JEC_factor_raw;}
   float genjet_pt() const{return genjet().pt();}
   float genjet_eta() const{return genjet().eta();}
   float genjet_phi() const{return genjet().phi();}
   float genjet_energy() const{return genjet().energy();}
   float genjet_index() const{return m_genjet_index;}
-  std::vector<unsigned int> genparticles_indices() const{return m_genparticles_indices;}
 
   void set_nTracks(int x){m_nTracks=x;}
   void set_jetArea(float x){m_jetArea=x;}
-  void set_pileup(float x){m_pileup=x;}
   void set_numberOfDaughters(int x){m_numberOfDaughters=x;} 
   void set_neutralEmEnergyFraction(float x){m_neutralEmEnergyFraction=x;}
   void set_neutralHadronEnergyFraction(float x){m_neutralHadronEnergyFraction=x;}
@@ -115,10 +108,8 @@ class Jet : public FlavorParticle{
   void set_btag_combinedSecondaryVertexMVA(float x){m_btag_combinedSecondaryVertexMVA=x;}
   void set_btag_jetBProbability(float x){m_btag_jetBProbability=x;}
   void set_btag_jetProbability(float x){m_btag_jetProbability=x;}
-  void set_JEC_uncertainty(float x){m_JEC_uncertainty=x;}
   void set_JEC_factor_raw(float x){m_JEC_factor_raw=x;}
   void set_genjet_index(int x){m_genjet_index=x;}
-  void add_genparticles_index(unsigned int x){m_genparticles_indices.push_back(x);}
 
   bool has_genjet() const{return m_genjet_index>=0;}
 
@@ -149,7 +140,6 @@ class Jet : public FlavorParticle{
   
   int m_nTracks;
   float m_jetArea;
-  float m_pileup;
   int m_numberOfDaughters; 
   float m_neutralEmEnergyFraction;
   float m_neutralHadronEnergyFraction;
@@ -168,12 +158,9 @@ class Jet : public FlavorParticle{
   float m_btag_combinedSecondaryVertexMVA;
   float m_btag_jetBProbability;
   float m_btag_jetProbability;
-  float m_JEC_uncertainty;
   float m_JEC_factor_raw;
   int m_genjet_index;
   Particle* m_genjet;
-
-  std::vector<unsigned int> m_genparticles_indices;
 
   std::vector<unsigned int> m_pfconstituents_indices;
 
