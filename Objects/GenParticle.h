@@ -1,7 +1,7 @@
 #ifndef GenParticle_H
 #define GenParticle_H
 
-#include "Particle.h"
+#include "FlavorParticle.h"
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -12,10 +12,9 @@
  *  @author Thomas Peiffer
  */
 
-class GenParticle : public Particle{
+class GenParticle : public FlavorParticle{
  public:
   GenParticle(){
-    m_pdgId=0;
     m_status=0;
     m_index=0;
     m_mother1=0;
@@ -27,7 +26,6 @@ class GenParticle : public Particle{
   ~GenParticle(){
   };
 
-  int pdgId() const{return m_pdgId;}
   int status() const{return m_status;}
   int index() const{return m_index;}
   int mother1() const{return m_mother1;}
@@ -75,7 +73,7 @@ class GenParticle : public Particle{
   //print list of particles in one event with their characteristics 
   void Print(std::vector<GenParticle> *gplist) const{
     std::cout << std::setw(10) << this->m_index << '|';
-    std::cout << std::setw(10) << this->m_pdgId << '|';
+    std::cout << std::setw(10) << this->pdgId() << '|';
     std::cout << std::setw(10) << this->m_status << '|';
     if(this->mother(gplist, 1)){
       std::ostringstream convert1;
@@ -115,7 +113,6 @@ class GenParticle : public Particle{
   }
 
 
-  void set_pdgId(int x){  m_pdgId=x;}
   void set_status(int x){  m_status=x;}
   void set_index(int x){  m_index=x;}
   void set_mother1(int x){  m_mother1=x;}
@@ -125,7 +122,6 @@ class GenParticle : public Particle{
   void set_spin(int x){  m_spin=x;}
 
  private:
-  int m_pdgId;
   int m_status;
   int m_index;
 

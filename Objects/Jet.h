@@ -1,14 +1,14 @@
 #ifndef Jet_H
 #define Jet_H
 
-#include "Particle.h"
+#include "FlavorParticle.h"
 
 /**
  *  @short jet class
  *  @author Thomas Peiffer
  */
 
-class Jet : public Particle{
+class Jet : public FlavorParticle{
 
  public:
 

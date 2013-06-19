@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.26 2013/06/10 13:33:05 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.27 2013/06/19 13:22:06 rkogler Exp $
 //
 //
 
@@ -642,6 +642,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jet.set_eta(pat_jet.eta());
 	 jet.set_phi(pat_jet.phi());
 	 jet.set_energy(pat_jet.energy());
+	 jet.set_flavor(pat_jet.partonFlavour());
 	 jet.set_numberOfDaughters (pat_jet.numberOfDaughters());
 	 const reco::TrackRefVector&  jettracks = pat_jet.associatedTracks();
 	 jet.set_nTracks ( jettracks.size());
@@ -728,6 +729,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 topjet.set_eta(pat_topjet.eta());
 	 topjet.set_phi(pat_topjet.phi());
 	 topjet.set_energy(pat_topjet.energy());
+	 topjet.set_flavor(pat_topjet.partonFlavour());
 	 topjet.set_numberOfDaughters(pat_topjet.numberOfDaughters());
 	 const reco::TrackRefVector&  topjettracks = pat_topjet.associatedTracks();
 	 topjet.set_nTracks( topjettracks.size());

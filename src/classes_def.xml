@@ -1,6 +1,8 @@
 <lcgdict>
 <class name="Particle"/>
 <class name="std::vector<Particle>"/>
+<class name="FlavorParticle"/>
+<class name="std::vector<FlavorParticle>"/>
 <class name="PFParticle"/>
 <class name="std::vector<PFParticle>"/>
 <class name="Jet"/>

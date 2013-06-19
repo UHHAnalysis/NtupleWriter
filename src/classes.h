@@ -1,4 +1,5 @@
 #include "UHHAnalysis/NtupleWriter/Objects/Particle.h"
+#include "UHHAnalysis/NtupleWriter/Objects/FlavorParticle.h"
 #include "UHHAnalysis/NtupleWriter/Objects/PFParticle.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Jet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/Electron.h"
@@ -18,6 +19,8 @@ namespace {
   namespace {
     Particle p;
     std::vector<Particle> ps;
+    FlavorParticle pfl;
+    std::vector<FlavorParticle> pfls;
     PFParticle pf;
     std::vector<PFParticle> pfs;
     Jet jet;
