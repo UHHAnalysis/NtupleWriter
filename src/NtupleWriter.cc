@@ -13,7 +13,7 @@
 //
 // Original Author:  Thomas Peiffer,,,Uni Hamburg
 //         Created:  Tue Mar 13 08:43:34 CET 2012
-// $Id: NtupleWriter.cc,v 1.28 2013/06/19 16:02:37 peiffer Exp $
+// $Id: NtupleWriter.cc,v 1.29 2013/06/19 22:05:46 rkogler Exp $
 //
 //
 
@@ -26,30 +26,54 @@
 #include "RecoBTag/SecondaryVertex/interface/CombinedSVComputer.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 
-//
-// constants, enums and typedefs
-//
+namespace{
+    
+/// Use info from pat_jet to fill info in jet
+void fill_jet_info(const pat::Jet & pat_jet, Jet & jet)
+{
+    jet.set_charge(pat_jet.charge());
+    jet.set_pt(pat_jet.pt());
+    jet.set_eta(pat_jet.eta());
+    jet.set_phi(pat_jet.phi());
+    jet.set_energy(pat_jet.energy());
+    jet.set_flavor(pat_jet.partonFlavour());
+    jet.set_numberOfDaughters (pat_jet.numberOfDaughters());
+    const reco::TrackRefVector&  jettracks = pat_jet.associatedTracks();
+    jet.set_nTracks ( jettracks.size());
+    jet.set_jetArea(pat_jet.jetArea());
+    if(pat_jet.isPFJet()){
+        jet.set_neutralEmEnergyFraction (pat_jet.neutralEmEnergyFraction());
+        jet.set_neutralHadronEnergyFraction (pat_jet.neutralHadronEnergyFraction());
+        jet.set_chargedEmEnergyFraction (pat_jet.chargedEmEnergyFraction());
+        jet.set_chargedHadronEnergyFraction (pat_jet.chargedHadronEnergyFraction());
+        jet.set_muonEnergyFraction (pat_jet.muonEnergyFraction());
+        jet.set_photonEnergyFraction (pat_jet.photonEnergyFraction());
+        jet.set_chargedMultiplicity (pat_jet.chargedMultiplicity());
+        jet.set_neutralMultiplicity (pat_jet.neutralMultiplicity());
+        jet.set_muonMultiplicity (pat_jet.muonMultiplicity());
+        jet.set_electronMultiplicity (pat_jet.electronMultiplicity());
+        jet.set_photonMultiplicity (pat_jet.photonMultiplicity());
+    }
+    jet.set_JEC_factor_raw(pat_jet.jecFactor("Uncorrected"));
+    jet.set_btag_simpleSecondaryVertexHighEff(pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
+    jet.set_btag_simpleSecondaryVertexHighPur(pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags"));
+    jet.set_btag_combinedSecondaryVertex(pat_jet.bDiscriminator("combinedSecondaryVertexBJetTags"));
+    jet.set_btag_combinedSecondaryVertexMVA(pat_jet.bDiscriminator("combinedSecondaryVertexMVABJetTags"));
+    jet.set_btag_jetBProbability(pat_jet.bDiscriminator("jetBProbabilityBJetTags"));
+    jet.set_btag_jetProbability(pat_jet.bDiscriminator("jetProbabilityBJetTags"));
+}
 
-//
-// static data member definitions
-//
+}
 
 //
 // constructors and destructor
 //
 NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
-
 {
-   //now do what ever initialization is needed
-  //edm::Service<TFileService> fs;
-  //tr = fs->make<TTree>("AnalysisTree","AnalysisTree");
-
-  fileName =  iConfig.getParameter<std::string>("fileName");
+  fileName = iConfig.getParameter<std::string>("fileName");
   outfile = new TFile(fileName,"RECREATE");
   outfile->cd();
   tr = new TTree("AnalysisTree","AnalysisTree");
-
-  std::string name;
 
   doElectrons = iConfig.getParameter<bool>("doElectrons");
   doMuons = iConfig.getParameter<bool>("doMuons");
@@ -79,7 +103,6 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   tr->Branch("rho",&rho);
   rho_source = iConfig.getParameter<edm::InputTag>("rho_source");
 
-  //tr->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult);
   if(doLumiInfo){
     tr->Branch("intgRecLumi",&intgRecLumi);
     tr->Branch("intgDelLumi",&intgDelLumi);
@@ -197,12 +220,8 @@ NtupleWriter::~NtupleWriter()
 //
 
 // ------------ method called for each event  ------------
-void
-NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  //   using namespace edm;
-
-
    // ------------- common variables ------------- 
    
    run = iEvent.id().run();
@@ -213,13 +232,6 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle<double> m_rho;
    iEvent.getByLabel(rho_source,m_rho);
    rho=*m_rho;
-
-//    if(isRealData){
-//      edm::Handle<bool> bool_handle;
-//      iEvent.getByLabel(edm::InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),bool_handle);
-//      HBHENoiseFilterResult = *(bool_handle.product());
-//    }
-//    else HBHENoiseFilterResult = false;
 
    // ------------- primary vertices and beamspot  -------------
 
@@ -256,7 +268,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      beamspot_z0 = bsp.z0();
    }
 
- // ------------- generator info -------------
+   // ------------- generator info -------------
    
    if(doGenInfo){
      genInfo.clear_weights();
@@ -669,45 +681,10 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	 for(size_t k=0; k<dis.size(); ++k){
 // 	   std::cout << dis[k].first << std::endl;
 // 	 }
-
 	 Jet jet;
-	 jet.set_charge(pat_jet.charge());
-	 jet.set_pt(pat_jet.pt());
-	 jet.set_eta(pat_jet.eta());
-	 jet.set_phi(pat_jet.phi());
-	 jet.set_energy(pat_jet.energy());
-	 jet.set_flavor(pat_jet.partonFlavour());
-	 jet.set_numberOfDaughters (pat_jet.numberOfDaughters());
-	 const reco::TrackRefVector&  jettracks = pat_jet.associatedTracks();
-	 jet.set_nTracks ( jettracks.size());
-	 jet.set_jetArea(pat_jet.jetArea());
-	 if(pat_jet.isPFJet()){
-	   jet.set_neutralEmEnergyFraction (pat_jet.neutralEmEnergyFraction());
-	   jet.set_neutralHadronEnergyFraction (pat_jet.neutralHadronEnergyFraction());
-	   jet.set_chargedEmEnergyFraction (pat_jet.chargedEmEnergyFraction());
-	   jet.set_chargedHadronEnergyFraction (pat_jet.chargedHadronEnergyFraction());
-	   jet.set_muonEnergyFraction (pat_jet.muonEnergyFraction());
-	   jet.set_photonEnergyFraction (pat_jet.photonEnergyFraction());
-	   jet.set_chargedMultiplicity (pat_jet.chargedMultiplicity());
-	   jet.set_neutralMultiplicity (pat_jet.neutralMultiplicity());
-	   jet.set_muonMultiplicity (pat_jet.muonMultiplicity());
-	   jet.set_electronMultiplicity (pat_jet.electronMultiplicity());
-	   jet.set_photonMultiplicity (pat_jet.photonMultiplicity());
-	 }
-
-	 jet.set_JEC_factor_raw(pat_jet.jecFactor("Uncorrected"));
-	 
-	 jet.set_btag_simpleSecondaryVertexHighEff(pat_jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
-	 jet.set_btag_simpleSecondaryVertexHighPur(pat_jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags"));
-	 jet.set_btag_combinedSecondaryVertex(pat_jet.bDiscriminator("combinedSecondaryVertexBJetTags"));
-	 jet.set_btag_combinedSecondaryVertexMVA(pat_jet.bDiscriminator("combinedSecondaryVertexMVABJetTags"));
-	 jet.set_btag_jetBProbability(pat_jet.bDiscriminator("jetBProbabilityBJetTags"));
-	 jet.set_btag_jetProbability(pat_jet.bDiscriminator("jetProbabilityBJetTags"));
-
-	 
+         fill_jet_info(pat_jet, jet);
 	 const reco::GenJet *genj = pat_jet.genJet();
 	 if(genj){
-
 	   for(unsigned int k=0; k<genjets->size(); ++k){
 	     if(genj->pt()==genjets->at(k).pt() && genj->eta()==genjets->at(k).eta()){
 	       jet.set_genjet_index(k);
@@ -716,9 +693,7 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // 	   if( jet.genjet_index()<0){
 // 	     std::cout<< "genjet not found for " << genj->pt() << "  " << genj->eta() << std::endl;
 // 	   }
-	   
 	 }
-	 
 	 jets[j].push_back(jet);
        }
      }
@@ -737,32 +712,13 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        iEvent.getByLabel(topjet_sources[j], pat_topjets);
 
        for (unsigned int i = 0; i < pat_topjets->size(); i++) {
- 
-	 const pat::Jet  pat_topjet =  * dynamic_cast<pat::Jet const *>(&pat_topjets->at(i));
+	 const pat::Jet & pat_topjet =  dynamic_cast<pat::Jet const&>(pat_topjets->at(i));
 	 if(pat_topjet.pt() < topjet_ptmin) continue;
 	 if(fabs(pat_topjet.eta()) > topjet_etamax) continue;
 
 	 TopJet topjet;
-	 topjet.set_charge(pat_topjet.charge());
-	 topjet.set_pt(pat_topjet.pt());
-	 topjet.set_eta(pat_topjet.eta());
-	 topjet.set_phi(pat_topjet.phi());
-	 topjet.set_energy(pat_topjet.energy());
-	 topjet.set_flavor(pat_topjet.partonFlavour());
-	 topjet.set_numberOfDaughters(pat_topjet.numberOfDaughters());
-	 const reco::TrackRefVector&  topjettracks = pat_topjet.associatedTracks();
-	 topjet.set_nTracks( topjettracks.size());
-	 topjet.set_jetArea( pat_topjet.jetArea());
-
-	 topjet.set_JEC_factor_raw( pat_topjet.jecFactor("Uncorrected"));
-
-	 topjet.set_btag_simpleSecondaryVertexHighEff(pat_topjet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags"));
-	 topjet.set_btag_simpleSecondaryVertexHighPur(pat_topjet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags"));
-	 topjet.set_btag_combinedSecondaryVertex(pat_topjet.bDiscriminator("combinedSecondaryVertexBJetTags"));
-	 topjet.set_btag_combinedSecondaryVertexMVA(pat_topjet.bDiscriminator("combinedSecondaryVertexMVABJetTags"));
-	 topjet.set_btag_jetBProbability(pat_topjet.bDiscriminator("jetBProbabilityBJetTags"));
-	 topjet.set_btag_jetProbability(pat_topjet.bDiscriminator("jetProbabilityBJetTags"));
-
+         fill_jet_info(pat_topjet, topjet);
+         
 	 /*
 	 const reco::GenJet *genj = pat_topjet.genJet();
 	 if(genj){
@@ -788,27 +744,23 @@ NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	 // add constituents to the jet, if requested
 	 if (doTopJetsConstituents){
-
 	   if (topjet_constituents_sources.size()>j){ //only add constituents if they are defined
-
 	     edm::Handle<pat::JetCollection> pat_topjets_with_cands;
 	     iEvent.getByLabel(topjet_constituents_sources[j], pat_topjets_with_cands);
-	     pat::Jet* pat_topjet_wc = NULL;
+	     const pat::Jet* pat_topjet_wc = NULL;
 
 	     for (unsigned int it = 0; it < pat_topjets_with_cands->size(); it++) {
 	       const pat::Jet* cand =  dynamic_cast<pat::Jet const *>(&pat_topjets_with_cands->at(it));
-	       double dphi = cand->phi() - pat_topjet.phi();
-	       if (dphi > TMath::Pi()) dphi -= 2*TMath::Pi();
-	       if (dphi < -TMath::Pi()) dphi += 2*TMath::Pi();	       
+               assert(cand);
+	       double dphi = deltaPhi(cand->phi(), pat_topjet.phi());   
 	       if (fabs(dphi)<0.5 && fabs(cand->eta()-pat_topjet.eta())<0.5){ // be generous: filtering, pruning... can change jet axis
-		 pat_topjet_wc = const_cast<pat::Jet*>(cand);
+		 pat_topjet_wc = cand;
 		 break;
 	       }
 	     }
 
 	     if (pat_topjet_wc){
-	       StoreJetConstituents(pat_topjet_wc, &topjet);
-
+	       StoreJetConstituents(*pat_topjet_wc, topjet);
 	       // now run substructure information
 	       JetProps substructure(&topjet);
 	       substructure.set_pf_cands(&pfparticles);
@@ -1117,16 +1069,14 @@ NtupleWriter::beginRun(edm::Run const& iRun, edm::EventSetup const&  iSetup)
 }
 
 // ------------ method called when ending the processing of a run  ------------
-void 
-NtupleWriter::endRun(edm::Run const&, edm::EventSetup const&)
+void NtupleWriter::endRun(edm::Run const&, edm::EventSetup const&)
 {
   if(doLumiInfo)
     std::cout << "total integ. luminosity: " << totalDelLumi <<"(del) " << totalRecLumi << "(rec)" << std::endl;
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
-void 
-NtupleWriter::beginLuminosityBlock(edm::LuminosityBlock const& lumi, edm::EventSetup const&)
+void NtupleWriter::beginLuminosityBlock(edm::LuminosityBlock const& lumi, edm::EventSetup const&)
 {
   if(doLumiInfo){
     edm::Handle<LumiSummary> l;
@@ -1150,12 +1100,6 @@ NtupleWriter::beginLuminosityBlock(edm::LuminosityBlock const& lumi, edm::EventS
   }
 }
 
-// ------------ method called when ending the processing of a luminosity block  ------------
-void 
-NtupleWriter::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
-{
-}
-
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
 NtupleWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -1166,186 +1110,83 @@ NtupleWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   descriptions.addDefault(desc);
 }
 
-// ------------ method fills constituents of the pat_jet into the Ntuple and stores a reference 
-// ------------ to those in the topjet
-// ------------ it is checked if the constituents have been stored already
-void
-NtupleWriter::StoreJetConstituents(pat::Jet* pat_jet, Jet* jet)
-{
-  // checks if the pf cand has already been stored, only stores so far missing ones
-  // PF candidates, then stores a reference to the pf candidate in the jet
-  // also calculates the jet charge and sets it
 
+namespace{
 
-  const std::vector<reco::PFCandidatePtr> jconstits = pat_jet->getPFConstituents();
-
-  unsigned int NstoredPFs = pfparticles.size();
-
-  // loop over all jet constituents and store them 
-  for (unsigned int i=0; i<jconstits.size(); ++i){
-
-    PFParticle part;
-    const reco::PFCandidate* pf = jconstits[i].get();
-
-    // check if it has already been stored, omit if true
-    int is_already_in_list = -1;
-    for (unsigned int j=0; j<NstoredPFs; ++j){
-      PFParticle spf = pfparticles[j];
-      double r2 = pow(pf->eta()-spf.eta(),2) + pow(pf->phi()-spf.phi(),2);
-      double dpt = fabs( pf->pt() - spf.pt() );
-      if (r2<1e-10 && dpt<1e-10){
-	is_already_in_list = j;
-	break;
-      }            
-    }
-    
-    if (is_already_in_list>-1){     
-      continue;
-    }
-
-
-    part.set_pt(pf->pt());
-    part.set_eta(pf->eta());
-    part.set_phi(pf->phi());
-    part.set_energy(pf->energy());
-    part.set_charge(pf->charge());
-
-    part.set_ecal_en(pf->ecalEnergy());
-    part.set_hcal_en(pf->hcalEnergy());
-    reco::TrackRef trackref = pf->trackRef();
-    if (!trackref.isNull()){
-      part.set_track_mom(trackref->p());
-    }
-
-    PFParticle::EParticleID id = PFParticle::eX;
-    switch ( pf->translatePdgIdToType(pf->pdgId()) ){
-    case reco::PFCandidate::X : id = PFParticle::eX; break;
-    case reco::PFCandidate::h : id = PFParticle::eH; break;
-    case reco::PFCandidate::e : id = PFParticle::eE; break;
-    case reco::PFCandidate::mu : id = PFParticle::eMu; break;
-    case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
-    case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
-    case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
-    case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
-    }
-    part.set_particleID(id);
-
-    pfparticles.push_back(part);
-
-    // add a reference to the particle 
-    jet->add_pfconstituents_index(pfparticles.size()-1);
-    
-  }
-  
-  if(pat_jet->isPFJet()){
-    jet->set_charge(pat_jet->charge());
-    jet->set_neutralEmEnergyFraction(pat_jet->neutralEmEnergyFraction());
-    jet->set_neutralHadronEnergyFraction (pat_jet->neutralHadronEnergyFraction());
-    jet->set_chargedEmEnergyFraction (pat_jet->chargedEmEnergyFraction());
-    jet->set_chargedHadronEnergyFraction (pat_jet->chargedHadronEnergyFraction());
-    jet->set_muonEnergyFraction (pat_jet->muonEnergyFraction());
-    jet->set_photonEnergyFraction (pat_jet->photonEnergyFraction());
-    jet->set_chargedMultiplicity (pat_jet->chargedMultiplicity());
-    jet->set_neutralMultiplicity (pat_jet->neutralMultiplicity());
-    jet->set_muonMultiplicity (pat_jet->muonMultiplicity());
-    jet->set_electronMultiplicity (pat_jet->electronMultiplicity());
-    jet->set_photonMultiplicity (pat_jet->photonMultiplicity());
-  }
-  
-  return;
-
-}
-
-// ------------ method fills PF candidates in a cone of radius R around 
-// ------------ a given particle (lepton, most likely)
-// ------------ it is checked if the constituents have been stored already
-void
-NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::PFCandidate>& pf_cands, double R0)
-{
-  // checks if the pf cand has already been stored, only stores so far missing ones
-
-  //cout << "\nStorePFCandsInCone: R0 = " << R0 << endl;
-  //cout << "found " << pf_cands.size() << " PF candidates in the event" << endl;
-  //cout << "Input inparticle: pt = " << inpart->pt() << " eta = " << inpart->eta() << " phi = " << inpart->phi() << endl;
-  
-  unsigned int NstoredPFs = pfparticles.size();
-  //cout << "got already " <<  NstoredPFs << " which need to be checked to avoid double counting" << endl;
-
-  // loop over all PF candidates and store the ones in a cone with radius R0
-  for (unsigned int i=0; i<pf_cands.size(); ++i){
-
-    reco::PFCandidate pf = pf_cands[i];
-
-    // calculate distance in eta/phi
-    double dphi = pf.phi() - inpart->phi();
-    if (dphi > TMath::Pi()) dphi -= 2*TMath::Pi();
-    if (dphi < -TMath::Pi()) dphi += 2*TMath::Pi();
-    double dr2 = dphi*dphi + pow(pf.eta() - inpart->eta(),2);
-    
-    // check if PF candidate is in cone around particle
-    if (sqrt(dr2)>R0) continue;
-
-    //cout << "found particle with distance " << dr2 << " at position " << i << endl;
-    //cout << "PF: pt = " << pf.pt() << " eta = " << pf.eta() << " phi = " << pf.phi() << endl;
-
-    // check if it's the same as the input particle
-    double dpt = fabs( inpart->pt() - pf.pt() );
-    if (dr2<1e-10 && dpt<1e-10){ 
-      //cout << "same particle, don't store" << endl;
-      continue;
-    }
-
-    // check if it has already been stored, omit if true
-    int is_already_in_list = -1;
-    for (unsigned int j=0; j<NstoredPFs; ++j){
-      PFParticle spf = pfparticles[j];
-      double r2 = pow(pf.eta()-spf.eta(),2) + pow(pf.phi()-spf.phi(),2);
-      double dpt = fabs( pf.pt() - spf.pt() );
-      if (r2<1e-10 && dpt<1e-10){
-	is_already_in_list = j;
-	break;
-      }            
-    }
-    
-    if (is_already_in_list>-1){     
-      //cout << "is already in list, continue" << endl;
-      continue;
-    }
-
-
+PFParticle PFCandidate2PFParticle(const reco::PFCandidate & pf){
     PFParticle part;
     part.set_pt(pf.pt());
     part.set_eta(pf.eta());
     part.set_phi(pf.phi());
     part.set_energy(pf.energy());
     part.set_charge(pf.charge());
-
     part.set_ecal_en(pf.ecalEnergy());
     part.set_hcal_en(pf.hcalEnergy());
     reco::TrackRef trackref = pf.trackRef();
     if (!trackref.isNull()){
       part.set_track_mom(trackref->p());
     }
-
     PFParticle::EParticleID id = PFParticle::eX;
     switch ( pf.translatePdgIdToType(pf.pdgId()) ){
-    case reco::PFCandidate::X : id = PFParticle::eX; break;
-    case reco::PFCandidate::h : id = PFParticle::eH; break;
-    case reco::PFCandidate::e : id = PFParticle::eE; break;
-    case reco::PFCandidate::mu : id = PFParticle::eMu; break;
-    case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
-    case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
-    case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
-    case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
+        case reco::PFCandidate::X : id = PFParticle::eX; break;
+        case reco::PFCandidate::h : id = PFParticle::eH; break;
+        case reco::PFCandidate::e : id = PFParticle::eE; break;
+        case reco::PFCandidate::mu : id = PFParticle::eMu; break;
+        case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
+        case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
+        case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
+        case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
     }
     part.set_particleID(id);
+    return part;
+}
     
-    pfparticles.push_back(part);
-    
-  }
-  
-  return;
+// add pf to pfs, ensuring there is no duplication. Retuns the index
+// of pf in pfs.
+size_t add_pfpart(const reco::PFCandidate & pf, vector<PFParticle> & pfs){
+    for(size_t j=0; j<pfs.size(); ++j){
+      PFParticle spf = pfs[j];
+      // note: static_cast to float is to ensure the comparison is done with the same precision as these quantities
+      // have been stored in spf. Otherwise, there could be a non-zero difference just because of conversion loss
+      // from double to float.
+      double r = fabs(static_cast<float>(pf.eta()) - spf.eta()) + fabs(static_cast<float>(pf.phi()) - spf.phi());
+      double dpt = fabs(static_cast<float>(pf.pt()) - spf.pt());
+      if (r == 0.0 && dpt == 0.0){
+        return j;
+      }            
+    }
+    pfs.push_back(PFCandidate2PFParticle(pf));
+    return pfs.size()-1;
+}
 
+
+}
+
+
+void NtupleWriter::StoreJetConstituents(const pat::Jet& pat_jet, Jet& jet)
+{
+  const std::vector<reco::PFCandidatePtr> jconstits = pat_jet.getPFConstituents();
+  for (unsigned int i=0; i<jconstits.size(); ++i){
+    const reco::PFCandidate* pf = jconstits[i].get();
+    size_t pfparticles_index = add_pfpart(*pf, pfparticles);
+    jet.add_pfconstituents_index(pfparticles_index);    
+  }
+}
+
+void NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::PFCandidate>& pf_cands, double R0)
+{
+  for (unsigned int i=0; i<pf_cands.size(); ++i){
+    const reco::PFCandidate & pf = pf_cands[i];
+    double dr = deltaR(*inpart, pf);
+    if (dr>R0) continue;
+    
+    // don't store particle itself:
+    double dpt = fabs( inpart->pt() - pf.pt() );
+    if (dr<1e-10 && dpt<1e-10){ 
+      continue;
+    }
+    add_pfpart(pf, pfparticles);    
+  }
 }
 
 //define this as a plug-in

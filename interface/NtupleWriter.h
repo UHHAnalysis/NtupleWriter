@@ -84,8 +84,12 @@ class NtupleWriter : public edm::EDAnalyzer {
       virtual void beginRun(edm::Run const&, edm::EventSetup const&);
       virtual void endRun(edm::Run const&, edm::EventSetup const&);
       virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
-      virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
-      void StoreJetConstituents(pat::Jet* pat_jet, Jet* topjet);
+      //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
+      
+      /// fills constituents of the pat_jet into the Ntuple and stores a reference to those in the provided topjet
+      void StoreJetConstituents(const pat::Jet & pat_jet, Jet & topjet);
+      
+      /// fill PF candidates from pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
       void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0);
 
       // ----------member data ---------------------------
