@@ -1704,7 +1704,49 @@ process.filtersSeq = cms.Sequence(
    process.eeBadScFilter
 )
 
-
+# remove not needed collections from pat sequence
+process.patDefaultSequence.remove( process.selectedPatElectrons )
+process.patDefaultSequence.remove( process.selectedPatMuons )
+process.patDefaultSequence.remove( process.selectedPatTaus )
+process.patDefaultSequence.remove( process.selectedPatPhotons )
+process.patDefaultSequence.remove( process.cleanPatElectrons )
+process.patDefaultSequence.remove( process.cleanPatMuons )
+process.patDefaultSequence.remove( process.cleanPatTaus )
+process.patDefaultSequence.remove( process.cleanPatPhotons )
+process.patDefaultSequence.remove( process.countPatElectrons )
+process.patDefaultSequence.remove( process.countPatMuons )
+process.patDefaultSequence.remove( process.countPatTaus )
+process.patDefaultSequence.remove( process.countPatPhotons )
+process.patDefaultSequence.remove( process.countPatLeptons )
+process.patDefaultSequence.remove( process.makePatElectrons )
+process.patDefaultSequence.remove( process.makePatMuons )
+process.patDefaultSequence.remove( process.makePatTaus )
+process.patDefaultSequence.remove( process.makePatMETs )
+process.patDefaultSequence.remove( process.makePatPhotons )
+process.patDefaultSequence.remove( process.cleanPatJets )
+process.patDefaultSequence.remove( process.cleanPatCandidateSummary )
+process.patPF2PATSequencePFlowLoose.remove (process.makePatTausPFlowLoose)
+process.patPF2PATSequencePFlowLoose.remove (process.selectedPatTausPFlowLoose)
+process.patPF2PATSequencePFlowLoose.remove (process.countPatTausPFlowLoose)
+process.patPF2PATSequencePFlowLoose.remove (process.countPatLeptonsPFlowLoose)
+process.PFBRECOPFlowLoose.remove( process.pfMETPFlowLoose )
+process.patCandidatesPFlowLoose.remove (process.makePatMETsPFlowLoose)
+process.patPF2PATSequencePFlowLoose.remove (process.producePatPFMETCorrectionsPFlowLoose) 
+process.patPF2PATSequencePFlowLoose.remove (process.patMETsPFlowLoose)
+process.PFBRECOPFlowLoose.remove( process.pfJetSequencePFlowLoose )
+process.PFBRECOPFlowLoose.remove( process.pfTauSequencePFlowLoose)
+process.PFBRECOPFlowLoose.remove( process.pfNoTauPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patJetCorrectionsPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.jetTracksAssociatorAtVertexPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.btaggingAODPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patJetChargePFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patJetPartonMatchPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.genForPF2PATSequence )
+process.patPF2PATSequencePFlowLoose.remove ( process.patJetGenJetMatchPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patJetFlavourIdPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patJetsPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.selectedPatJetsPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.countPatJetsPFlowLoose )
 
 process.patseq = cms.Sequence(
     process.filtersSeq*
@@ -1816,6 +1858,7 @@ if options.runOnFastSim:
 if options.writeSimpleInputs :
 	process.patseq *= cms.Sequence(process.pfInputs)
 
+
 if options.useSusyFilter :
 	process.patseq.remove( process.HBHENoiseFilter )
 	process.load( 'PhysicsTools.HepMCCandAlgos.modelfilter_cfi' )
@@ -1832,6 +1875,8 @@ else :
 	process.p0 = cms.Path(
 		process.patseq
 	)
+
+
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   fileName = cms.string('Ntuple.root'), 
@@ -1875,7 +1920,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   gentopjet_sources = cms.vstring("caTopTagGen", "caFilteredGenJetsNoNu", "caHEPTopTagGen" ),
                                   gentopjet_ptmin = cms.double(150.0), 
                                   gentopjet_etamax = cms.double(5.0),
-                                  met_sources =  cms.vstring("patMETs","patMETsPFlow"),
+                                  met_sources =  cms.vstring("patMETsPFlow"),
                                   pv_sources = cms.vstring("goodOfflinePrimaryVertices"),
                                   trigger_prefixes = cms.vstring(#"HLT_IsoMu", "HLT_Mu",
                                                                  #"HLT_L1SingleMu", "HLT_L2Mu",
@@ -1897,8 +1942,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(5)
 
 
 # process all the events
-process.maxEvents.input = 100
-process.options.wantSummary = False
+
+process.maxEvents.input = 30
+process.options.wantSummary = True
+
 process.out.dropMetaData = cms.untracked.string("DROPPED")
 
 process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
