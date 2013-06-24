@@ -1775,6 +1775,9 @@ process.patPF2PATSequencePFlowLoose.remove ( process.patJetFlavourIdPFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.patJetsPFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.selectedPatJetsPFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.countPatJetsPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patHPSPFTauDiscriminationUpdatePFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patPFTauIsolationPFlowLoose )
+process.patPF2PATSequencePFlowLoose.remove ( process.patTausPFlowLoose )
 
 process.patseq = cms.Sequence(
     process.filtersSeq*
