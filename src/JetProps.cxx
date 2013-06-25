@@ -31,6 +31,15 @@ JetProps::JetProps(TopJet* jet)
   m_JetDef = NULL;
 }
 
+JetProps::JetProps(TopJet* jet, std::vector<PFParticle>* parts)
+{
+  // standard constructor
+  m_jet = jet;
+  m_pf_candidates = parts;
+  m_JetFinder = NULL;
+  m_JetDef = NULL;
+}
+
 JetProps::~JetProps()
 {
   // destructor, clean up
