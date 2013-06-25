@@ -26,6 +26,7 @@ class JetProps
  public:
   JetProps();
   JetProps(TopJet* jet);
+  JetProps(TopJet* jet, std::vector<PFParticle>* parts);
   ~JetProps();
 
   double GetNsubjettiness(int N, Njettiness::AxesMode mode, double beta, double R0, double Rcutoff=std::numeric_limits<double>::max());
