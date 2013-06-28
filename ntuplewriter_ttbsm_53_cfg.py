@@ -128,7 +128,7 @@ if not options.useData :
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
 
     process.source = cms.Source("PoolSource",
-                                fileNames = cms.untracked.vstring("inputmclist")
+                                fileNames = cms.untracked.vstring("/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/001C868B-B2E1-E111-9BE3-003048D4DCD8.root")
                                 )
 
 
@@ -1912,7 +1912,7 @@ else :
 	)
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string(mcfilename), 
+                                  fileName = cms.string("Ntuple.root"), 
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
@@ -1946,9 +1946,10 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
 				  #photon_sources = cms.vstring("selectedPatPhotons"),
                                   topjet_sources = cms.vstring("goodPatJetsCATopTagPFPacked", "goodPatJetsCA15FilteredPFPacked", "goodPatJetsCAHEPTopTagPFPacked"),
                                   topjet_constituents_sources = cms.vstring("goodPatJetsCA8PF", "goodPatJetsCA15PF"),
+                                  #topjet_constituents_sources = cms.vstring(),
                                   topjet_ptmin = cms.double(150.0), 
                                   topjet_etamax = cms.double(5.0),
-                                  pf_around_leptons_source = cms.string("pfNoPileUpPFlow"),
+                                  pf_around_leptons_sources = cms.vstring("pfNoPileUpIsoPFlow", "pfPileUpIsoPFlow"),
 				  doGenTopJets = cms.bool(not options.useData),
                                   gentopjet_sources = cms.vstring("caTopTagGen", "caFilteredGenJetsNoNu", "caHEPTopTagGen"),
                                   gentopjet_ptmin = cms.double(150.0), 
@@ -1971,7 +1972,7 @@ process.outpath = cms.EndPath()
 
 
 # reduce verbosity
-process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(5)
+process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(50)
 
 
 # process all the events
@@ -1981,5 +1982,5 @@ process.out.dropMetaData = cms.untracked.string("DROPPED")
 
 process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 
-#open('junk.py','w').write(process.dumpPython())
+open('junk.py','w').write(process.dumpPython())
 

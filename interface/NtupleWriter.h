@@ -90,7 +90,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       void StoreJetConstituents(const pat::Jet & pat_jet, Jet & topjet);
       
       /// fill PF candidates from pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
-      void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0);
+      void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool fromiso);
 
       // ----------member data ---------------------------
       TFile *outfile;
@@ -176,7 +176,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       float beamspot_y0;
       float beamspot_z0;
 
-      std::string pf_around_leptons_source;
+      std::vector<std::string> pf_around_leptons_sources;
 
       edm::InputTag genparticle_source;
       GenInfo genInfo;
