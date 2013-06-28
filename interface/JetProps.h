@@ -9,7 +9,7 @@
 
 
 /**
- *  @class for the calculation of jet properties
+ *  @short for the calculation of jet properties
  *   most of the functions here use FastJet to calculate
  *   observables like N-subjettiness, mass-drop,
  *   sub-jets or jet grooming variables
