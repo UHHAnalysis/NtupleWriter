@@ -807,6 +807,9 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	      //btag info
               topjet.add_subFlavour(patsubjetd->partonFlavour());
               topjet.add_subCSV(patsubjetd->bDiscriminator("combinedSecondaryVertexBJetTags"));
+	      //info for subjet JEC correction
+	      topjet.add_subArea(patsubjetd->jetArea());
+	      topjet.add_subJEC_raw(patsubjetd->jecFactor("Uncorrected"));
 	      if (doTagInfos)
 		{
 		  //ip tag info
