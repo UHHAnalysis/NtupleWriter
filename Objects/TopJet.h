@@ -23,6 +23,8 @@ class TopJet : public Jet{
 
     //clear btag variables
     m_subCSV.clear();
+    m_subArea.clear();
+    m_subJEC_raw.clear();
     m_subFlavour.clear();
 
     //clear track impact parameter tag info
@@ -81,6 +83,8 @@ class TopJet : public Jet{
   //btag variables getters
   std::vector<Particle> subjets() const{return m_subjets;}
   std::vector<float> subCSV() const{return m_subCSV;}
+  std::vector<float> subArea() const{return m_subArea;}
+  std::vector<float> subJEC_raw() const{return m_subJEC_raw;}
   std::vector<int> subFlavour() const{return m_subFlavour;}
   std::vector<float> btagsub_combinedSecondaryVertex() const{return m_subCSV;}
   std::vector<int> flavorsub() const{return m_subFlavour;}
@@ -137,6 +141,8 @@ class TopJet : public Jet{
   //btag variables setters
   void add_subjet(Particle p){m_subjets.push_back(p);}
   void add_subCSV(float discriminant){m_subCSV.push_back(discriminant);}
+  void add_subArea(float area){m_subArea.push_back(area);}
+  void add_subJEC_raw(float jecraw){m_subJEC_raw.push_back(jecraw);}
   void add_subFlavour(int flavour){m_subFlavour.push_back(flavour);}
 
   //track impact parameter tag info setters
@@ -195,6 +201,8 @@ class TopJet : public Jet{
   //btag variables
   std::vector<float> m_subCSV;
   std::vector<int> m_subFlavour;
+  std::vector<float> m_subArea;
+  std::vector<float> m_subJEC_raw;
 
   //track impact parameter tag info
   std::vector<std::vector<float> > m_subTrackMomentum;
