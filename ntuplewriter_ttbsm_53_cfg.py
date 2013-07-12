@@ -136,7 +136,8 @@ else :
     inputJetCorrLabelAK5PFchs = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
     process.source.fileNames = [
-        '/store/data/Run2012A/SingleMu/AOD/13Jul2012-v1/00000/001D2347-D8D0-E111-A115-1CC1DE1D0600.root'
+#        '/store/data/Run2012C/SingleMu/AOD/22Jan2013-v1/30000/EE4EC30A-4878-E211-8B10-485B39800BA4.root'
+        '/store/data/Run2012D/SingleElectron/AOD/22Jan2013-v1/10000/068E9FFF-C892-E211-9132-003048679164.root'
     ]
 
 #process.source.eventsToProcess = cms.untracked.VEventRange( ['1:86747'] )
@@ -1731,6 +1732,18 @@ process.filtersSeq = cms.Sequence(
    ~process.logErrorTooManySeeds *
    process.eeBadScFilter
 )
+
+if options.useData :
+    l1Tag  = cms.InputTag( '' ) # skip L1 results, since conflicts with the GlobalTag can occur
+    hltTag = cms.InputTag( 'TriggerResults::HLT' )
+    from HLTrigger.HLTfilters.triggerResultsFilter_cfi import *
+    process.triggerResults = triggerResultsFilter.clone( hltResults = hltTag,
+                                                         l1tResults = l1Tag,
+                                                         throw      = False,
+                                                         triggerConditions = [ 'HLT_Ele27_WP80*', 'HLT_IsoMu24*', 'HLT_Mu40*' ]
+                                                         )
+    process.filtersSeq*=process.triggerResults
+    
 
 # remove not needed collections from pat sequence
 process.patDefaultSequence.remove( process.selectedPatElectrons )
