@@ -160,7 +160,7 @@ class Jet : public FlavorParticle{
   float m_btag_jetProbability;
   float m_JEC_factor_raw;
   int m_genjet_index;
-  Particle* m_genjet;
+  Particle* m_genjet; //!
 
   std::vector<unsigned int> m_pfconstituents_indices;
 
