@@ -1,5 +1,7 @@
 #! /bin/sh
 
+# This script is executed from SFrame/NtupleWriter to make the necessary object includes reachable
+
 mkdir -p include; 
 cd include;
 
@@ -34,4 +36,9 @@ mkdir -p UHHAnalysis;
 cd UHHAnalysis;
 if [ ! -h NtupleWriter ]; then ln -s ../../NtupleWriter NtupleWriter; fi;
 cd ..
+
+# new mechnism for UHHAnalysis/NtupleWriter is to create it relative to $SFRAME_DIR:
+cd $SFRAME_DIR
+mkdir UHHAnalysis
+ln -s ../NtupleWriter UHHAnalysis
 
