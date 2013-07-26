@@ -30,15 +30,8 @@ if [ ! -h Nsubjettiness.h ]; then ln -s ../interface/Nsubjettiness.h .; fi;
 if [ ! -h Qjets.h ]; then ln -s ../interface/Qjets.h .; fi;
 if [ ! -h QjetsPlugin.h ]; then ln -s ../interface/QjetsPlugin.h .; fi;
 
-cd ..
-
-mkdir -p UHHAnalysis; 
-cd UHHAnalysis;
-if [ ! -h NtupleWriter ]; then ln -s ../../NtupleWriter NtupleWriter; fi;
-cd ..
-
-# new mechnism for UHHAnalysis/NtupleWriter is to create it relative to $SFRAME_DIR:
+# to allow CMSSW-like includes such as "UHHAnalysis/NtupleWriter/interface/..." from within standalone sframe,
+# emulate the CMSSW directory structure by creating corresponding symlinks in $SFRAME_DIR:
 cd $SFRAME_DIR
 mkdir UHHAnalysis
 ln -s ../NtupleWriter UHHAnalysis
-
