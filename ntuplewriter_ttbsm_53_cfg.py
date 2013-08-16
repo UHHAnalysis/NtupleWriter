@@ -1733,6 +1733,11 @@ process.filtersSeq = cms.Sequence(
    process.eeBadScFilter
 )
 
+if options.runOnFastSim:
+    process.filtersSeq.remove ( process.logErrorTooManyClusters )
+    process.filtersSeq.remove ( process.logErrorTooManyTripletsPairs )
+    process.filtersSeq.remove ( process.logErrorTooManySeeds )
+
 if options.useData :
     l1Tag  = cms.InputTag( '' ) # skip L1 results, since conflicts with the GlobalTag can occur
     hltTag = cms.InputTag( 'TriggerResults::HLT' )
@@ -1903,6 +1908,8 @@ if options.useData :
 if options.runOnFastSim:
     process.patseq.remove( process.HBHENoiseFilter )
     process.patseq.remove( process.CSCTightHaloFilter ) 
+    process.patseq.remove( process.manystripclus53X )
+    process.patseq.remove( process.toomanystripclus53X )
 
 if options.writeSimpleInputs :
 	process.patseq *= cms.Sequence(process.pfInputs)
