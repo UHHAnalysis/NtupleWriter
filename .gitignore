@@ -3,3 +3,4 @@ include/
 obj/
 src/Ntuple_Dict.cxx
 src/Ntuple_Dict.h
+*~
