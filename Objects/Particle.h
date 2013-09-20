@@ -8,6 +8,8 @@
 
 #include <cmath>
 
+#define PI M_PI
+
 typedef ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiE4D< Double32_t > > LorentzVector;
 
 /**
