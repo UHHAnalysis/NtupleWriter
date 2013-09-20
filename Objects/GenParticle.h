@@ -35,7 +35,7 @@ class GenParticle : public FlavorParticle{
   int spin() const{return m_spin;}
 
   //return mother 1 or 2 (ind<=1 or ind>=2)
-  GenParticle* mother(std::vector<GenParticle> *gplist, int ind=1) const {
+  const GenParticle* mother(const std::vector<GenParticle> *gplist, int ind=1) const {
     for(unsigned int i=0; i< gplist->size(); ++i){
       if(ind<=1){
 	if(this->m_mother1 == gplist->at(i).index()){
@@ -53,7 +53,7 @@ class GenParticle : public FlavorParticle{
   }
 
   //return daughter 1 or 2 (ind<=1 or ind>=2)
-  GenParticle* daughter(std::vector<GenParticle> *gplist, int ind=1) const {
+  const GenParticle* daughter(const std::vector<GenParticle> *gplist, int ind=1) const {
     for(unsigned int i=0; i< gplist->size(); ++i){
       if(ind<=1){
 	if(this->m_daughter1 == gplist->at(i).index()){
@@ -71,7 +71,7 @@ class GenParticle : public FlavorParticle{
   }
   
   //print list of particles in one event with their characteristics 
-  void Print(std::vector<GenParticle> *gplist) const{
+  void Print(const std::vector<GenParticle> *gplist) const{
     std::cout << std::setw(10) << this->m_index << '|';
     std::cout << std::setw(10) << this->pdgId() << '|';
     std::cout << std::setw(10) << this->m_status << '|';

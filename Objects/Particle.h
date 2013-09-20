@@ -6,10 +6,7 @@
 #include "Math/PtEtaPhiE4D.h"
 #include "TObject.h"
 
-
-#ifndef PI
-#define PI       3.14159265358979323846264338328     
-#endif
+#include <cmath>
 
 typedef ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiE4D< Double32_t > > LorentzVector;
 
@@ -65,7 +62,7 @@ class Particle{
   void set_energy(float energy){m_energy=energy;}
 
   /// set four-momentum
-  void set_v4(LorentzVector v4){
+  void set_v4(const LorentzVector & v4){
     set_pt(v4.Pt());
     set_eta(v4.Eta());
     set_phi(v4.Phi());
@@ -73,15 +70,16 @@ class Particle{
   }
 
   /// distance in phi to particle p2
-  double deltaPhi(const Particle p2) const{
+  double deltaPhi(const Particle & p2) const{
     double deltaphi = fabs(this->phi() - p2.phi());
-    if(deltaphi > PI) deltaphi = 2* PI - deltaphi;
+    if(deltaphi > M_PI) deltaphi = 2* M_PI - deltaphi;
     return deltaphi;
   }
   /// distance in eta-phi plane to particle p2
-  double deltaR(const Particle p2) const{
-    double deltaeta = this->eta() - p2.eta();
-    return sqrt(deltaeta*deltaeta+deltaPhi(p2)*deltaPhi(p2));
+  double deltaR(const Particle & p2) const{
+    double deltaeta = m_eta - p2.m_eta;
+    double dphi = deltaPhi(p2);
+    return sqrt(deltaeta * deltaeta + dphi * dphi);
   }
 
  private:

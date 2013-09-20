@@ -10,5 +10,7 @@ INCLUDES += -I$(FASTJETDIR)/../include
 # execute configure.sh if necessary:
 dummy := $(shell [ -d ../UHHAnalysis ] || ./configure.sh)
 
+USERCXXFLAGS += -g
+
 # Include the generic compilation rules
 include $(SFRAME_DIR)/Makefile.common
