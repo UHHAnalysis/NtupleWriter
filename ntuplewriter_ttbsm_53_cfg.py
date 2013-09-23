@@ -7,11 +7,6 @@ from PhysicsTools.PatAlgos.tools.coreTools import *
 ####### Parameters ############
 ###############################
 
-
-# workaround: if executed from edmConfigHash, sys.argv is missing, so set it here manually. 
-import sys
-if not hasattr(sys, 'argv'): sys.argv = ['abc.py'] # VarParsing expects to find some '*.py' in the argument list, so just provide it ...
-
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
@@ -133,7 +128,12 @@ if not options.useData :
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
 
     process.source = cms.Source("PoolSource",
-                                fileNames = cms.untracked.vstring("/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/001C868B-B2E1-E111-9BE3-003048D4DCD8.root")
+                            fileNames  =
+                                #cms.untracked.vstring("file:///scratch/hh/dust/naf/cms/user/gonzalez/fastsim_test.root"),
+                                cms.untracked.vstring(__FILE_NAMES__),
+                            skipEvents =
+                                #cms.untracked.uint32(0)
+                                cms.untracked.uint32(__SKIP_EVENTS__)
                                 )
 
 
@@ -141,8 +141,7 @@ else :
     inputJetCorrLabelAK5PFchs = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
     process.source.fileNames = [
-#        '/store/data/Run2012C/SingleMu/AOD/22Jan2013-v1/30000/EE4EC30A-4878-E211-8B10-485B39800BA4.root'
-        '/store/data/Run2012D/SingleElectron/AOD/22Jan2013-v1/10000/068E9FFF-C892-E211-9132-003048679164.root'
+        '/store/data/Run2012A/SingleMu/AOD/13Jul2012-v1/00000/001D2347-D8D0-E111-A115-1CC1DE1D0600.root'
     ]
 
 #process.source.eventsToProcess = cms.untracked.VEventRange( ['1:86747'] )
@@ -166,12 +165,12 @@ import sys
 
 if options.useData :
     if options.globalTag is '':
-        process.GlobalTag.globaltag = cms.string( 'FT_53_V21_AN4::All' )
+        process.GlobalTag.globaltag = cms.string( 'GR_P_V42_AN4::All' )
     else:
         process.GlobalTag.globaltag = cms.string( options.globalTag )
 else :
     if options.globalTag is '':
-        process.GlobalTag.globaltag = cms.string( 'START53_V24::All' )
+        process.GlobalTag.globaltag = cms.string( 'START53_V7G::All' )
     else:
         process.GlobalTag.globaltag = cms.string( options.globalTag )
 
@@ -212,18 +211,19 @@ process.goodVertices = cms.EDFilter(
   "VertexSelector",
   filter = cms.bool(False),
   src = cms.InputTag("offlinePrimaryVertices"),
-  cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.rho < 2")
+  cut = cms.string("!isFake && ndof >= 4 && abs(z) <= 24 && position.rho < 2")
 )
 
-## The tracking failure filter _______________________________________________||
-process.load('RecoMET.METFilters.trackingFailureFilter_cfi')
-process.load('RecoMET.METFilters.trackingPOGFilters_cfi')
+if not options.runOnFastSim:
+    ## The tracking failure filter _______________________________________________||
+    process.load('RecoMET.METFilters.trackingFailureFilter_cfi')
+    process.load('RecoMET.METFilters.trackingPOGFilters_cfi')
 
-# Tracking coherent noise filter 
-process.manystripclus53X = cms.EDFilter('ByClusterSummaryMultiplicityPairEventFilter',
-        multiplicityConfig = cms.PSet(
-            firstMultiplicityConfig = cms.PSet(
-                clusterSummaryCollection = cms.InputTag("clusterSummaryProducer"),
+    # Tracking coherent noise filter , see https://twiki.cern.ch/twiki/bin/viewauth/CMS/TrackingPOGFilters
+    process.manystripclus53X = cms.EDFilter('ByClusterSummaryMultiplicityPairEventFilter',
+                                            multiplicityConfig = cms.PSet(
+        firstMultiplicityConfig = cms.PSet(
+        clusterSummaryCollection = cms.InputTag("clusterSummaryProducer"),
                 subDetEnum = cms.int32(5),
                 subDetVariable = cms.string("pHits")
                 ),
@@ -234,9 +234,9 @@ process.manystripclus53X = cms.EDFilter('ByClusterSummaryMultiplicityPairEventFi
                 ),
             ),
         cut = cms.string("( mult2 > 20000+7*mult1)")
-)
+     )
 
-process.toomanystripclus53X = cms.EDFilter('ByClusterSummaryMultiplicityPairEventFilter',
+    process.toomanystripclus53X = cms.EDFilter('ByClusterSummaryMultiplicityPairEventFilter',
         multiplicityConfig = cms.PSet(
             firstMultiplicityConfig = cms.PSet(
                 clusterSummaryCollection = cms.InputTag("clusterSummaryProducer"),
@@ -251,11 +251,13 @@ process.toomanystripclus53X = cms.EDFilter('ByClusterSummaryMultiplicityPairEven
             ),
         cut = cms.string("(mult2>50000) && ( mult2 > 20000+7*mult1)")
         )
+        
+    # Tracking TOBTEC fakes filter ##
+    process.load('RecoMET.METFilters.tobtecfakesfilter_cfi')
+    # if true, only events passing filter (bad events) will pass
+    process.tobtecfakesfilter.filter=cms.bool(False) 
 
-# Tracking TOBTEC fakes filter ##
-process.load('RecoMET.METFilters.tobtecfakesfilter_cfi')
-# if true, only events passing filter (bad events) will pass
-process.tobtecfakesfilter.filter=cms.bool(False) 
+
 
 ## Add the latest Tau discriminators _________________________________________||
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
@@ -495,7 +497,7 @@ process.patPF2PATSequencePFlowLoose += process.patConversionsPFlowLoose
 
 
 ###############################
-###### Bare KT 0.6 jets #######
+###### Bare KT 0.6 jets #######store/mc/Summer12/W1JetsToLNu_matchingdown_TuneZ2Star_8TeV-madgraph/AODSIM/START53_V7C_FSIM-v1/10000/0013D85A-7D9E-E211-B3E2-80000048FE80.root
 ###############################
 
 from RecoJets.Configuration.RecoPFJets_cff import kt6PFJets
@@ -1720,8 +1722,11 @@ process.load('RecoVertex/AdaptiveVertexFinder/inclusiveVertexing_cff')
 
 
 # let it run
+if options.runOnFastSim:
+    process.filterSeq = cms.Sequence(process.primaryVertexFilter *process.goodVertices)
 
-process.filtersSeq = cms.Sequence(
+else:
+ process.filtersSeq = cms.Sequence(
    process.primaryVertexFilter *
    process.noscraping *
    process.HBHENoiseFilter *
@@ -1736,24 +1741,8 @@ process.filtersSeq = cms.Sequence(
    ~process.logErrorTooManyTripletsPairs *
    ~process.logErrorTooManySeeds *
    process.eeBadScFilter
-)
+ )
 
-if options.runOnFastSim:
-    process.filtersSeq.remove ( process.logErrorTooManyClusters )
-    process.filtersSeq.remove ( process.logErrorTooManyTripletsPairs )
-    process.filtersSeq.remove ( process.logErrorTooManySeeds )
-
-if options.useData :
-    l1Tag  = cms.InputTag( '' ) # skip L1 results, since conflicts with the GlobalTag can occur
-    hltTag = cms.InputTag( 'TriggerResults::HLT' )
-    from HLTrigger.HLTfilters.triggerResultsFilter_cfi import *
-    process.triggerResults = triggerResultsFilter.clone( hltResults = hltTag,
-                                                         l1tResults = l1Tag,
-                                                         throw      = False,
-                                                         triggerConditions = [ 'HLT_Ele27_WP80*', 'HLT_IsoMu24*', 'HLT_Mu40*' ]
-                                                         )
-    process.filtersSeq*=process.triggerResults
-    
 
 # remove not needed collections from pat sequence
 process.patDefaultSequence.remove( process.selectedPatElectrons )
@@ -1802,43 +1791,82 @@ process.patPF2PATSequencePFlowLoose.remove ( process.patHPSPFTauDiscriminationUp
 process.patPF2PATSequencePFlowLoose.remove ( process.patPFTauIsolationPFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.patTausPFlowLoose )
 
-process.patseq = cms.Sequence(
-    process.filtersSeq*
-    process.goodOfflinePrimaryVertices*
-    process.softElectronCands*
-    process.inclusiveVertexing*
-    process.genParticlesForJetsNoNu*
-    process.ca8GenJetsNoNu*
-    process.ca15GenJetsNoNu*
-    process.ak8GenJetsNoNu*
-    process.caFilteredGenJetsNoNu*
-    process.caMassDropFilteredGenJetsNoNu*
-    process.caPrunedGen*
-    process.caTopTagGen*
-    process.CATopTagInfosGen*
-    process.caHEPTopTagGen*
-    getattr(process,"patPF2PATSequence"+postfix)*
-    process.patDefaultSequence*
-    process.goodPatJetsPFlow*
-    process.goodPatJetsCA8PF*
-    process.goodPatJetsCA8PrunedPF*
-    process.goodPatJetsCATopTagPF*
-    process.goodPatJetsCAHEPTopTagPF*
-    process.goodPatJetsCA15PF*
-    process.goodPatJetsCA15MassDropFilteredPF*
-    process.goodPatJetsCA15FilteredPF*
-    process.goodPatJetsCA8PrunedPFPacked*
-    process.goodPatJetsCATopTagPFPacked*
-    process.goodPatJetsCAHEPTopTagPFPacked*
-    process.goodPatJetsCA15MassDropFilteredPFPacked*
-    process.goodPatJetsCA15FilteredPFPacked*
-    process.flavorHistorySeq*
-    process.prunedGenParticles*
-    process.kt6PFJetsForIsolation*
-    process.recoTauClassicHPSSequence*
-    getattr(process,"patPF2PATSequence"+postfixLoose)#*
-#    process.miniPFLeptonSequence
-    )
+
+if options.runOnFastSim:
+    process.patseq = cms.Sequence(
+        process.goodOfflinePrimaryVertices*
+        process.softElectronCands*
+        process.inclusiveVertexing*
+        process.genParticlesForJetsNoNu*
+        process.ca8GenJetsNoNu*
+        process.ca15GenJetsNoNu*
+        process.ak8GenJetsNoNu*
+        process.caFilteredGenJetsNoNu*
+        process.caMassDropFilteredGenJetsNoNu*
+        process.caPrunedGen*
+        process.caTopTagGen*
+        process.CATopTagInfosGen*
+        process.caHEPTopTagGen*
+        getattr(process,"patPF2PATSequence"+postfix)*
+        process.patDefaultSequence*
+        process.goodPatJetsPFlow*
+        process.goodPatJetsCA8PF*
+        process.goodPatJetsCA8PrunedPF*
+        process.goodPatJetsCATopTagPF*
+        process.goodPatJetsCAHEPTopTagPF*
+        process.goodPatJetsCA15PF*
+        process.goodPatJetsCA15MassDropFilteredPF*
+        process.goodPatJetsCA15FilteredPF*
+        process.goodPatJetsCA8PrunedPFPacked*
+        process.goodPatJetsCATopTagPFPacked*
+        process.goodPatJetsCAHEPTopTagPFPacked*
+        process.goodPatJetsCA15MassDropFilteredPFPacked*
+        process.goodPatJetsCA15FilteredPFPacked*
+        process.flavorHistorySeq*
+        process.prunedGenParticles*
+        process.kt6PFJetsForIsolation*
+        process.recoTauClassicHPSSequence*
+        getattr(process,"patPF2PATSequence"+postfixLoose)#*
+        #    process.miniPFLeptonSequence
+        )
+else:    
+    process.patseq = cms.Sequence(
+        process.filtersSeq*
+        process.goodOfflinePrimaryVertices*
+        process.softElectronCands*
+        process.inclusiveVertexing*
+        process.genParticlesForJetsNoNu*
+        process.ca8GenJetsNoNu*
+        process.ca15GenJetsNoNu*
+        process.ak8GenJetsNoNu*
+        process.caFilteredGenJetsNoNu*
+        process.caMassDropFilteredGenJetsNoNu*
+        process.caPrunedGen*
+        process.caTopTagGen*
+        process.CATopTagInfosGen*
+        process.caHEPTopTagGen*
+        getattr(process,"patPF2PATSequence"+postfix)*
+        process.patDefaultSequence*
+        process.goodPatJetsPFlow*
+        process.goodPatJetsCA8PF*
+        process.goodPatJetsCA8PrunedPF*
+        process.goodPatJetsCATopTagPF*
+        process.goodPatJetsCAHEPTopTagPF*
+        process.goodPatJetsCA15PF*
+        process.goodPatJetsCA15MassDropFilteredPF*
+        process.goodPatJetsCA15FilteredPF*
+        process.goodPatJetsCA8PrunedPFPacked*
+        process.goodPatJetsCATopTagPFPacked*
+        process.goodPatJetsCAHEPTopTagPFPacked*
+        process.goodPatJetsCA15MassDropFilteredPFPacked*
+        process.goodPatJetsCA15FilteredPFPacked*
+        process.flavorHistorySeq*
+        process.prunedGenParticles*
+        process.kt6PFJetsForIsolation*
+        process.recoTauClassicHPSSequence*
+        getattr(process,"patPF2PATSequence"+postfixLoose)#*
+        #    process.miniPFLeptonSequence
+        )
 
 if options.useExtraJetColls:
 	process.extraJetSeq = cms.Sequence(
@@ -1913,8 +1941,6 @@ if options.useData :
 if options.runOnFastSim:
     process.patseq.remove( process.HBHENoiseFilter )
     process.patseq.remove( process.CSCTightHaloFilter ) 
-    process.patseq.remove( process.manystripclus53X )
-    process.patseq.remove( process.toomanystripclus53X )
 
 if options.writeSimpleInputs :
 	process.patseq *= cms.Sequence(process.pfInputs)
@@ -2001,7 +2027,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(50)
 
 
 # process all the events
-process.maxEvents.input = -1
+process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(__MAX_EVENTS__))
 process.options.wantSummary = True
 process.out.dropMetaData = cms.untracked.string("DROPPED")
 
