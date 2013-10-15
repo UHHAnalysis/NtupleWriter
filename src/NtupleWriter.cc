@@ -92,6 +92,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doTrigger = iConfig.getParameter<bool>("doTrigger");
   SVComputer_  = iConfig.getUntrackedParameter<edm::InputTag>("svComputer",edm::InputTag("combinedSecondaryVertex"));
   doTagInfos = iConfig.getUntrackedParameter<bool>("doTagInfos",false);
+  doRho = iConfig.getUntrackedParameter<bool>("doRho",true);
   storePFsAroundLeptons = iConfig.getUntrackedParameter<bool>("storePFsAroundLeptons",false);
 
   // initialization of tree variables
@@ -101,7 +102,14 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   tr->Branch("luminosityBlock",&luminosityBlock);
   tr->Branch("isRealData",&isRealData);
   tr->Branch("rho",&rho);
-  rho_source = iConfig.getParameter<edm::InputTag>("rho_source");
+  //always create rho branch, as some SFrame modules rely on it being present; only fill it
+  // if doRho is true.
+  if(doRho){
+     rho_source = iConfig.getParameter<edm::InputTag>("rho_source");
+  }
+  else{
+    rho = -1;
+  }
 
   if(doLumiInfo){
     tr->Branch("intgRecLumi",&intgRecLumi);
@@ -229,9 +237,11 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
    luminosityBlock = iEvent.luminosityBlock();
    isRealData      = iEvent.isRealData();
 
-   edm::Handle<double> m_rho;
-   iEvent.getByLabel(rho_source,m_rho);
-   rho=*m_rho;
+   if(doRho){
+      edm::Handle<double> m_rho;
+      iEvent.getByLabel(rho_source,m_rho);
+      rho=*m_rho;
+   }
 
    // ------------- primary vertices and beamspot  -------------
 

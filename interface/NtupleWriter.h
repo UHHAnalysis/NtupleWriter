@@ -120,6 +120,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       int event;
       bool isRealData;
       //bool HBHENoiseFilterResult;
+      bool doRho;
       float rho;
 
       float intgDelLumi;

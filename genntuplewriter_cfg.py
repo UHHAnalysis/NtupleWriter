@@ -10,26 +10,8 @@ process.options   = cms.untracked.PSet(
 )
 
 process.source = cms.Source("PoolSource",
-
-   fileNames = cms.untracked.vstring('file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ1.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ2.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ3.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ4.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ5.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ6.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ7.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ8.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ9.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ10.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ11.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ12.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ13.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ14.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ15.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ16.root',
-                                     'file:/scratch/hh/lustre/cms/user/peiffer/LQGen/LQ17.root'
+   fileNames = cms.untracked.vstring('file:/scratch/hh/dust/naf/cms/user/jott/Powheg_ZH_bb_8TeV_GEN.root',
                                      ),
-
    skipEvents = cms.untracked.uint32(0),
    duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 )
@@ -61,12 +43,13 @@ process.caTopTagGen = cms.EDProducer(
 #NtupleWriter
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
-                                  fileName = cms.string('/scratch/hh/lustre/cms/user/peiffer/genLQ_test.root'), 
+                                  fileName = cms.string('/scratch/hh/dust/naf/cms/user/jott/Powheg_ZH_bb_8TeV_SFrame_ntuple.root'), 
                                   doElectrons = cms.bool(False),
                                   doMuons = cms.bool(False),
                                   doTaus = cms.bool(False),
                                   doJets = cms.bool(False),
                                   doTopJets = cms.bool(False),
+                                  doTopJetsConstituents = cms.bool(False),
                                   doGenTopJets = cms.bool(True),
                                   gentopjet_sources = cms.vstring("caTopTagGen" ),
                                   gentopjet_ptmin = cms.double(150.0), 
@@ -76,10 +59,14 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doPV = cms.bool(False),
                                   doGenInfo = cms.bool(True),
                                   doAllGenParticles = cms.bool(True),
+                                  genparticle_source = cms.InputTag('genParticles'),
                                   doTrigger = cms.bool(False),
-                                  doLumiInfo = cms.bool(False)
-                                  
-                                  
+                                  doLumiInfo = cms.bool(False),
+                                  doGenJets = cms.bool(True),
+                                  genjet_sources = cms.vstring("ak5GenJets"),
+                                  genjet_ptmin = cms.double(10.0),
+                                  genjet_etamax = cms.double(5.0),
+                                  doRho = cms.untracked.bool(False),
 )
 
 process.p = cms.Path( process.genParticlesForJetsNoNu*
