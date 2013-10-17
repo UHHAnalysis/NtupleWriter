@@ -7,6 +7,11 @@ from PhysicsTools.PatAlgos.tools.coreTools import *
 ####### Parameters ############
 ###############################
 
+# workaround: if executed from edmConfigHash, sys.argv is missing, so set it here manually. 
+import sys
+if not hasattr(sys, 'argv'): sys.argv = ['abc.py'] # VarParsing expects to find some '*.py' in the argument list, so just provide it ...
+ 
+
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
@@ -165,12 +170,12 @@ import sys
 
 if options.useData :
     if options.globalTag is '':
-        process.GlobalTag.globaltag = cms.string( 'GR_P_V42_AN4::All' )
+        process.GlobalTag.globaltag = cms.string( 'FT_53_V21_AN4::All' )
     else:
         process.GlobalTag.globaltag = cms.string( options.globalTag )
 else :
     if options.globalTag is '':
-        process.GlobalTag.globaltag = cms.string( 'START53_V7G::All' )
+        process.GlobalTag.globaltag = cms.string( 'START53_V24::All' )
     else:
         process.GlobalTag.globaltag = cms.string( options.globalTag )
 
