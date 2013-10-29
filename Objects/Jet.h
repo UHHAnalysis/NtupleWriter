@@ -43,14 +43,15 @@ class Jet : public FlavorParticle{
   };
 
   LorentzVector genjet_v4() const{
-   
     return genjet().v4();
   };
 
   Particle genjet() const{
-    if(m_genjet)
+    if(m_genjet){
       return *m_genjet;
+    }
     else{
+      std::cout << "WARNING: genjet routine called for a jet but genjet collection has not been specified" << std::endl;
       //return 0 particle
       Particle p;
       return p;
@@ -114,8 +115,12 @@ class Jet : public FlavorParticle{
   bool has_genjet() const{return m_genjet_index>=0;}
 
   void set_genjet(std::vector<Particle>* genjets){
-    if(!genjets) return;
-    if(m_genjet_index<0 || m_genjet_index>(int)genjets->size()) return;
+    if(!genjets) return; //no genjet collection -> keep NULL pointer
+    if(m_genjet_index<0 || m_genjet_index>(int)genjets->size()) { //genjet collection provided but no matched genjet found -> set genjet pointer to 0 particle
+      static Particle* p =  new Particle();
+      m_genjet = p;
+      return;
+    }
     m_genjet = &genjets->at(m_genjet_index);
   }
 
