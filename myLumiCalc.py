@@ -49,7 +49,8 @@ options.register ('outfilename',
 
 options.parseArguments()
 
-os.system("lumiCalc2.py -i "+options.JSONname+" lumibyls -b stable --hltpath "+options.HLTpath+" -o TempOut.csv")
+#os.system("lumiCalc2.py -i "+options.JSONname+" lumibyls -b stable --hltpath "+options.HLTpath+" -o TempOut.csv")
+os.system("pixelLumiCalc.py -i "+options.JSONname+" lumibyls --hltpath "+options.HLTpath+" -o TempOut.csv")
     
 ofile = TFile(options.outfilename,"RECREATE")
 tr = TTree("AnalysisTree","AnalysisTree")
