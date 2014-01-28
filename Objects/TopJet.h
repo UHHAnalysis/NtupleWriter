@@ -145,6 +145,10 @@ class TopJet : public Jet{
   void add_subJEC_raw(float jecraw){m_subJEC_raw.push_back(jecraw);}
   void add_subFlavour(int flavour){m_subFlavour.push_back(flavour);}
 
+  //remove subjets
+  void rm_subjets(){m_subjets.clear();}
+  void rm_JEC(){m_subJEC_raw.clear();}
+
   //track impact parameter tag info setters
   void add_subTrackMomentum(std::vector<float> t){ m_subTrackMomentum.push_back(t);}
   void add_subTrackEta(std::vector<float> t){ m_subTrackEta.push_back(t);}
