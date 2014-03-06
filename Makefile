@@ -12,5 +12,7 @@ dummy := $(shell [ -d ../UHHAnalysis ] || ./configure.sh)
 
 USERCXXFLAGS += -g
 
+USERLDFLAGS += $(shell root-config --libs) -lGenVector
+
 # Include the generic compilation rules
 include $(SFRAME_DIR)/Makefile.common
