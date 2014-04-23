@@ -91,6 +91,9 @@ class NtupleWriter : public edm::EDAnalyzer {
       
       /// fill PF candidates from pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
       void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool fromiso);
+      
+      // fill gen particles from a gen topjet
+      void fill_genparticles_jet(const reco::GenJet& reco_genjet, GenTopJet& genjet);
 
       // ----------member data ---------------------------
       TFile *outfile;
@@ -160,6 +163,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       std::vector<PFParticle> pfparticles; // only one collection allowed!
 
       std::vector<std::string> gentopjet_sources;
+      std::vector<std::string> gentopjet_constituents_sources;
       std::vector<GenTopJet> gentopjets[Nmax];
       double gentopjet_ptmin;
       double gentopjet_etamax;
