@@ -131,23 +131,17 @@ options.parseArguments()
 if not options.useData :
     inputJetCorrLabelAK5PFchs = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'])
-
-    process.source = cms.Source("PoolSource",
-                            fileNames  =
-                                #cms.untracked.vstring("file:///scratch/hh/dust/naf/cms/user/gonzalez/fastsim_test.root"),
-                                cms.untracked.vstring(__FILE_NAMES__),
-                            skipEvents =
-                                #cms.untracked.uint32(0)
-                                cms.untracked.uint32(__SKIP_EVENTS__)
-                                )
-
-
 else :
     inputJetCorrLabelAK5PFchs = ('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
     inputJetCorrLabelAK7PFchs = ('AK7PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
-    process.source.fileNames = [
-        '/store/data/Run2012A/SingleMu/AOD/13Jul2012-v1/00000/001D2347-D8D0-E111-A115-1CC1DE1D0600.root'
-    ]
+
+
+process.source = cms.Source("PoolSource",
+                            fileNames  =
+                            cms.untracked.vstring(__FILE_NAMES__),
+                            skipEvents =
+                            cms.untracked.uint32(__SKIP_EVENTS__)
+                            )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange( ['1:86747'] )
 
@@ -2008,6 +2002,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   pf_around_leptons_sources = cms.vstring("pfNoPileUpIsoPFlow", "pfPileUpIsoPFlow"),
 				  doGenTopJets = cms.bool(not options.useData),
                                   gentopjet_sources = cms.vstring("caTopTagGen", "caFilteredGenJetsNoNu", "caHEPTopTagGen"),
+                                  gentopjet_constituents_sources = cms.vstring("ca8GenJetsNoNu"),
                                   gentopjet_ptmin = cms.double(150.0), 
                                   gentopjet_etamax = cms.double(5.0),
                                   met_sources =  cms.vstring("patMETsPFlow"),
