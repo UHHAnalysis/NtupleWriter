@@ -22,7 +22,7 @@ options.register ('tlbsmTag',
                   'TLBSM tag use in production')
 
 options.register ('useData',
-                  False,
+                  True,
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.int,
                   'Run this on real data')
@@ -250,11 +250,6 @@ if not options.runOnFastSim:
             ),
         cut = cms.string("(mult2>50000) && ( mult2 > 20000+7*mult1)")
         )
-        
-    # Tracking TOBTEC fakes filter ##
-    process.load('RecoMET.METFilters.tobtecfakesfilter_cfi')
-    # if true, only events passing filter (bad events) will pass
-    process.tobtecfakesfilter.filter=cms.bool(False) 
 
 
 
@@ -472,7 +467,7 @@ if options.useData :
 ###### Electron ID ############
 ###############################
 
-process.load('EGamma.EGammaAnalysisTools.electronIdMVAProducer_cfi') 
+process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi') 
 process.eidMVASequence = cms.Sequence(  process.mvaTrigV0 + process.mvaNonTrigV0 )
 #Electron ID
 process.patElectronsPFlow.electronIDSources.mvaTrigV0    = cms.InputTag("mvaTrigV0")
@@ -1733,7 +1728,6 @@ else:
    process.hcalLaserEventFilter *
    process.EcalDeadCellTriggerPrimitiveFilter *
    process.goodVertices * process.trackingFailureFilter *
-   process.tobtecfakesfilter *
    ~process.manystripclus53X *
    ~process.toomanystripclus53X *
    ~process.logErrorTooManyClusters *
@@ -1794,7 +1788,6 @@ process.patPF2PATSequencePFlowLoose.remove ( process.patTausPFlowLoose )
 if options.runOnFastSim:
     process.patseq = cms.Sequence(
         process.goodOfflinePrimaryVertices*
-        process.softElectronCands*
         process.inclusiveVertexing*
         process.genParticlesForJetsNoNu*
         process.ca8GenJetsNoNu*
@@ -1824,7 +1817,6 @@ if options.runOnFastSim:
         process.flavorHistorySeq*
         process.prunedGenParticles*
         process.kt6PFJetsForIsolation*
-        process.recoTauClassicHPSSequence*
         getattr(process,"patPF2PATSequence"+postfixLoose)#*
         #    process.miniPFLeptonSequence
         )
@@ -1832,7 +1824,6 @@ else:
     process.patseq = cms.Sequence(
         process.filtersSeq*
         process.goodOfflinePrimaryVertices*
-        process.softElectronCands*
         process.inclusiveVertexing*
         process.genParticlesForJetsNoNu*
         process.ca8GenJetsNoNu*
@@ -1862,7 +1853,6 @@ else:
         process.flavorHistorySeq*
         process.prunedGenParticles*
         process.kt6PFJetsForIsolation*
-        process.recoTauClassicHPSSequence*
         getattr(process,"patPF2PATSequence"+postfixLoose)#*
         #    process.miniPFLeptonSequence
         )
@@ -2027,7 +2017,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(50)
 
 
 # process all the events
-process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(__MAX_EVENTS__))
+#process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(__MAX_EVENTS__))
+process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(100))
 process.options.wantSummary = True
 process.out.dropMetaData = cms.untracked.string("DROPPED")
 

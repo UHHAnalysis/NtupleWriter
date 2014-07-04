@@ -44,7 +44,7 @@
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "DataFormats/Luminosity/interface/LumiSummary.h"
 
-#include "EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h"
+#include "EgammaAnalysis/ElectronTools/interface/ElectronEffectiveArea.h"
 
 #include "UHHAnalysis/NtupleWriter/Objects/Particle.h"
 #include "UHHAnalysis/NtupleWriter/Objects/PFParticle.h"
