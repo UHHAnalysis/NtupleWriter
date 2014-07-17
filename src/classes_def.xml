@@ -9,6 +9,8 @@
 <class name="std::vector<Jet>"/>
 <class name="TopJet"/>
 <class name="std::vector<TopJet>"/>
+<class name="TopGenJet"/>
+<class name="std::vector<TopGenJet>"/>
 <class name="GenTopJet"/>
 <class name="std::vector<GenTopJet>"/>
 <class name="Electron"/>
