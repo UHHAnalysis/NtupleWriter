@@ -9,7 +9,7 @@
 #include "UHHAnalysis/NtupleWriter/Objects/MET.h"
 #include "UHHAnalysis/NtupleWriter/Objects/PrimaryVertex.h"
 #include "UHHAnalysis/NtupleWriter/Objects/TopJet.h"
-#include "UHHAnalysis/NtupleWriter/Objects/TopGenJet.h"
+#include "UHHAnalysis/NtupleWriter/Objects/GenJetWithParts.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenTopJet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenInfo.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenParticle.h"
@@ -28,8 +28,8 @@ namespace {
     std::vector<Jet> jets;
     TopJet topjet;
     std::vector<TopJet> topjets;
-    TopGenJet topgenjet;
-    std::vector<TopGenJet> topgenjets;
+    GenJetWithParts genjetwithparts;
+    std::vector<GenJetWithParts> genjetswithparts;
     GenTopJet gentopjet;
     std::vector<GenTopJet> gentopjets;
     Electron ele; 

@@ -81,7 +81,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doJets = iConfig.getParameter<bool>("doJets");
   doGenJets = iConfig.getParameter<bool>("doGenJets");
   doGenTopJets = iConfig.getParameter<bool>("doGenTopJets");
-  doTopGenJets = iConfig.getParameter<bool>("doTopGenJets");
+  doGenJetsWithParts = iConfig.getParameter<bool>("doGenJetsWithParts");
   doPhotons = iConfig.getParameter<bool>("doPhotons");
   doMET = iConfig.getParameter<bool>("doMET");
   doGenInfo = iConfig.getParameter<bool>("doGenInfo");
@@ -177,12 +177,12 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
       tr->Branch( gentopjet_sources[j].c_str(), "std::vector<GenTopJet>", &gentopjets[j]);
     }
   }
-  if(doTopGenJets){
-    topgenjet_sources = iConfig.getParameter<std::vector<std::string> >("topgenjet_sources");
-    topgenjet_ptmin = iConfig.getParameter<double> ("topgenjet_ptmin");
-    topgenjet_etamax = iConfig.getParameter<double> ("topgenjet_etamax");
-    for(size_t j=0; j< topgenjet_sources.size(); ++j){  
-      tr->Branch( topgenjet_sources[j].c_str(), "std::vector<TopGenJet>", &topgenjets[j]);
+  if(doGenJetsWithParts){
+    genjetwithparts_sources = iConfig.getParameter<std::vector<std::string> >("genjetwithparts_sources");
+    genjetwithparts_ptmin = iConfig.getParameter<double> ("genjetwithparts_ptmin");
+    genjetwithparts_etamax = iConfig.getParameter<double> ("genjetwithparts_etamax");
+    for(size_t j=0; j< genjetwithparts_sources.size(); ++j){  
+      tr->Branch( genjetwithparts_sources[j].c_str(), "std::vector<GenJetWithParts>", &genjetswithparts[j]);
     }
   }
 
@@ -699,29 +699,29 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 
    }
-   //--------------topgenjets-----------------------
-   if(doTopGenJets){
-     for(size_t j=0; j < topgenjet_sources.size();j++){
-       std::string topgenjet_source = topgenjet_sources[j];
+   //--------------gen jets with parts-----------------------
+   if(doGenJetsWithParts){
+     for(size_t j=0; j < genjetwithparts_sources.size();j++){
+       std::string genjetwithparts_source = genjetwithparts_sources[j];
 
-       topgenjets[j].clear();
+       genjetswithparts[j].clear();
 
        edm::Handle< std::vector<reco::GenJet> > genjet_handle;
-       iEvent.getByLabel(topgenjet_source, genjet_handle);
+       iEvent.getByLabel(genjetwithparts_source, genjet_handle);
        const std::vector<reco::GenJet>& gen_jets = *(genjet_handle.product());
 
        for(unsigned int i=0; i < gen_jets.size(); i++){
 
 	 const reco::GenJet* gen_jet = &gen_jets[i];
-	 if(gen_jet->pt() < topgenjet_ptmin) continue;
-	 if(fabs(gen_jet->eta()) > topgenjet_etamax) continue;
+	 if(gen_jet->pt() < genjetwithparts_ptmin) continue;
+	 if(fabs(gen_jet->eta()) > genjetwithparts_etamax) continue;
 
-	 TopGenJet topgenjet;
-	 topgenjet.set_charge(gen_jet->charge());
-	 topgenjet.set_pt(gen_jet->pt());
-	 topgenjet.set_eta(gen_jet->eta());
-	 topgenjet.set_phi(gen_jet->phi());
-	 topgenjet.set_energy(gen_jet->energy());
+	 GenJetWithParts genjet;
+	 genjet.set_charge(gen_jet->charge());
+	 genjet.set_pt(gen_jet->pt());
+	 genjet.set_eta(gen_jet->eta());
+	 genjet.set_phi(gen_jet->phi());
+	 genjet.set_energy(gen_jet->energy());
 
 	 // recalculate the jet charge
 	 int jet_charge = 0;
@@ -730,10 +730,10 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	   jet_charge +=  jetgenps[l]->charge();
 	 }
 
-    	 topgenjet.set_charge(jet_charge);
+    	 genjet.set_charge(jet_charge);
 
-	 fill_genparticles_jet(gen_jets[i], topgenjet);
-	 topgenjets[j].push_back(topgenjet);
+	 fill_genparticles_jet(gen_jets[i], genjet);
+	 genjetswithparts[j].push_back(genjet);
        }
      }
    }
@@ -1346,7 +1346,7 @@ void NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::
 
 
 
-void NtupleWriter::fill_genparticles_jet(const reco::GenJet& reco_genjet, TopGenJet& genjet)
+void NtupleWriter::fill_genparticles_jet(const reco::GenJet& reco_genjet, GenJetWithParts& genjet)
 {
   // loop over all jet consituents, fill into gen_particle collection
 	 

@@ -56,7 +56,7 @@
 #include "UHHAnalysis/NtupleWriter/Objects/MET.h"
 #include "UHHAnalysis/NtupleWriter/Objects/PrimaryVertex.h"
 #include "UHHAnalysis/NtupleWriter/Objects/TopJet.h"
-#include "UHHAnalysis/NtupleWriter/Objects/TopGenJet.h"
+#include "UHHAnalysis/NtupleWriter/Objects/GenJetWithParts.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenTopJet.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenInfo.h"
 #include "UHHAnalysis/NtupleWriter/Objects/GenParticle.h"
@@ -94,7 +94,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool fromiso);
       
       // fill gen particles from a gen topjet
-      void fill_genparticles_jet(const reco::GenJet& reco_genjet, TopGenJet& genjet);
+      void fill_genparticles_jet(const reco::GenJet& reco_genjet, GenJetWithParts& genjet);
 
       // ----------member data ---------------------------
       TFile *outfile;
@@ -106,7 +106,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doTaus;
       bool doJets;
       bool doGenJets;
-      bool doTopGenJets;
+      bool doGenJetsWithParts;
       bool doTopJets;
       bool doTopJetsConstituents;
       bool doGenTopJets;
@@ -169,10 +169,10 @@ class NtupleWriter : public edm::EDAnalyzer {
       double gentopjet_ptmin;
       double gentopjet_etamax;
 
-      std::vector<std::string> topgenjet_sources;
-      std::vector<TopGenJet> topgenjets[Nmax];
-      double topgenjet_ptmin;
-      double topgenjet_etamax;
+      std::vector<std::string> genjetwithparts_sources;
+      std::vector<GenJetWithParts> genjetswithparts[Nmax];
+      double genjetwithparts_ptmin;
+      double genjetwithparts_etamax;
 
       std::vector<std::string> photon_sources;
       std::vector<Photon> phs[Nmax];

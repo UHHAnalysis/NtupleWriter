@@ -31,8 +31,8 @@
 #pragma link C++ class std::vector<TopJet>+;
 #pragma link C++ class GenTopJet+;
 #pragma link C++ class std::vector<GenTopJet>+;
-#pragma link C++ class TopGenJet+;
-#pragma link C++ class std::vector<TopGenJet>+;
+#pragma link C++ class GenJetWithParts+;
+#pragma link C++ class std::vector<GenJetWithParts>+;
 #pragma link C++ class Electron+;
 #pragma link C++ class std::vector<Electron>+;
 #pragma link C++ class Muon+;

@@ -1,17 +1,17 @@
-#ifndef TopGenJet_H
-#define TopGenJet_H
+#ifndef GenJetWithParts_H
+#define GenJetWithParts_H
 
 #include "Particle.h"
 #include "TLorentzVector.h"
 
 
-class TopGenJet : public Particle {
+class GenJetWithParts : public Particle {
  public:
-  TopGenJet(){
+  GenJetWithParts(){
     m_genparticles_indices.clear();
   };
 
-  ~TopGenJet(){
+  ~GenJetWithParts(){
   };
 
   std::vector<unsigned int> genparticles_indices() const{return m_genparticles_indices;}
