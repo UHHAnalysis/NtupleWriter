@@ -11,6 +11,7 @@ if [ ! -h Electron.h ]; then ln -s ../Objects/Electron.h .; fi;
 if [ ! -h FlavorParticle.h ]; then ln -s ../Objects/FlavorParticle.h .; fi;
 if [ ! -h GenInfo.h ]; then ln -s ../Objects/GenInfo.h .; fi;
 if [ ! -h GenParticle.h ]; then ln -s ../Objects/GenParticle.h .; fi;
+if [ ! -h GenJetWithParts.h ]; then ln -s ../Objects/GenJetWithParts.h .; fi;
 if [ ! -h GenTopJet.h ]; then ln -s ../Objects/GenTopJet.h .; fi;
 if [ ! -h Jet.h ]; then ln -s ../Objects/Jet.h .; fi;
 if [ ! -h MET.h ]; then ln -s ../Objects/MET.h .; fi;
