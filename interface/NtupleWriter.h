@@ -31,13 +31,17 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/PdfInfo.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+//#include "FWCore/Framework/interface/TriggerNamesService.h"
+//#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+//#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
-#include "FWCore/Framework/interface/TriggerNamesService.h"
-#include "DataFormats/HLTReco/interface/TriggerEvent.h"
-#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+//#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
@@ -91,7 +95,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       void StoreJetConstituents(const pat::Jet & pat_jet, Jet & topjet);
       
       /// fill PF candidates from pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
-      void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool fromiso);
+      void StorePFCandsInCone(Particle* part, const std::vector<pat::PackedCandidate>& pf_cands, double R0);
       
       // fill gen particles from a gen topjet
       void fill_genparticles_jet(const reco::GenJet& reco_genjet, GenJetWithParts& genjet);
@@ -105,6 +109,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doMuons;
       bool doTaus;
       bool doJets;
+      bool doJetsConstituents;
       bool doGenJets;
       bool doGenJetsWithParts;
       bool doTopJets;
@@ -119,6 +124,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doTrigger;
       bool doTagInfos;
       bool storePFsAroundLeptons;
+      bool doAllPFConstituents;
 
       int run;
       int luminosityBlock;
@@ -162,6 +168,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       double topjet_etamax;
 
       std::vector<std::string> topjet_constituents_sources;
+      std::vector<std::string> pf_constituents_sources;
       std::vector<PFParticle> pfparticles; // only one collection allowed!
 
       std::vector<std::string> gentopjet_sources;
@@ -190,6 +197,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       std::vector<std::string> pf_around_leptons_sources;
 
       edm::InputTag genparticle_source;
+      edm::InputTag stablegenparticle_source;   
       GenInfo genInfo;
       std::vector<GenParticle> genps;
       edm::InputTag SVComputer_;
@@ -204,6 +212,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool newrun;
       bool previouslumiblockwasfilled;
 
+      edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
+      
 };
 
 
