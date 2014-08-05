@@ -65,6 +65,111 @@ void fill_jet_info(const pat::Jet & pat_jet, Jet & jet)
 
 }
 
+namespace{
+
+PFParticle PFCandidate2PFParticle(const pat::PackedCandidate & pf, bool fromjet, bool fromiso, bool frompuiso){
+    PFParticle part;
+    part.set_pt(pf.pt());
+    part.set_eta(pf.eta());
+    part.set_phi(pf.phi());
+    part.set_energy(pf.energy());
+    part.set_charge(pf.charge());
+    // part.set_ecal_en(pf.ecalEnergy());
+    // part.set_hcal_en(pf.hcalEnergy());
+    part.set_isJetParticle(fromjet);
+    part.set_isIsoParticle(fromiso);
+    part.set_isPUIsoParticle(frompuiso);
+    if(pf.fromPV()>=2) part.set_fromPV(true); 
+    else part.set_fromPV(false); 
+    reco::Track trackref = pf.pseudoTrack();
+    //if (!trackref.isNull()){
+    //part.set_track_mom(trackref.p());
+    //}
+
+    //electron ID not fully supported when taken from miniAOD
+    PFParticle::EParticleID id = PFParticle::eX;
+    // if(pf.isGlobalMuon() || pf.isStandAloneMuon() ) id = PFParticle::eMu;
+    // else if(pf.charge()==0) id = PFParticle::eH0;
+    // else if(pf.fromPV() >= 2) id = PFParticle::eH;
+
+    reco::PFCandidate pfp;
+    pfp.setCharge(pf.charge());
+    switch ( pfp.translatePdgIdToType(pf.pdgId()) ){
+         case reco::PFCandidate::X : id = PFParticle::eX; break;
+         case reco::PFCandidate::h : id = PFParticle::eH; break;
+         case reco::PFCandidate::e : id = PFParticle::eE; break;
+         case reco::PFCandidate::mu : id = PFParticle::eMu; break;
+         case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
+         case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
+         case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
+         case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
+     }
+    part.set_particleID(id);
+    return part;
+}
+
+// add pf to pfs, ensuring there is no duplication. Retuns the index
+// of pf in pfs.
+ size_t add_pfpart(const pat::PackedCandidate & pf, vector<PFParticle> & pfs, bool fromjet, bool fromiso, bool frompuiso){
+    for(size_t j=0; j<pfs.size(); ++j){
+      PFParticle spf = pfs[j];
+      // note: static_cast to float is to ensure the comparison is done with the same precision as these quantities
+      // have been stored in spf. Otherwise, there could be a non-zero difference just because of conversion loss
+      // from double to float.
+      double r = fabs(static_cast<float>(pf.eta()) - spf.eta()) + fabs(static_cast<float>(pf.phi()) - spf.phi());
+      double dpt = fabs(static_cast<float>(pf.pt()) - spf.pt());
+      if (r == 0.0 && dpt == 0.0){
+	if(fromjet) pfs[j].set_isJetParticle(true);
+	if(fromiso) pfs[j].set_isIsoParticle(true);	
+	if(frompuiso) pfs[j].set_isPUIsoParticle(true);
+        return j;
+      }            
+    }
+    pfs.push_back(PFCandidate2PFParticle(pf, fromjet, fromiso, frompuiso));
+    return pfs.size()-1;
+}
+    
+size_t add_genpart(const reco::GenParticle & jetgenp, vector<GenParticle> & genparts){
+   for(size_t j=0; j<genparts.size();j++){
+     GenParticle sgenpart = genparts[j];
+     double r = fabs(static_cast<float>(jetgenp.eta()-sgenpart.eta()))+fabs(static_cast<float>(jetgenp.phi()-sgenpart.phi()));
+     double dpt = fabs(static_cast<float>(jetgenp.pt()-sgenpart.pt()));
+     if (r == 0.0 && dpt == 0.0){
+       return j;
+     }
+   }
+   GenParticle genp;
+   genp.set_charge(jetgenp.charge());
+   genp.set_pt(jetgenp.p4().pt());
+   genp.set_eta(jetgenp.p4().eta());
+   genp.set_phi(jetgenp.p4().phi());
+   genp.set_energy(jetgenp.p4().E());
+   genp.set_index(genparts.size());
+   genp.set_status(jetgenp.status());
+   genp.set_pdgId(jetgenp.pdgId());
+	 
+   genp.set_mother1(-1);
+   genp.set_mother2(-1);
+   genp.set_daughter1(-1);
+   genp.set_daughter2(-1);
+	 
+   int nm=jetgenp.numberOfMothers();
+   int nd=jetgenp.numberOfDaughters();
+
+   	 
+   if (nm>0) genp.set_mother1( jetgenp.motherRef(0).key());
+   if (nm>1) genp.set_mother2( jetgenp.motherRef(1).key());
+   if (nd>0) genp.set_daughter1( jetgenp.daughterRef(0).key());
+   if (nd>1) genp.set_daughter2( jetgenp.daughterRef(1).key());
+	 
+
+   genparts.push_back(genp);
+ 
+   return genparts.size()-1;
+ }
+}
+
+
 //
 // constructors and destructor
 //
@@ -90,11 +195,13 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
   doTopJetsConstituents = iConfig.getParameter<bool>("doTopJetsConstituents");
+  doJetsConstituents = iConfig.getParameter<bool>("doJetsConstituents");
   doTrigger = iConfig.getParameter<bool>("doTrigger");
   SVComputer_  = iConfig.getUntrackedParameter<edm::InputTag>("svComputer",edm::InputTag("combinedSecondaryVertex"));
   doTagInfos = iConfig.getUntrackedParameter<bool>("doTagInfos",false);
   doRho = iConfig.getUntrackedParameter<bool>("doRho",true);
   storePFsAroundLeptons = iConfig.getUntrackedParameter<bool>("storePFsAroundLeptons",false);
+  doAllPFConstituents = iConfig.getParameter<bool>("doAllPFConstituents");
 
   // initialization of tree variables
 
@@ -165,10 +272,11 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
       tr->Branch( topjet_sources[j].c_str(), "std::vector<TopJet>", &topjets[j]);
     }
   }
-  if(doTopJetsConstituents){
-    topjet_constituents_sources = iConfig.getParameter<std::vector<std::string> >("topjet_constituents_sources");
+  if(doTopJetsConstituents || doJetsConstituents || doAllPFConstituents || storePFsAroundLeptons){
     tr->Branch( "PFParticles", "std::vector<PFParticle>", &pfparticles);
   }
+  if(doTopJetsConstituents) topjet_constituents_sources = iConfig.getParameter<std::vector<std::string> >("topjet_constituents_sources");
+  if(doAllPFConstituents) pf_constituents_sources = iConfig.getParameter<std::vector<std::string> >("pf_constituents_sources");
   if(doGenTopJets){
     gentopjet_sources = iConfig.getParameter<std::vector<std::string> >("gentopjet_sources");
     gentopjet_ptmin = iConfig.getParameter<double> ("gentopjet_ptmin");
@@ -206,6 +314,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   }
   if(doGenInfo){
     genparticle_source= iConfig.getParameter<edm::InputTag>("genparticle_source");
+    stablegenparticle_source = iConfig.getParameter<edm::InputTag>("stablegenparticle_source");
     tr->Branch("genInfo","GenInfo",&genInfo);
     tr->Branch("GenParticles","std::vector<GenParticle>", &genps);
   }
@@ -216,10 +325,12 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
     tr->Branch("triggerResults", "std::vector<bool>", &triggerResults);
     //tr->Branch("L1_prescale", "std::vector<int>", &L1_prescale);
     //tr->Branch("HLT_prescale", "std::vector<int>", &HLT_prescale);
+    triggerBits_ = consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("trigger_bits"));
   }
   if (storePFsAroundLeptons){
     pf_around_leptons_sources = iConfig.getParameter<std::vector<std::string> >("pf_around_leptons_sources");
   }
+
   newrun = true;
 }
 
@@ -357,6 +468,9 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
        //write out only top quarks,final state leptons and status 3 particles (works fine only for MadGraph)
        bool islepton = iter->status()==1 && abs(iter->pdgId())>=11 && abs(iter->pdgId())<=16 ;
        if(abs(iter->pdgId())==6 || iter->status()==3 || islepton ||  doAllGenParticles){
+	 //do not store stable particles here, will be strored later from packed collection
+	 if(iter->status()==1) continue;
+
 	 GenParticle genp;
 	 genp.set_charge(iter->charge());
 	 genp.set_pt(iter->p4().pt());
@@ -384,9 +498,64 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 genps.push_back(genp);
        }
      }
+     
+     //store stable gen particles from packed collection
+     if(doAllGenParticles){
+       edm::Handle<edm::View<pat::PackedGenParticle> > packed;
+       iEvent.getByLabel(stablegenparticle_source,packed);
+
+       for(size_t j=0; j<packed->size();j++){
+
+	 const pat::PackedGenParticle* iter = &(*packed)[j];
+
+	 GenParticle genp;
+	 genp.set_charge(iter->charge());
+	 genp.set_pt(iter->p4().pt());
+	 genp.set_eta(iter->p4().eta());
+	 genp.set_phi(iter->p4().phi());
+	 genp.set_energy(iter->p4().E());
+	 genp.set_index(index);
+	 genp.set_status( iter->status());
+	 genp.set_pdgId( iter->pdgId());
+
+	 genp.set_mother1(-1);
+	 genp.set_mother2(-1);
+	 genp.set_daughter1(-1);
+	 genp.set_daughter2(-1);
+
+	 // //check, if particle has already been filled in previous routine from reco::GenParticleCollection 
+	 // bool fill=true;
+	 // for(unsigned int i=0; i< genps.size(); ++i){
+	 //   if(genps[i].status()==1 && genps[i].pdgId()==genp.pdgId() && fabs(genps[i].pt()-genp.pt())<0.0001 && fabs(genps[i].eta()-genp.eta())<0.0001){
+	 //     std::cout << "Doppelt: " << genps[i].status() << "  " << genps[i].pt() << "  " << genp.pt() <<"    "<<  genps[i].eta() << "  " <<   genp.eta() << "  " <<  genps[i].pdgId() << "  " << genps[i].mother1() << "  " << genps[i].mother2()<< std::endl;
+	 //     fill=false;
+	 //     break;
+	 //   }
+	 // }
+	 // if(fill) {
+
+	 genps.push_back(genp);
+
+	 //std::cout << "Nicht Doppelt: " << genp.status() << "  " << genp.pt() << "  " <<  genp.pdgId() << std::endl;
+	 //}
+       }
+     }
    }
 
    // ------------- full PF collection -------------   
+
+   if(doAllPFConstituents){
+     for(unsigned int k=0; k<pf_constituents_sources.size(); ++k){
+       edm::Handle< std::vector<pat::PackedCandidate> > pfcand_handle;
+       iEvent.getByLabel(pf_around_leptons_sources[k], pfcand_handle);  
+       const std::vector<pat::PackedCandidate>& pf_cands = *(pfcand_handle.product());
+       
+       for (unsigned int i=0; i<pf_cands.size(); ++i){
+	 const pat::PackedCandidate & pf = pf_cands[i];
+	 add_pfpart(pf, pfparticles, false, false, false);    
+       }
+     }
+   }
 
 
    // ------------- electrons -------------   
@@ -442,8 +611,9 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 ele.set_fbrem(pat_ele.fbrem());
 	 ele.set_EoverPIn(pat_ele.eSuperClusterOverP());
 	 ele.set_EcalEnergy(pat_ele.ecalEnergy());
-	 ele.set_mvaTrigV0(pat_ele.electronID("mvaTrigV0"));
-	 ele.set_mvaNonTrigV0(pat_ele.electronID("mvaNonTrigV0"));
+	 //not in miniaod
+	 //ele.set_mvaTrigV0(pat_ele.electronID("mvaTrigV0"));
+	 //ele.set_mvaNonTrigV0(pat_ele.electronID("mvaNonTrigV0"));
 	 float AEff03 = 0.00;
 	 if(isRealData){
 	   AEff03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pat_ele.superCluster()->eta(), ElectronEffectiveArea::kEleEAData2011);
@@ -456,12 +626,10 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 
 	 if (storePFsAroundLeptons){
 	   for(unsigned int k=0; k<pf_around_leptons_sources.size(); ++k){
-	     edm::Handle< std::vector<reco::PFCandidate> > pfcand_handle;
+	     edm::Handle< std::vector<pat::PackedCandidate> > pfcand_handle;
 	     iEvent.getByLabel(pf_around_leptons_sources[k], pfcand_handle);  
-	     const std::vector<reco::PFCandidate>& pf_cands = *(pfcand_handle.product());
-	     bool frompu = true;
-	     if( pf_around_leptons_sources[k].find("NoPileUp") < pf_around_leptons_sources[k].size()) frompu=false;
-	     StorePFCandsInCone(&ele, pf_cands, 0.4, frompu);
+	     const std::vector<pat::PackedCandidate>& pf_cands = *(pfcand_handle.product());
+	     StorePFCandsInCone(&ele, pf_cands, 0.4);
 	   }
 	 }
 
@@ -563,12 +731,10 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 	 if (storePFsAroundLeptons){
 	   for(unsigned int k=0; k<pf_around_leptons_sources.size(); ++k){
-	     edm::Handle< std::vector<reco::PFCandidate> > pfcand_handle;
+	     edm::Handle< std::vector<pat::PackedCandidate> > pfcand_handle;
 	     iEvent.getByLabel(pf_around_leptons_sources[k], pfcand_handle);  
-	     const std::vector<reco::PFCandidate>& pf_cands = *(pfcand_handle.product());
-	     bool frompu = true;
-	     if( pf_around_leptons_sources[k].find("NoPileUp") < pf_around_leptons_sources[k].size()) frompu=false;
-	     StorePFCandsInCone(&mu, pf_cands, 0.4, frompu);
+	     const std::vector<pat::PackedCandidate>& pf_cands = *(pfcand_handle.product());
+	     StorePFCandsInCone(&mu, pf_cands, 0.4);
 	   }
 	 }
 
@@ -598,31 +764,64 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 tau.set_phi( pat_tau.phi());
 	 tau.set_energy( pat_tau.energy());
 	 tau.set_decayModeFinding ( pat_tau.tauID("decayModeFinding")>0.5); 
-	 //tau.set_byVLooseCombinedIsolationDeltaBetaCorr  ( pat_tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5); 
-	 tau.set_byLooseCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5); 
-	 tau.set_byMediumCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5); 
-	 tau.set_byTightCombinedIsolationDeltaBetaCorr ( pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5); 
-	 tau.set_byLooseIsolationMVA( pat_tau.tauID("byLooseIsolationMVA")>0.5); 
-	 tau.set_byMediumIsolationMVA( pat_tau.tauID("byMediumIsolationMVA")>0.5); 
-	 tau.set_byTightIsolationMVA( pat_tau.tauID("byTightIsolationMVA")>0.5); 
-	 tau.set_byLooseIsolationMVA2( pat_tau.tauID("byLooseIsolationMVA2")>0.5); 
-	 tau.set_byMediumIsolationMVA2( pat_tau.tauID("byMediumIsolationMVA2")>0.5); 
-	 tau.set_byTightIsolationMVA2( pat_tau.tauID("byTightIsolationMVA2")>0.5);
-	 tau.set_byLooseCombinedIsolationDeltaBetaCorr3Hits(  pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")>0.5); 
-	 tau.set_byMediumCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits")>0.5); 
-	 tau.set_byTightCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits")>0.5); 
-	 tau.set_againstElectronLooseMVA3  ( pat_tau.tauID("againstElectronLooseMVA3")>0.5); 
-	 tau.set_againstElectronMediumMVA3 ( pat_tau.tauID("againstElectronMediumMVA3")>0.5); 
-	 tau.set_againstElectronTightMVA3 ( pat_tau.tauID("againstElectronTightMVA3")>0.5); 
-	 tau.set_againstElectronVTightMVA3 ( pat_tau.tauID("againstElectronVTightMVA3")>0.5); 
-	 tau.set_againstMuonLoose2 ( pat_tau.tauID("againstMuonLoose2")>0.5); 
-	 tau.set_againstMuonMedium2 ( pat_tau.tauID("againstMuonMedium2")>0.5); 
-	 tau.set_againstMuonTight2 ( pat_tau.tauID("againstMuonTight2")>0.5); 
-	 tau.set_byIsolationMVAraw(  pat_tau.tauID("byIsolationMVAraw"));
-	 tau.set_byIsolationMVA2raw(  pat_tau.tauID("byIsolationMVA2raw"));
+	 tau.set_decayModeFindingNewDMs ( pat_tau.tauID("decayModeFindingNewDMs")>0.5); 
+
+	 tau.set_againstElectronLoose ( pat_tau.tauID("againstElectronLoose"));
+	 tau.set_againstElectronLooseMVA5 ( pat_tau.tauID("againstElectronLooseMVA5"));
+	 tau.set_againstElectronMVA5category ( pat_tau.tauID("againstElectronMVA5category"));
+	 tau.set_againstElectronMVA5raw ( pat_tau.tauID("againstElectronMVA5raw"));
+	 tau.set_againstElectronMedium ( pat_tau.tauID("againstElectronMedium"));
+	 tau.set_againstElectronMediumMVA5 ( pat_tau.tauID("againstElectronMediumMVA5"));
+	 tau.set_againstElectronTight ( pat_tau.tauID("againstElectronTight"));
+	 tau.set_againstElectronTightMVA5 ( pat_tau.tauID("againstElectronTightMVA5"));
+	 tau.set_againstElectronVLooseMVA5 ( pat_tau.tauID("againstElectronVLooseMVA5"));
+	 tau.set_againstElectronVTightMVA5 ( pat_tau.tauID("againstElectronVTightMVA5"));
+	 tau.set_againstMuonLoose ( pat_tau.tauID("againstMuonLoose"));
+	 tau.set_againstMuonLoose2 ( pat_tau.tauID("againstMuonLoose2"));
+	 tau.set_againstMuonLoose3 ( pat_tau.tauID("againstMuonLoose3"));
+	 tau.set_againstMuonLooseMVA ( pat_tau.tauID("againstMuonLooseMVA"));
+	 tau.set_againstMuonMVAraw ( pat_tau.tauID("againstMuonMVAraw"));
+	 tau.set_againstMuonMedium ( pat_tau.tauID("againstMuonMedium"));
+	 tau.set_againstMuonMedium2 ( pat_tau.tauID("againstMuonMedium2"));
+	 tau.set_againstMuonMediumMVA ( pat_tau.tauID("againstMuonMediumMVA"));
+	 tau.set_againstMuonTight ( pat_tau.tauID("againstMuonTight"));
+	 tau.set_againstMuonTight2 ( pat_tau.tauID("againstMuonTight2"));
+	 tau.set_againstMuonTight3 ( pat_tau.tauID("againstMuonTight3"));
+	 tau.set_againstMuonTightMVA ( pat_tau.tauID("againstMuonTightMVA"));
+	 tau.set_byCombinedIsolationDeltaBetaCorrRaw3Hits ( pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits"));
+	 tau.set_byIsolationMVA3newDMwLTraw ( pat_tau.tauID("byIsolationMVA3newDMwLTraw"));
+	 tau.set_byIsolationMVA3newDMwoLTraw ( pat_tau.tauID("byIsolationMVA3newDMwoLTraw"));
+	 tau.set_byIsolationMVA3oldDMwLTraw ( pat_tau.tauID("byIsolationMVA3oldDMwLTraw"));
+	 tau.set_byIsolationMVA3oldDMwoLTraw ( pat_tau.tauID("byIsolationMVA3oldDMwoLTraw"));
+	 tau.set_byLooseCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits"));
+	 tau.set_byLooseIsolationMVA3newDMwLT ( pat_tau.tauID("byLooseIsolationMVA3newDMwLT"));
+	 tau.set_byLooseIsolationMVA3newDMwoLT ( pat_tau.tauID("byLooseIsolationMVA3newDMwoLT"));
+	 tau.set_byLooseIsolationMVA3oldDMwLT ( pat_tau.tauID("byLooseIsolationMVA3oldDMwLT"));
+	 tau.set_byLooseIsolationMVA3oldDMwoLT ( pat_tau.tauID("byLooseIsolationMVA3oldDMwoLT"));
+	 tau.set_byMediumCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
+	 tau.set_byMediumIsolationMVA3newDMwLT ( pat_tau.tauID("byMediumIsolationMVA3newDMwLT"));
+	 tau.set_byMediumIsolationMVA3newDMwoLT ( pat_tau.tauID("byMediumIsolationMVA3newDMwoLT"));
+	 tau.set_byMediumIsolationMVA3oldDMwLT ( pat_tau.tauID("byMediumIsolationMVA3oldDMwLT"));
+	 tau.set_byMediumIsolationMVA3oldDMwoLT ( pat_tau.tauID("byMediumIsolationMVA3oldDMwoLT"));
+	 tau.set_byTightCombinedIsolationDeltaBetaCorr3Hits ( pat_tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
+	 tau.set_byTightIsolationMVA3newDMwLT ( pat_tau.tauID("byTightIsolationMVA3newDMwLT"));
+	 tau.set_byTightIsolationMVA3newDMwoLT ( pat_tau.tauID("byTightIsolationMVA3newDMwoLT"));
+	 tau.set_byTightIsolationMVA3oldDMwLT ( pat_tau.tauID("byTightIsolationMVA3oldDMwLT"));
+	 tau.set_byTightIsolationMVA3oldDMwoLT ( pat_tau.tauID("byTightIsolationMVA3oldDMwoLT"));
+	 tau.set_byVLooseIsolationMVA3newDMwLT ( pat_tau.tauID("byVLooseIsolationMVA3newDMwLT"));
+	 tau.set_byVLooseIsolationMVA3newDMwoLT ( pat_tau.tauID("byVLooseIsolationMVA3newDMwoLT"));
+	 tau.set_byVLooseIsolationMVA3oldDMwLT ( pat_tau.tauID("byVLooseIsolationMVA3oldDMwLT"));
+	 tau.set_byVLooseIsolationMVA3oldDMwoLT ( pat_tau.tauID("byVLooseIsolationMVA3oldDMwoLT"));
+	 tau.set_byVTightIsolationMVA3newDMwLT ( pat_tau.tauID("byVTightIsolationMVA3newDMwLT"));
+	 tau.set_byVTightIsolationMVA3newDMwoLT ( pat_tau.tauID("byVTightIsolationMVA3newDMwoLT"));
+	 tau.set_byVTightIsolationMVA3oldDMwLT ( pat_tau.tauID("byVTightIsolationMVA3oldDMwLT"));
+	 tau.set_byVTightIsolationMVA3oldDMwoLT ( pat_tau.tauID("byVTightIsolationMVA3oldDMwoLT"));
+	 tau.set_byVVTightIsolationMVA3newDMwLT ( pat_tau.tauID("byVVTightIsolationMVA3newDMwLT"));
+	 tau.set_byVVTightIsolationMVA3newDMwoLT ( pat_tau.tauID("byVVTightIsolationMVA3newDMwoLT"));
+	 tau.set_byVVTightIsolationMVA3oldDMwLT ( pat_tau.tauID("byVVTightIsolationMVA3oldDMwLT"));
+	 tau.set_byVVTightIsolationMVA3oldDMwoLT ( pat_tau.tauID("byVVTightIsolationMVA3oldDMwoLT"));
+
 	 tau.set_decayMode( pat_tau.decayMode() );
-	 tau.set_byCombinedIsolationDeltaBetaCorrRaw( pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw"));
-	 tau.set_byCombinedIsolationDeltaBetaCorrRaw3Hits( pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits"));
 
 //       std::cout << pat_tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits") << std::endl;
 	 
@@ -640,18 +839,15 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 taus[j].push_back(tau);
 
 	 // store isolation info only for identified taus
-	 if (pat_tau.tauID("decayModeFinding")>0.5){
-	   bool storepfs = (pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5) || (pat_tau.tauID("byLooseIsolationMVA")>0.5); 	   
-
-	   if (storePFsAroundLeptons && storepfs){
-	     for(unsigned int k=0; k<pf_around_leptons_sources.size(); ++k){
-	       edm::Handle< std::vector<reco::PFCandidate> > pfcand_handle;
-	       iEvent.getByLabel(pf_around_leptons_sources[k], pfcand_handle);  
-	       const std::vector<reco::PFCandidate>& pf_cands = *(pfcand_handle.product());
-	       bool frompu = true;
-	       if( pf_around_leptons_sources[k].find("NoPileUp") < pf_around_leptons_sources[k].size()) frompu=false;
-	       StorePFCandsInCone(&tau, pf_cands, 0.4, frompu);
-	     }
+	 //if (pat_tau.tauID("decayModeFinding")>0.5){
+	 //  bool storepfs = (pat_tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")>0.5) || (pat_tau.tauID("byLooseIsolationMVA3newDMwoLT")>0.5); 	   
+	   
+	 if (storePFsAroundLeptons){
+	   for(unsigned int k=0; k<pf_around_leptons_sources.size(); ++k){
+	     edm::Handle< std::vector<pat::PackedCandidate> > pfcand_handle;
+	     iEvent.getByLabel(pf_around_leptons_sources[k], pfcand_handle);  
+	     const std::vector<pat::PackedCandidate>& pf_cands = *(pfcand_handle.product());
+	     StorePFCandsInCone(&tau, pf_cands, 0.4);
 	   }
 	 }
        }
@@ -769,11 +965,14 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 // 	     std::cout<< "genjet not found for " << genj->pt() << "  " << genj->eta() << std::endl;
 // 	   }
 	 }
+
+	 if(doJetsConstituents) 
+	   StoreJetConstituents(pat_jet, jet);
 	 jets[j].push_back(jet);
+
        }
      }
    }
-
 
    // ------------- top jets -------------
    if(doTopJets){
@@ -1083,52 +1282,36 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
        
      }
    }
-
+  
    // ------------- trigger -------------
+
+
    if(doTrigger){
-     edm::InputTag triggerEvent = edm::InputTag("hltTriggerSummaryAOD");
-     edm::Handle< trigger::TriggerEvent > dummy_TriggerEvent;
-     iEvent.getByLabel( edm::InputTag(triggerEvent.label(), triggerEvent.instance()), dummy_TriggerEvent );
+     edm::Handle<edm::TriggerResults> triggerBits;
      
-     const edm::Provenance *meta = dummy_TriggerEvent.provenance();
-     std::string nameProcess = meta->processName();
-     edm::InputTag triggerResultTag = edm::InputTag("TriggerResults");
-     triggerResultTag = edm::InputTag( triggerResultTag.label(), triggerResultTag.instance(), nameProcess );
-     
-     edm::Handle<edm::TriggerResults> trigger;
-     iEvent.getByLabel(triggerResultTag, trigger);
-     const edm::TriggerResults& trig = *(trigger.product());
-     
+     iEvent.getByToken(triggerBits_, triggerBits);
+
      triggerResults.clear();
      triggerNames.clear();
-//      L1_prescale.clear();
-//      HLT_prescale.clear();
-     
-     edm::Service<edm::service::TriggerNamesService> tns;
-     std::vector<std::string> triggerNames_all;
-     tns->getTrigPaths(trig,triggerNames_all);
-     
-     if (trig.size()!=triggerNames_all.size()) std::cout <<"ERROR: length of names and paths not the same: "<<triggerNames_all.size()<<","<<trig.size()<< std::endl;
-     for(unsigned int i=0; i<trig.size(); ++i){
+
+     const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+     //std::cout << "\n === TRIGGER PATHS === " << std::endl;
+     for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
+       // std::cout << "Trigger " << names.triggerName(i) << 
+       // 	 // ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
+       // 	 ": " << (triggerBits->accept(i) ? "PASS" : "fail (or not run)") 
+       // 		 << std::endl;
+
        std::vector<std::string>::const_iterator it = trigger_prefixes.begin();
        for(; it!=trigger_prefixes.end(); ++it){
-	 if(triggerNames_all[i].substr(0, it->size()) == *it)break;
+	 if(names.triggerName(i).substr(0, it->size()) == *it)break;
+	 
        }
        if(it==trigger_prefixes.end()) continue;
-       
-       //triggerResults.insert(std::pair<std::string, bool>(triggerNames[i],trig.accept(i)));
-       triggerResults.push_back(trig.accept(i));
-       if(newrun) triggerNames.push_back(triggerNames_all[i]);
-//        if(isRealData){
-// 	 std::pair<int, int> pre=hlt_cfg.prescaleValues(iEvent, iSetup, triggerNames_all[i]);
-// 	 L1_prescale.push_back(pre.first);
-// 	 HLT_prescale.push_back(pre.second);
-// 	 //std::cout <<  triggerNames_all[i] << " " << pre.first << " " <<pre.second << "   " << hlt_cfg.prescaleValue(iEvent, iSetup, triggerNames_all[i]) << std::endl;
-//        }
+
+       triggerResults.push_back(triggerBits->accept(i));
+       if(newrun) triggerNames.push_back(names.triggerName(i));
      }
-     //    for(std::map<std::string, bool>::const_iterator iter = triggerResults.begin(); iter!=triggerResults.end(); iter++){
-     //      std::cout << (*iter).first << "   " << (*iter).second << std::endl;
-     //    }
      newrun=false;
    }
 
@@ -1138,10 +1321,6 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
      previouslumiblockwasfilled=true;
 
    // clean up
-   if(doTopJetsConstituents){
-     pfparticles.clear();
-   }
-   
    // need to do a check if necessary
    pfparticles.clear();
 
@@ -1223,115 +1402,29 @@ NtupleWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 
-namespace{
-
-PFParticle PFCandidate2PFParticle(const reco::PFCandidate & pf, bool fromjet, bool fromiso, bool frompuiso){
-    PFParticle part;
-    part.set_pt(pf.pt());
-    part.set_eta(pf.eta());
-    part.set_phi(pf.phi());
-    part.set_energy(pf.energy());
-    part.set_charge(pf.charge());
-    part.set_ecal_en(pf.ecalEnergy());
-    part.set_hcal_en(pf.hcalEnergy());
-    part.set_isJetParticle(fromjet);
-    part.set_isIsoParticle(fromiso);
-    part.set_isPUIsoParticle(frompuiso);
-    reco::TrackRef trackref = pf.trackRef();
-    if (!trackref.isNull()){
-      part.set_track_mom(trackref->p());
-    }
-    PFParticle::EParticleID id = PFParticle::eX;
-    switch ( pf.translatePdgIdToType(pf.pdgId()) ){
-        case reco::PFCandidate::X : id = PFParticle::eX; break;
-        case reco::PFCandidate::h : id = PFParticle::eH; break;
-        case reco::PFCandidate::e : id = PFParticle::eE; break;
-        case reco::PFCandidate::mu : id = PFParticle::eMu; break;
-        case reco::PFCandidate::gamma : id = PFParticle::eGamma; break;
-        case reco::PFCandidate::h0 : id = PFParticle::eH0; break;
-        case reco::PFCandidate::h_HF : id = PFParticle::eH_HF; break;
-        case reco::PFCandidate::egamma_HF : id = PFParticle::eEgamma_HF; break;
-    }
-    part.set_particleID(id);
-    return part;
-}
-    
-// add pf to pfs, ensuring there is no duplication. Retuns the index
-// of pf in pfs.
-size_t add_pfpart(const reco::PFCandidate & pf, vector<PFParticle> & pfs, bool fromjet, bool fromiso, bool frompuiso){
-    for(size_t j=0; j<pfs.size(); ++j){
-      PFParticle spf = pfs[j];
-      // note: static_cast to float is to ensure the comparison is done with the same precision as these quantities
-      // have been stored in spf. Otherwise, there could be a non-zero difference just because of conversion loss
-      // from double to float.
-      double r = fabs(static_cast<float>(pf.eta()) - spf.eta()) + fabs(static_cast<float>(pf.phi()) - spf.phi());
-      double dpt = fabs(static_cast<float>(pf.pt()) - spf.pt());
-      if (r == 0.0 && dpt == 0.0){
-	if(fromjet) pfs[j].set_isJetParticle(true);
-	if(fromiso) pfs[j].set_isIsoParticle(true);	
-	if(frompuiso) pfs[j].set_isPUIsoParticle(true);
-        return j;
-      }            
-    }
-    pfs.push_back(PFCandidate2PFParticle(pf, fromjet, fromiso, frompuiso));
-    return pfs.size()-1;
-}
-
- size_t add_genpart(const reco::GenParticle & jetgenp, vector<GenParticle> & genparts){
-   for(size_t j=0; j<genparts.size();j++){
-     GenParticle sgenpart = genparts[j];
-     double r = fabs(static_cast<float>(jetgenp.eta()-sgenpart.eta()))+fabs(static_cast<float>(jetgenp.phi()-sgenpart.phi()));
-     double dpt = fabs(static_cast<float>(jetgenp.pt()-sgenpart.pt()));
-     if (r == 0.0 && dpt == 0.0){
-       return j;
-     }
-   }
-   GenParticle genp;
-   genp.set_charge(jetgenp.charge());
-   genp.set_pt(jetgenp.p4().pt());
-   genp.set_eta(jetgenp.p4().eta());
-   genp.set_phi(jetgenp.p4().phi());
-   genp.set_energy(jetgenp.p4().E());
-   genp.set_index(genparts.size());
-   genp.set_status(jetgenp.status());
-   genp.set_pdgId(jetgenp.pdgId());
-	 
-   genp.set_mother1(-1);
-   genp.set_mother2(-1);
-   genp.set_daughter1(-1);
-   genp.set_daughter2(-1);
-	 
-   int nm=jetgenp.numberOfMothers();
-   int nd=jetgenp.numberOfDaughters();
-
-   	 
-   if (nm>0) genp.set_mother1( jetgenp.motherRef(0).key());
-   if (nm>1) genp.set_mother2( jetgenp.motherRef(1).key());
-   if (nd>0) genp.set_daughter1( jetgenp.daughterRef(0).key());
-   if (nd>1) genp.set_daughter2( jetgenp.daughterRef(1).key());
-	 
-
-   genparts.push_back(genp);
- 
-   return genparts.size()-1;
- }
-}
 
 
 void NtupleWriter::StoreJetConstituents(const pat::Jet& pat_jet, Jet& jet)
 {
-  const std::vector<reco::PFCandidatePtr> jconstits = pat_jet.getPFConstituents();
-  for (unsigned int i=0; i<jconstits.size(); ++i){
-    const reco::PFCandidate* pf = jconstits[i].get();
+  // const std::vector<reco::PFCandidatePtr> jconstits = pat_jet.getPFConstituents();
+  // for (unsigned int i=0; i<jconstits.size(); ++i){
+  //   const reco::PFCandidate* pf = jconstits[i].get();
+  //   size_t pfparticles_index = add_pfpart(*pf, pfparticles, true, false, false);
+  //   jet.add_pfconstituents_index(pfparticles_index);    
+  // }
+
+  for (unsigned int i=0; i<pat_jet.numberOfDaughters(); ++i){
+    pat::PackedCandidate* pf = ( pat::PackedCandidate*) pat_jet.daughter(i);
     size_t pfparticles_index = add_pfpart(*pf, pfparticles, true, false, false);
     jet.add_pfconstituents_index(pfparticles_index);    
   }
+
 }
 
-void NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool frompu)
+void NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<pat::PackedCandidate>& pf_cands, double R0)
 {
   for (unsigned int i=0; i<pf_cands.size(); ++i){
-    const reco::PFCandidate & pf = pf_cands[i];
+    const pat::PackedCandidate & pf = pf_cands[i];
     double dr = deltaR(*inpart, pf);
     if (dr>R0) continue;
     
@@ -1340,6 +1433,9 @@ void NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::
     if (dr<1e-10 && dpt<1e-10){ 
       continue;
     }
+    bool frompu=true;
+    if(pf.charge()==0 || pf.fromPV() >=2) frompu=false;
+
     add_pfpart(pf, pfparticles, false, !frompu, frompu);    
   }
 }

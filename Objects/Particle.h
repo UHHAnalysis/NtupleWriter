@@ -42,7 +42,7 @@ class Particle{
   };
   
   /// charge
-  float charge() const{return m_charge;}
+  short charge() const{return m_charge;}
   /// transverse momentum
   float pt() const {return m_pt;}
   /// pseudo-rapidity
@@ -53,7 +53,7 @@ class Particle{
   float energy() const{return m_energy;}
 
   /// set charge
-  void set_charge(float charge){m_charge=charge;}
+  void set_charge(short charge){m_charge=charge;}
   /// set transverse momentum
   void set_pt(float pt){m_pt=pt;}  
   /// set pseudo-rapidity
@@ -86,7 +86,7 @@ class Particle{
 
  private:
 
-  float m_charge;
+  short m_charge;
   float m_pt; 
   float m_eta; 
   float m_phi; 

@@ -122,14 +122,14 @@ class GenParticle : public FlavorParticle{
   void set_spin(int x){  m_spin=x;}
 
  private:
-  int m_status;
-  int m_index;
+  short m_status;
+  unsigned short m_index;
 
-  int m_mother1;
-  int m_mother2;
-  int m_daughter1;
-  int m_daughter2;
-  int m_spin;
+  unsigned short m_mother1;
+  unsigned short m_mother2;
+  unsigned short m_daughter1;
+  unsigned short m_daughter2;
+  short m_spin;
  
 
 };

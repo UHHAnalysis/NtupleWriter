@@ -2,6 +2,7 @@
 #define Jet_H
 
 #include "FlavorParticle.h"
+#include "PFParticle.h"
 
 /**
  *  @short jet class
@@ -139,6 +140,52 @@ class Jet : public FlavorParticle{
 	return true;   
     }
     return false;
+  }
+
+  void fill_PF_variables(std::vector<PFParticle*> pfparts){
+
+    float mu_energy=0;
+    int n_mu=0; 
+    float ele_energy=0;
+    int n_ele=0; 
+    float ch_energy=0;
+    //int n_ch=0; 
+    float nh_energy=0;
+    //int n_nh=0; 
+    float ph_energy=0;
+    int n_ph=0; 
+    int n_dau=0;
+    int n_cm=0;
+    int n_nm=0;
+    int jet_charge=0;
+    for(unsigned int i=0; i< m_pfconstituents_indices.size(); i++){
+      if(m_pfconstituents_indices[i]>pfparts.size()){
+	std::cerr << "ERROR: PFParticle index out of range in this jet, check list of particles given to fill_PF_variables routine" << std::endl;
+	continue;
+      }
+      n_dau++;
+      if(pfparts.at(m_pfconstituents_indices[i])->charge()!=0) n_cm++;
+      else n_nm++;
+      jet_charge+=pfparts.at(m_pfconstituents_indices[i])->charge();
+      if(pfparts.at(m_pfconstituents_indices[i])->particleID()==PFParticle::eMu){ n_mu++;  mu_energy+=pfparts.at(m_pfconstituents_indices[i])->v4().E();}
+      if(pfparts.at(m_pfconstituents_indices[i])->particleID()==PFParticle::eGamma){ n_ph++;  ph_energy+=pfparts.at(m_pfconstituents_indices[i])->v4().E();} 
+      if(pfparts.at(m_pfconstituents_indices[i])->particleID()==PFParticle::eH){ /*n_ch++;*/  ch_energy+=pfparts.at(m_pfconstituents_indices[i])->v4().E();} 
+      if(pfparts.at(m_pfconstituents_indices[i])->particleID()==PFParticle::eH0){ /*n_nh++;*/  nh_energy+=pfparts.at(m_pfconstituents_indices[i])->v4().E();} 
+      if(pfparts.at(m_pfconstituents_indices[i])->particleID()==PFParticle::eE){ n_ele++;  ele_energy+=pfparts.at(m_pfconstituents_indices[i])->v4().E();} 
+    }
+    this->set_charge(jet_charge);
+    this->set_numberOfDaughters(n_dau);
+    this->set_chargedMultiplicity(n_cm);
+    this->set_neutralMultiplicity(n_nm);
+    this->set_muonMultiplicity(n_mu);
+    this->set_muonEnergyFraction(mu_energy/this->v4().E());
+    this->set_chargedHadronEnergyFraction(ch_energy/this->v4().E());
+    this->set_neutralHadronEnergyFraction(nh_energy/this->v4().E());
+    this->set_electronMultiplicity(n_ele);
+    this->set_chargedEmEnergyFraction(ele_energy/this->v4().E());
+    this->set_photonMultiplicity(n_ph);
+    this->set_photonEnergyFraction(ph_energy/this->v4().E());
+    this->set_neutralEmEnergyFraction(ph_energy/this->v4().E());
   }
 
  private:

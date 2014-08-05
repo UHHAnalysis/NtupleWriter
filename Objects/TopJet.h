@@ -74,6 +74,38 @@ class TopJet : public Jet{
   ~TopJet(){
   };
 
+  TopJet(Jet j){
+    this->set_v4(j.v4());
+    this->set_charge(j.charge());
+    this->set_pdgId(j.pdgId());
+    this->set_nTracks(j.nTracks());
+    this->set_jetArea(j.jetArea());
+    this->set_numberOfDaughters(j.numberOfDaughters());
+    this->set_neutralEmEnergyFraction(j.neutralEmEnergyFraction());
+    this->set_neutralHadronEnergyFraction(j.neutralHadronEnergyFraction());
+    this->set_chargedEmEnergyFraction(j.chargedEmEnergyFraction());
+    this->set_chargedHadronEnergyFraction(j.chargedHadronEnergyFraction());
+    this->set_muonEnergyFraction(j.muonEnergyFraction());
+    this->set_photonEnergyFraction(j.photonEnergyFraction());
+    this->set_chargedMultiplicity(j.chargedMultiplicity());
+    this->set_neutralMultiplicity(j.neutralMultiplicity());
+    this->set_muonMultiplicity(j.muonMultiplicity());
+    this->set_electronMultiplicity(j.electronMultiplicity());
+    this->set_photonMultiplicity(j.photonMultiplicity());
+    this->set_btag_simpleSecondaryVertexHighEff(j.btag_simpleSecondaryVertexHighEff());
+    this->set_btag_simpleSecondaryVertexHighPur(j.btag_simpleSecondaryVertexHighPur());
+    this->set_btag_combinedSecondaryVertex(j.btag_combinedSecondaryVertex());
+    this->set_btag_combinedSecondaryVertexMVA(j.btag_combinedSecondaryVertexMVA());
+    this->set_btag_jetBProbability(j.btag_jetBProbability());
+    this->set_btag_jetProbability(j.btag_jetProbability());
+    this->set_JEC_factor_raw(j.JEC_factor_raw());
+    this->set_genjet_index(j.genjet_index());
+    for(unsigned int i=0; i<j.pfconstituents_indices().size(); i++){
+      this->add_pfconstituents_index(j.pfconstituents_indices()[i]);
+    }
+
+  }
+
   // substructure getters
   float qjets_volatility(){return m_qjets_volatility;}
   float tau1(){return m_tau1;}
