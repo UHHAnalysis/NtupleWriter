@@ -24,6 +24,7 @@ writeAllGenParticles=True
 
 process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   fileName = cms.string("Ntuple.root"), 
+                                  runOnMiniAOD = cms.bool(True),
                                   doElectrons = cms.bool(True),
                                   doMuons = cms.bool(True),
                                   doTaus = cms.bool(True),
