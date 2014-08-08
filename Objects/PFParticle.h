@@ -25,9 +25,9 @@ class PFParticle : public Particle{
 
   PFParticle(){
      m_particleID=eX;
-     /* m_track_p=0.; */
-     /* m_ecal_en=0.; */
-     /* m_hcal_en=0.; */
+     m_track_p=0.; 
+     m_ecal_en=0.; 
+     m_hcal_en=0.; 
      m_jetparticle=false;
      m_isoparticle=false;
      m_puisoparticle=false;
@@ -38,9 +38,9 @@ class PFParticle : public Particle{
   };
 
   EParticleID particleID(){return (EParticleID)m_particleID;}
-  /* double track_mom(){return m_track_p;} */
-  /* double ecal_en(){return m_ecal_en;} */
-  /* double hcal_en(){return m_hcal_en;} */
+  double track_mom(){return m_track_p;} 
+  double ecal_en(){return m_ecal_en;} 
+  double hcal_en(){return m_hcal_en;} 
   /// returns true, if this PFParticle has been clustered to a top-jet
   bool isJetParticle(){return m_jetparticle;}
   /// returns true, if this PFParticle has been used to calculate lepton isolation
@@ -51,9 +51,9 @@ class PFParticle : public Particle{
   bool fromPV(){return m_fromPV;}
 
   void set_particleID(EParticleID id){m_particleID = id;}
-  /* void set_track_mom(double p){m_track_p = p;} */
-  /* void set_ecal_en(double e){m_ecal_en = e;} */
-  /* void set_hcal_en(double e){m_hcal_en = e;} */
+  void set_track_mom(double p){m_track_p = p;} 
+  void set_ecal_en(double e){m_ecal_en = e;} 
+  void set_hcal_en(double e){m_hcal_en = e;} 
   void set_isJetParticle(bool x){m_jetparticle = x;}
   void set_isIsoParticle(bool x){m_isoparticle = x;}
   void set_isPUIsoParticle(bool x){m_puisoparticle = x;}
@@ -62,9 +62,9 @@ class PFParticle : public Particle{
  private:
   
   char m_particleID;
-  /* double m_track_p; */
-  /* double m_ecal_en; */
-  /* double m_hcal_en; */
+  double m_track_p; 
+  double m_ecal_en; 
+  double m_hcal_en; 
 
   bool m_jetparticle;
   bool m_isoparticle;

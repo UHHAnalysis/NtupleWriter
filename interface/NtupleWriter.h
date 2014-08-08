@@ -33,6 +33,7 @@
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/TrackReco/interface/HitPattern.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/PdfInfo.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
@@ -90,12 +91,15 @@ class NtupleWriter : public edm::EDAnalyzer {
       virtual void endRun(edm::Run const&, edm::EventSetup const&);
       virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
-      
+
       /// fills constituents of the pat_jet into the Ntuple and stores a reference to those in the provided topjet
       void StoreJetConstituents(const pat::Jet & pat_jet, Jet & topjet);
-      
+
       /// fill PF candidates from pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
-      void StorePFCandsInCone(Particle* part, const std::vector<pat::PackedCandidate>& pf_cands, double R0);
+      void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool fromiso);
+
+      /// fill PF candidates from packed pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
+      void StorePFCandsInCone_packed(Particle* part, const std::vector<pat::PackedCandidate>& pf_cands, double R0);
       
       // fill gen particles from a gen topjet
       void fill_genparticles_jet(const reco::GenJet& reco_genjet, GenJetWithParts& genjet);
@@ -125,6 +129,8 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doTagInfos;
       bool storePFsAroundLeptons;
       bool doAllPFConstituents;
+      bool runOnMiniAOD;
+
 
       int run;
       int luminosityBlock;
