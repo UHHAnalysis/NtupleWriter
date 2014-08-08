@@ -17,6 +17,9 @@
 //
 //
 
+//set this flag to TRUE when running in CMSSW_7_0_X, switch it off for CMSSW_7_1_X and CMSSW_7_2_X
+#define CMSSW_70 TRUE
+
 #include "UHHAnalysis/NtupleWriter/interface/NtupleWriter.h"
 #include "UHHAnalysis/NtupleWriter/interface/JetProps.h"
 #include "RecoBTau/JetTagComputer/interface/GenericMVAJetTagComputer.h"
@@ -661,8 +664,11 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 ele.set_trackIso(pat_ele.trackIso());
 	 ele.set_photonIso(pat_ele.photonIso());
 	 ele.set_puChargedHadronIso(pat_ele.puChargedHadronIso());
-	 //ele.set_gsfTrack_trackerExpectedHitsInner_numberOfLostHits(pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits());
+#if CMSSW_70==TRUE
+	 ele.set_gsfTrack_trackerExpectedHitsInner_numberOfLostHits(pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits());
+#else
 	 ele.set_gsfTrack_trackerExpectedHitsInner_numberOfLostHits(pat_ele.gsfTrack()->hitPattern().numberOfLostTrackerHits(reco::HitPattern::MISSING_INNER_HITS));
+#endif
 	 ele.set_gsfTrack_px( pat_ele.gsfTrack()->px());
 	 ele.set_gsfTrack_py( pat_ele.gsfTrack()->py());
 	 ele.set_gsfTrack_pz( pat_ele.gsfTrack()->pz());
@@ -1233,7 +1239,9 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 		  const GenericMVAJetTagComputer *computer = dynamic_cast<const GenericMVAJetTagComputer*>( computerHandle.product() );
 		  if(computer)
 		    {
-		      //computer->passEventSetup(iSetup);
+#if CMSSW70==TRUE
+		      computer->passEventSetup(iSetup);
+#endif
 		      std::vector<const reco::BaseTagInfo*>  baseTagInfos;
 		      baseTagInfos.push_back(patsubjetd->tagInfoTrackIP("impactParameter") );
 		      baseTagInfos.push_back(patsubjetd->tagInfoSecondaryVertex("secondaryVertex") );      
