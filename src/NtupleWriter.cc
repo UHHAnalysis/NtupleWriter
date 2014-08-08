@@ -17,8 +17,8 @@
 //
 //
 
-//set this flag to TRUE when running in CMSSW_7_0_X, switch it off for CMSSW_7_1_X and CMSSW_7_2_X
-#define CMSSW_70 TRUE
+//set this flag to TRUE when running in CMSSW_7_0_X, switch it to FALSE for CMSSW_7_1_X and CMSSW_7_2_X
+#define CMSSW70 TRUE
 
 #include "UHHAnalysis/NtupleWriter/interface/NtupleWriter.h"
 #include "UHHAnalysis/NtupleWriter/interface/JetProps.h"
@@ -664,7 +664,7 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 ele.set_trackIso(pat_ele.trackIso());
 	 ele.set_photonIso(pat_ele.photonIso());
 	 ele.set_puChargedHadronIso(pat_ele.puChargedHadronIso());
-#if CMSSW_70==TRUE
+#if CMSSW70 == TRUE
 	 ele.set_gsfTrack_trackerExpectedHitsInner_numberOfLostHits(pat_ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits());
 #else
 	 ele.set_gsfTrack_trackerExpectedHitsInner_numberOfLostHits(pat_ele.gsfTrack()->hitPattern().numberOfLostTrackerHits(reco::HitPattern::MISSING_INNER_HITS));
@@ -1239,7 +1239,7 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 		  const GenericMVAJetTagComputer *computer = dynamic_cast<const GenericMVAJetTagComputer*>( computerHandle.product() );
 		  if(computer)
 		    {
-#if CMSSW70==TRUE
+#if CMSSW70 == TRUE
 		      computer->passEventSetup(iSetup);
 #endif
 		      std::vector<const reco::BaseTagInfo*>  baseTagInfos;
