@@ -18,7 +18,7 @@
 //
 
 //set this flag to 1 when running in CMSSW_7_0_X, switch it to 0 for CMSSW_7_1_X and CMSSW_7_2_X
-#define CMSSW70 0
+#define CMSSW70 1
 
 #include "UHHAnalysis/NtupleWriter/interface/NtupleWriter.h"
 #include "UHHAnalysis/NtupleWriter/interface/JetProps.h"
