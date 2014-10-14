@@ -47,12 +47,20 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) , 
 ###############################################
 # SOURCE
 
+#process.source = cms.Source("PoolSource",
+#                            fileNames  = cms.untracked.vstring(__FILE_NAMES__),
+#                            skipEvents = cms.untracked.uint32(__SKIP_EVENTS__)
+#)
+
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(__MAX_EVENTS__))
+
 process.source = cms.Source("PoolSource",
-                            fileNames  = cms.untracked.vstring(__FILE_NAMES__),
-                            skipEvents = cms.untracked.uint32(__SKIP_EVENTS__)
+                            fileNames  = cms.untracked.vstring("/store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU40bx25_POSTLS170_V7-v2/00000/00800BE3-E826-E411-AD01-20CF3019DEE9.root"),
+                            skipEvents = cms.untracked.uint32(0)
 )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(__MAX_EVENTS__))
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100))
+
 
 
 ###############################################
@@ -195,6 +203,7 @@ process.ca8PFJets  = process.ca4PFJets.clone(rParam = 0.8,  doAreaFastjet = True
 process.ak15PFJets = process.ak4PFJets.clone(rParam = 1.5,  doAreaFastjet = True)
 
 process.ca8CHSJets  = process.ca8PFJets.clone (src = chsstring)
+
 process.ak15CHSJets = process.ak15PFJets.clone(src = chsstring)
 
 process.load('RecoJets.JetProducers.ak4PFJetsFiltered_cfi')
@@ -260,7 +269,7 @@ process.hepTopTagCHS = process.cmsTopTagCHS.clone(
     useSubjetMass = cms.bool(False),
 )
 
-
+process.ca15CHSJets = process.hepTopTagCHS.clone ( writeCompound = cms.bool(False), jetCollInstanceName = cms.string('') )
 
 
 process.CATopTagInfos = cms.EDProducer("CATopJetTagger",
@@ -482,6 +491,7 @@ process.combinedSecondaryVertexCA8CHS.trackSelection.jetDeltaRMax = cms.double(0
 process.combinedSecondaryVertexCA8CHS.trackPseudoSelection.jetDeltaRMax = cms.double(0.8)
 process.combinedSecondaryVertexBJetTagsCA8CHS.jetTagComputer = cms.string('combinedSecondaryVertexCA8CHS')
 
+
 # patJetsCA8PFpruned
 addJetCollection(
     process,
@@ -659,6 +669,30 @@ process.patJetsCMSTopTagFJCHSPacked = cms.EDProducer("BoostedJetMerger",
     subjetSrc=cms.InputTag("patJetsCMSTopTagFJCHSSubjets")
       )
 
+#patJetsCA15CHS
+addJetCollection(
+    process,
+    labelName = 'CA15CHS',
+    jetSource = cms.InputTag('ca15CHSJets'),
+#    algo = 'ca15',
+#    rParam = 1.5,
+    jetCorrections = ('AK7PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute']), 'None'),
+    trackSource = cms.InputTag(tracks),
+    pvSource = cms.InputTag(vertices),
+    btagDiscriminators = ['combinedSecondaryVertexBJetTags'],
+    )
+process.patJetPartonMatchCA15CHS.matched=importantgenparticles
+process.patJetCorrFactorsCA15CHS.primaryVertices = primaryvertices
+process.patJetGenJetMatchCA15CHS.matched = 'ca15GenJets'#'slimmedGenJets'
+process.jetTracksAssociatorAtVertexCA15CHS=process.ak5JetTracksAssociatorAtVertexPF.clone(jets = cms.InputTag('ca15CHSJets'), coneSize = 1.5)
+process.secondaryVertexTagInfosCA15CHS.trackSelection.jetDeltaRMax = cms.double(1.5) # default is 0.3
+process.secondaryVertexTagInfosCA15CHS.vertexCuts.maxDeltaRToJetAxis = cms.double(1.5) # default is 0.5
+process.combinedSecondaryVertexCA15CHS= process.combinedSecondaryVertex.clone()
+process.combinedSecondaryVertexCA15CHS.trackSelection.jetDeltaRMax = cms.double(1.5)
+process.combinedSecondaryVertexCA15CHS.trackPseudoSelection.jetDeltaRMax = cms.double(1.5)
+process.combinedSecondaryVertexBJetTagsCA15CHS.jetTagComputer = cms.string('combinedSecondaryVertexCA15CHS')
+
+
 # patJetsHEPTopTagCHS
 addJetCollection(
     process,
@@ -718,6 +752,7 @@ for jetcoll in (process.patJetsAK15PF,
                 process.patJetsCA8PFpruned,
                 process.patJetsCA8PFprunedSubjets,
                 process.patJetsCA8CHS,
+                process.patJetsCA15CHS,
                 process.patJetsCA8CHSpruned,
                 process.patJetsCA8CHSprunedSubjets,
                 process.patJetsCMSTopTagCHS,
@@ -810,9 +845,11 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   genjet_ptmin = cms.double(10.0),
                                   genjet_etamax = cms.double(5.0),
 				  #photon_sources = cms.vstring("selectedPatPhotons"),
-                                  topjet_sources = cms.vstring("patJetsHEPTopTagCHSPacked","patJetsCMSTopTagCHSPacked","patJetsCA8CHSprunedPacked"),
-                                  topjet_constituents_sources = cms.vstring("patJetsHEPTopTagCHS","patJetsCMSTopTagCHS", "patJetsCA8CHSpruned"),
-                                  topjet_ptmin = cms.double(30.0), 
+                                  #topjet_sources = cms.vstring("patJetsHEPTopTagCHSPacked","patJetsCMSTopTagCHSPacked","patJetsCA8CHSprunedPacked"),
+                                  #topjet_constituents_sources = cms.vstring("patJetsHEPTopTagCHS","patJetsCMSTopTagCHS", "patJetsCA8CHSpruned"),
+                                  topjet_sources = cms.vstring("patJetsCMSTopTagCHSPacked","patJetsHEPTopTagCHSPacked"),
+                                  topjet_constituents_sources = cms.vstring("patJetsCA8CHS","patJetsCA15CHS"),
+                                  topjet_ptmin = cms.double(100.0), 
                                   topjet_etamax = cms.double(5.0),
                                   pf_around_leptons_sources = cms.vstring("packedPFCandidates"),
                                   #missing in miniaod
@@ -853,6 +890,7 @@ process.p = cms.Path(
 #  *process.ca8PFJets
 #  *process.ak15PFJets
 #  *process.ca8CHSJets
+#  *process.ca15CHSJets
 #  *process.ak15CHSJets
 #  *process.ak15PFJetsFiltered
 #  *process.ak15CHSJetsFiltered
@@ -885,6 +923,7 @@ process.p = cms.Path(
 #  *process.patJetsCA8PFprunedSubjets
 #  *process.patJetsCA8PFprunedPacked
   *process.patJetsCA8CHS
+  *process.patJetsCA15CHS
   *process.patJetsCA8CHSpruned
   *process.patJetsCA8CHSprunedSubjets
   *process.patJetsCA8CHSprunedPacked

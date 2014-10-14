@@ -1143,7 +1143,8 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	     }
 
 	     if (pat_topjet_wc){
-	       if (pat_topjet.pt()>150){ StoreJetConstituents(*pat_topjet_wc, topjet);}
+	       //if (pat_topjet.pt()>150) 
+	       StoreJetConstituents(*pat_topjet_wc, topjet);
 	       // now run substructure information
 	       JetProps substructure(&topjet);
 	       substructure.set_pf_cands(&pfparticles);
