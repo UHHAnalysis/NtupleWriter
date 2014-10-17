@@ -523,7 +523,7 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
        bool islepton = iter->status()==1 && abs(iter->pdgId())>=11 && abs(iter->pdgId())<=16 ;
        if(abs(iter->pdgId())==6 || iter->status()==3 || islepton ||  doAllGenParticles ){
 	 //in case of miniAOD: do not store stable particles here, will be strored later from packed collection
-	 if(iter->status()==1 && runOnMiniAOD) continue;
+	 if(iter->status()==1 && runOnMiniAOD && !islepton) continue;
 
 	 GenParticle genp;
 	 genp.set_charge(iter->charge());
@@ -550,6 +550,7 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 if (nd>1) genp.set_daughter2( iter->daughterRef(1).key());
 
 	 genps.push_back(genp);
+
        }
      }
      
@@ -561,6 +562,9 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
        for(size_t j=0; j<packed->size();j++){
 
 	 const pat::PackedGenParticle* iter = &(*packed)[j];
+	 if(iter->status()!=1) continue;
+
+	 index++;
 
 	 GenParticle genp;
 	 genp.set_charge(iter->charge());
@@ -577,21 +581,24 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	 genp.set_daughter1(-1);
 	 genp.set_daughter2(-1);
 
-	 // //check, if particle has already been filled in previous routine from reco::GenParticleCollection 
+	 bool islepton = abs(iter->pdgId())>=11 && abs(iter->pdgId())<=16 ;
+	  //check, if particle has already been filled in previous routine from reco::GenParticleCollection 
 	 // bool fill=true;
 	 // for(unsigned int i=0; i< genps.size(); ++i){
-	 //   if(genps[i].status()==1 && genps[i].pdgId()==genp.pdgId() && fabs(genps[i].pt()-genp.pt())<0.0001 && fabs(genps[i].eta()-genp.eta())<0.0001){
-	 //     std::cout << "Doppelt: " << genps[i].status() << "  " << genps[i].pt() << "  " << genp.pt() <<"    "<<  genps[i].eta() << "  " <<   genp.eta() << "  " <<  genps[i].pdgId() << "  " << genps[i].mother1() << "  " << genps[i].mother2()<< std::endl;
-	 //     fill=false;
-	 //     break;
-	 //   }
+	 //    if(genps[i].status()==1 && genps[i].pdgId()==genp.pdgId() && fabs(genps[i].pt()-genp.pt())<0.1 && fabs(genps[i].eta()-genp.eta())<0.1 && islepton){
+	 //      std::cout << "Doppelt: " << genps[i].status() << "  " << genps[i].pt() << "  " << genp.pt() <<"    "<<  genps[i].eta() << "  " <<   genp.eta() << "  " <<  genps[i].pdgId() << "  " << genps[i].mother1() << "  " << genps[i].mother2()<< std::endl;
+	 //      fill=false;
+	 //      break;
+	 //    }
+	 //  }
+	 //  if(fill) {
+
+	 //    genps.push_back(genp);
+
+	 //    if (islepton) std::cout << "Nicht Doppelt: " << genp.status() << "  " << genp.pt() << "  " << genp.eta() << "  " << genp.pdgId() << std::endl;
 	 // }
-	 // if(fill) {
 
-	 genps.push_back(genp);
-
-	 //std::cout << "Nicht Doppelt: " << genp.status() << "  " << genp.pt() << "  " <<  genp.pdgId() << std::endl;
-	 //}
+	 if(!islepton)  genps.push_back(genp);
        }
      }
  
