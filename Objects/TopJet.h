@@ -107,10 +107,10 @@ class TopJet : public Jet{
   }
 
   // substructure getters
-  float qjets_volatility(){return m_qjets_volatility;}
-  float tau1(){return m_tau1;}
-  float tau2(){return m_tau2;}
-  float tau3(){return m_tau3;}
+  float qjets_volatility() const {return m_qjets_volatility;}
+  float tau1() const {return m_tau1;}
+  float tau2() const {return m_tau2;}
+  float tau3() const {return m_tau3;}
 
   //btag variables getters
   std::vector<Particle> subjets() const{return m_subjets;}
