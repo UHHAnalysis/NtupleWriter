@@ -92,6 +92,9 @@ class NtupleWriter : public edm::EDAnalyzer {
       
       /// fill PF candidates from pf_cands to "pfparticles" collection in a cone of radius R0 around inpart (lepton, most likely)
       void StorePFCandsInCone(Particle* part, const std::vector<reco::PFCandidate>& pf_cands, double R0, bool fromiso);
+
+      /// store all PF candidates to "pfparticles" collection
+      void StoreAllPFCands(const std::vector<reco::PFCandidate>& pf_coll);
       
       // fill gen particles from a gen topjet
       void fill_genparticles_jet(const reco::GenJet& reco_genjet, GenJetWithParts& genjet);
@@ -116,6 +119,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       bool doAllGenParticles;
       bool doLumiInfo;
       bool doPV;
+      bool doAllPFParticles;
       bool doTrigger;
       bool doTagInfos;
       bool storePFsAroundLeptons;
@@ -188,6 +192,7 @@ class NtupleWriter : public edm::EDAnalyzer {
       float beamspot_z0;
 
       std::vector<std::string> pf_around_leptons_sources;
+      std::string pf_collection_source;
 
       edm::InputTag genparticle_source;
       GenInfo genInfo;

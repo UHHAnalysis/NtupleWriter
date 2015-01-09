@@ -86,6 +86,7 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   doMET = iConfig.getParameter<bool>("doMET");
   doGenInfo = iConfig.getParameter<bool>("doGenInfo");
   doAllGenParticles = iConfig.getParameter<bool>("doAllGenParticles");
+  doAllPFParticles = iConfig.getParameter<bool>("doAllPFParticles");
   doLumiInfo = iConfig.getParameter<bool>("doLumiInfo");
   doPV = iConfig.getParameter<bool>("doPV");
   doTopJets = iConfig.getParameter<bool>("doTopJets");
@@ -220,7 +221,21 @@ NtupleWriter::NtupleWriter(const edm::ParameterSet& iConfig)
   if (storePFsAroundLeptons){
     pf_around_leptons_sources = iConfig.getParameter<std::vector<std::string> >("pf_around_leptons_sources");
   }
+  if (doAllPFParticles){
+    pf_collection_source = iConfig.getParameter<std::string>("pf_collection_source");
+  }
+
   newrun = true;
+
+  // consitency check
+  if (doAllPFParticles && storePFsAroundLeptons){
+    cout << "Error in configuration: data format can not store all PF candidates (doAllPFParticles) and PF candidates around leptons " << endl;
+    cout << "used for calculating the isolation (storePFsAroundLeptons) simultaneously." << endl;
+    cout << "Please correct configuration, by switching only one option ON." << endl;
+    cout << "Exiting." << endl;
+    exit(333);
+  }
+
 }
 
 
@@ -1132,6 +1147,16 @@ void NtupleWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
      newrun=false;
    }
 
+   // -------------- all PF candidates -------------------
+   if (doAllPFParticles){
+   
+     edm::Handle<reco::PFCandidateCollection> pfColl_handle;
+     iEvent.getByLabel(pf_collection_source, pfColl_handle);
+     const std::vector<reco::PFCandidate>& pf_coll = *(pfColl_handle.product());   
+     StoreAllPFCands(pf_coll);
+
+   }
+
 
    tr->Fill();
    if(doLumiInfo)
@@ -1344,6 +1369,15 @@ void NtupleWriter::StorePFCandsInCone(Particle* inpart, const std::vector<reco::
   }
 }
 
+void NtupleWriter::StoreAllPFCands(const std::vector<reco::PFCandidate>& pf_coll)
+{
+
+  // add all PF particles to the event
+  for ( unsigned int j = 0; j<pf_coll.size(); ++j){
+    add_pfpart(pf_coll.at(j), pfparticles, false, false, false);    
+  }
+  
+}
 
 
 void NtupleWriter::fill_genparticles_jet(const reco::GenJet& reco_genjet, GenJetWithParts& genjet)

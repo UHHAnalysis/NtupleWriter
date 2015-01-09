@@ -1840,6 +1840,8 @@ if options.useExtraJetColls:
 ## IVF and BCandidate producer for Vbb cross check analysis
 process.load('RecoVertex/AdaptiveVertexFinder/inclusiveVertexing_cff')
 
+## don't cluster e, mu, tau into gen jets
+process.genParticlesForJetsNoNu.excludeFromResonancePids = cms.vuint32(12, 14, 16)
 
 # let it run
 if options.runOnFastSim:
@@ -2113,6 +2115,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doPhotons = cms.bool(False),
                                   doMET = cms.bool(True),
                                   doPV = cms.bool(True),
+                                  doAllPFParticles = cms.untracked.bool(options.writePFCands),
 				  storePFsAroundLeptons = cms.untracked.bool(True),
                                   doGenInfo = cms.bool(not options.useData),
 				  doAllGenParticles = cms.bool(options.writeAllGenParticles), #set to true if you want to store all gen particles, otherwise, only tops and status 3 particles are stored
@@ -2140,6 +2143,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   topjet_ptmin = cms.double(30.0), 
                                   topjet_etamax = cms.double(5.0),
                                   pf_around_leptons_sources = cms.vstring("pfNoPileUpIsoPFlow", "pfPileUpIsoPFlow"),
+                                  pf_collection_source = cms.string("pfNoElectronPFlow"),
 				  doGenTopJets = cms.bool(not options.useData),			      
                                   gentopjet_sources = cms.vstring("caTopTagGen","ca12TopTagGen", "caFilteredGenJetsNoNu", "caHEPTopTagGen"),
                                   gentopjet_ptmin = cms.double(150.0), 
@@ -2170,11 +2174,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(50)
 
 # process all the events
 process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(__MAX_EVENTS__))
-process.options.wantSummary = True
+process.options.wantSummary = False
 process.out.dropMetaData = cms.untracked.string("DROPPED")
 
 process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 
-open('junk.py','w').write(process.dumpPython())
+#open('junk.py','w').write(process.dumpPython())
 
 
