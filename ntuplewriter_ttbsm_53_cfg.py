@@ -137,6 +137,8 @@ else :
 
 
 process.source = cms.Source("PoolSource",
+#                            fileNames  = cms.untracked.vstring('/store/mc/Summer12DR53X/ZPrimeToTTJets_fixedFSR_M2000GeV_W20GeV_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V19-v1/00000/46A64260-C0AB-E411-BE43-7845C4FC360B.root'),
+#                            skipEvents =  cms.untracked.uint32(0)
                             fileNames  =
                             cms.untracked.vstring(__FILE_NAMES__),
                             skipEvents =
@@ -190,7 +192,7 @@ process.noscraping = cms.EDFilter(
 process.load('CommonTools.RecoAlgos.HBHENoiseFilter_cfi')
 
 ## The CSC beam halo tight filter ____________________________________________||
-process.load('RecoMET.METAnalyzers.CSCHaloFilter_cfi')
+process.load('RecoMET.METFilters.CSCTightHaloFilter_cfi')
 
 ## The HCAL laser filter _____________________________________________________||
 process.load("RecoMET.METFilters.hcalLaserEventFilter_cfi")
@@ -1911,7 +1913,8 @@ process.patPF2PATSequencePFlowLoose.remove ( process.countPatJetsPFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.patHPSPFTauDiscriminationUpdatePFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.patPFTauIsolationPFlowLoose )
 process.patPF2PATSequencePFlowLoose.remove ( process.patTausPFlowLoose )
-
+process.patCandidatesPFlowLoose.remove (process.makePatJetsPFlowLoose)
+process.patPF2PATSequencePFlowLoose.remove (process.patJetFlavourIdLegacyPFlowLoose)
 
 if options.runOnFastSim:
     process.patseq = cms.Sequence(
@@ -2115,7 +2118,7 @@ process.MyNtuple = cms.EDAnalyzer('NtupleWriter',
                                   doPhotons = cms.bool(False),
                                   doMET = cms.bool(True),
                                   doPV = cms.bool(True),
-                                  doAllPFParticles = cms.untracked.bool(options.writePFCands),
+                                  doAllPFParticles = cms.bool(options.writePFCands),
 				  storePFsAroundLeptons = cms.untracked.bool(True),
                                   doGenInfo = cms.bool(not options.useData),
 				  doAllGenParticles = cms.bool(options.writeAllGenParticles), #set to true if you want to store all gen particles, otherwise, only tops and status 3 particles are stored
@@ -2173,6 +2176,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(50)
 
 
 # process all the events
+#process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(20))
 process.maxEvents = cms.untracked.PSet( input =cms.untracked.int32(__MAX_EVENTS__))
 process.options.wantSummary = False
 process.out.dropMetaData = cms.untracked.string("DROPPED")
